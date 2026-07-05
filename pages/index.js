@@ -99,7 +99,7 @@ function Sheet({ r }) {
 
 function isoDay(d) { return d.toISOString().slice(0, 10); }
 
-const TOKEN_KEY = "hostaway_token";
+const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
 
 export default function Home() {
@@ -107,28 +107,29 @@ export default function Home() {
   const [list, setList] = useState(null);
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
-  const [token, setToken] = useState("");
+  const [apiKey, setApiKey] = useState("");
   const [account, setAccount] = useState("");
-  const [tokenSaved, setTokenSaved] = useState(false);
-  const [showToken, setShowToken] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [showSetup, setShowSetup] = useState(false);
 
-  // Récupère le token mémorisé à l'ouverture
+  // Récupère les identifiants mémorisés à l'ouverture
   useEffect(() => {
-    const t = typeof window !== "undefined" ? window.localStorage.getItem(TOKEN_KEY) : "";
+    const k = typeof window !== "undefined" ? window.localStorage.getItem(KEY_KEY) : "";
     const a = typeof window !== "undefined" ? window.localStorage.getItem(ACCOUNT_KEY) : "";
-    if (t) { setToken(t); setTokenSaved(true); }
+    if (k) setApiKey(k);
     if (a) setAccount(a);
+    if (k && a) setSaved(true);
   }, []);
 
-  const load = useCallback(async (d, tk, acc) => {
-    if (!tk) { setStatus("Colle ton token Hostaway pour commencer."); setList(null); return; }
+  const load = useCallback(async (d, acc, key) => {
+    if (!acc || !key) { setStatus("Renseigne l'Account ID et l'API Key."); setList(null); return; }
     setLoading(true);
     setStatus("Chargement…");
     try {
       const res = await fetch(`/api/reservations?from=${d}&to=${d}`, {
         headers: {
-          "x-hostaway-token": tk,
-          ...(acc ? { "x-hostaway-account": acc } : {}),
+          "x-hostaway-account": acc,
+          "x-hostaway-key": key,
         },
       });
       const data = await res.json();
@@ -144,25 +145,25 @@ export default function Home() {
     }
   }, []);
 
-  // Chargement auto : à l'ouverture (si token présent) et à chaque changement de jour
+  // Chargement auto : à l'ouverture (si identifiants présents) et à chaque changement de jour
   useEffect(() => {
-    if (tokenSaved && token) load(day, token, account);
-  }, [day, tokenSaved, token, account, load]);
+    if (saved && account && apiKey) load(day, account, apiKey);
+  }, [day, saved, account, apiKey, load]);
 
-  function saveToken() {
-    if (!token.trim()) return;
-    window.localStorage.setItem(TOKEN_KEY, token.trim());
-    if (account.trim()) window.localStorage.setItem(ACCOUNT_KEY, account.trim());
-    setTokenSaved(true);
-    setShowToken(false);
-    load(day, token.trim(), account.trim());
+  function saveCreds() {
+    if (!account.trim() || !apiKey.trim()) return;
+    window.localStorage.setItem(ACCOUNT_KEY, account.trim());
+    window.localStorage.setItem(KEY_KEY, apiKey.trim());
+    setSaved(true);
+    setShowSetup(false);
+    load(day, account.trim(), apiKey.trim());
   }
 
-  function forgetToken() {
-    window.localStorage.removeItem(TOKEN_KEY);
+  function forgetCreds() {
     window.localStorage.removeItem(ACCOUNT_KEY);
-    setToken(""); setAccount(""); setTokenSaved(false); setList(null);
-    setStatus("Token effacé.");
+    window.localStorage.removeItem(KEY_KEY);
+    setAccount(""); setApiKey(""); setSaved(false); setList(null);
+    setStatus("Identifiants effacés.");
   }
 
   function shiftDay(n) {
@@ -182,25 +183,25 @@ export default function Home() {
       <div className="toolbar">
         <h1>Fiches de Police</h1>
 
-        {!tokenSaved || showToken ? (
+        {!saved || showSetup ? (
           <div className="token-setup">
-            <input
-              type="password"
-              placeholder="Colle ton token Hostaway ici…"
-              value={token}
-              onChange={e => setToken(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && saveToken()}
-              autoFocus
-            />
             <input
               type="text"
               className="acc"
-              placeholder="Account ID (optionnel)"
+              placeholder="Account ID"
               value={account}
               onChange={e => setAccount(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && saveToken()}
+              onKeyDown={e => e.key === "Enter" && saveCreds()}
+              autoFocus
             />
-            <button className="arrow save" onClick={saveToken} title="Enregistrer le token">→</button>
+            <input
+              type="password"
+              placeholder="API Key Hostaway…"
+              value={apiKey}
+              onChange={e => setApiKey(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && saveCreds()}
+            />
+            <button className="arrow save" onClick={saveCreds} title="Enregistrer">→</button>
           </div>
         ) : (
           <>
@@ -210,30 +211,31 @@ export default function Home() {
               <button className="arrow" onClick={() => shiftDay(1)} title="Jour suivant">›</button>
             </div>
             <button onClick={() => setDay(isoDay(new Date()))}>Aujourd'hui</button>
-            <button onClick={() => load(day, token, account)} disabled={loading} title="Actualiser">↻</button>
+            <button onClick={() => load(day, account, apiKey)} disabled={loading} title="Actualiser">↻</button>
             <button className="primary" onClick={() => window.print()} disabled={!list || !list.length}>Imprimer</button>
-            <button className="ghost" onClick={() => setShowToken(true)} title="Changer le token">⚙</button>
+            <button className="ghost" onClick={() => setShowSetup(true)} title="Changer les identifiants">⚙</button>
           </>
         )}
 
         <span className="status">{status}</span>
-        {tokenSaved && !showToken && (
-          <button className="ghost forget" onClick={forgetToken} title="Oublier le token">Déconnecter</button>
+        {saved && !showSetup && (
+          <button className="ghost forget" onClick={forgetCreds} title="Oublier les identifiants">Déconnecter</button>
         )}
       </div>
 
       <div className="sheets">
-        {!tokenSaved && !loading && (
+        {!saved && !loading && (
           <div className="empty-state">
-            Colle ton token Hostaway une seule fois et valide avec la flèche <strong>→</strong>.
-            Il reste enregistré sur cet appareil : à la prochaine ouverture, les arrivées du jour s'afficheront automatiquement.
+            Renseigne ton <strong>Account ID</strong> et ton <strong>API Key</strong> Hostaway une seule fois,
+            puis valide avec la flèche <strong>→</strong>. Ils restent enregistrés sur cet appareil :
+            à la prochaine ouverture, les arrivées du jour s'afficheront automatiquement.
           </div>
         )}
         {loading && <div className="empty-state">Chargement des arrivées…</div>}
-        {!loading && tokenSaved && list && list.length === 0 && (
+        {!loading && saved && list && list.length === 0 && (
           <div className="empty-state">Aucune arrivée ce jour.</div>
         )}
-        {!loading && tokenSaved && list && list.map((r, i) => <Sheet key={i} r={r} />)}
+        {!loading && saved && list && list.map((r, i) => <Sheet key={i} r={r} />)}
       </div>
     </>
   );
