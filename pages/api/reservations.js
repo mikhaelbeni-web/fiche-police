@@ -137,9 +137,24 @@ export default async function handler(req, res) {
     const data = await r.json();
     const all = data.result || [];
 
+    // Exclure les réservations annulées / refusées / expirées.
+    // Liste noire (plus sûre qu'une liste blanche : au pire on garde une arrivée,
+    // on ne risque pas d'en masquer une vraie). Statuts Hostaway insensibles à la casse.
+    const CANCELLED_STATUSES = new Set([
+      "cancelled", "canceled", "declined", "expired", "denied", "aborted",
+    ]);
+    const active = all.filter(resv => {
+      const status = (resv.status || "").toString().toLowerCase();
+      if (CANCELLED_STATUSES.has(status)) return false;
+      // Repli : champs d'annulation explicites si le statut n'est pas fiable
+      if (resv.isCancelled === true) return false;
+      if (resv.cancellationDate) return false;
+      return true;
+    });
+
     // Filtre : ne garder que les réservations dont le logement est Belleville.
     // On rapproche listingMapId (résa) avec l'id du listing taggé.
-    const filtered = all.filter(resv => {
+    const filtered = active.filter(resv => {
       const lid = String(resv.listingMapId ?? resv.listingId ?? "");
       if (bellevilleIds.has(lid)) return true;
       // Repli supplémentaire : nom du listing dans la résa contient "belleville"
@@ -154,6 +169,8 @@ export default async function handler(req, res) {
         _debug: {
           bellevilleListingIds: Array.from(bellevilleIds),
           totalReservations: all.length,
+          activeAfterCancelFilter: active.length,
+          cancelledExcluded: all.length - active.length,
           filteredReservations: filtered.length,
           sampleReservationKeys: all[0] ? Object.keys(all[0]) : [],
           sampleReservation: all[0] || null,
