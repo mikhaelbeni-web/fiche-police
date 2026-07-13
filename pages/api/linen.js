@@ -1,9 +1,11 @@
 // pages/api/linen.js
-// Lecture seule. Pour un jour donné : liste des appartements à faire (départs du jour),
-// avec le nombre de personnes ATTENDUES (arrivée du même jour sur le même logement, si elle existe).
-// Si aucune arrivée le jour même sur ce logement, "attendu" reste vide (à la charge du personnel).
+// Lecture seule. Résidence Le Belleville UNIQUEMENT.
+// Pour un jour donné : appartements à faire (départs du jour), numéro exact via la table
+// statique lib/apartments.js, et nombre de personnes ATTENDUES (arrivée du même jour
+// sur le même logement, si elle existe — sinon case vide).
 
-import { verifySession, getAccessToken, getListingMap, isActive, fetchReservations } from "../../lib/hostaway";
+import { verifySession, getAccessToken, isActive, fetchReservations } from "../../lib/hostaway";
+import { getApartmentInfo, bellevilleIds } from "../../lib/apartments";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -27,17 +29,18 @@ export default async function handler(req, res) {
 
   try {
     const accessToken = await getAccessToken(accountId, apiKey);
-    const listingMap = await getListingMap(accessToken, accountId);
+    const bIds = new Set(bellevilleIds());
 
-    // Départs du jour = appartements à nettoyer
     const departures = (await fetchReservations(accessToken, {
       departureStartDate: day, departureEndDate: day, limit: "500", includeResources: "1",
-    })).filter(isActive).filter(rv => (rv.departureDate || rv.checkOutDate || "").slice(0, 10) === day);
+    })).filter(isActive)
+      .filter(rv => (rv.departureDate || rv.checkOutDate || "").slice(0, 10) === day)
+      .filter(rv => bIds.has(String(rv.listingMapId ?? rv.listingId ?? "")));
 
-    // Arrivées du jour = pour connaître qui est ATTENDU dans chaque logement
     const arrivals = (await fetchReservations(accessToken, {
       arrivalStartDate: day, arrivalEndDate: day, limit: "500", includeResources: "1",
-    })).filter(isActive).filter(rv => (rv.arrivalDate || rv.checkInDate || "").slice(0, 10) === day);
+    })).filter(isActive)
+      .filter(rv => (rv.arrivalDate || rv.checkInDate || "").slice(0, 10) === day);
 
     const arrivalByListing = {};
     for (const rv of arrivals) {
@@ -45,26 +48,22 @@ export default async function handler(req, res) {
       arrivalByListing[lid] = rv.numberOfGuests ?? rv.adults ?? null;
     }
 
-    const byResidence = {};
-    for (const rv of departures) {
+    const items = departures.map(rv => {
       const lid = String(rv.listingMapId ?? rv.listingId ?? "");
-      const info = listingMap[lid] || { residence: "Sans résidence", appartement: rv.listingName || "—", unitNumber: "" };
-      const key = info.residence;
-      if (!byResidence[key]) byResidence[key] = { residence: key, items: [] };
+      const info = getApartmentInfo(lid) || { appartement: rv.listingName || "—", unitNumber: "—" };
       const attendu = Object.prototype.hasOwnProperty.call(arrivalByListing, lid) ? arrivalByListing[lid] : null;
-      byResidence[key].items.push({
-        unitNumber: info.unitNumber || "",
-        appartement: info.appartement || rv.listingName || "—",
-        attendu, // null = pas d'arrivée connue le jour même -> case vide à remplir à la main
-      });
-    }
+      return {
+        listingId: lid,
+        appartement: info.appartement,
+        unitNumber: info.unitNumber,
+        attendu,
+      };
+    });
 
-    const groups = Object.values(byResidence).sort((a, b) => a.residence.localeCompare(b.residence));
-    for (const g of groups) {
-      g.items.sort((a, b) => (a.unitNumber || a.appartement).localeCompare(b.unitNumber || b.appartement, undefined, { numeric: true }));
-    }
+    // Tri numérique par numéro d'appartement
+    items.sort((a, b) => a.unitNumber.localeCompare(b.unitNumber, undefined, { numeric: true }));
 
-    return res.status(200).json({ day, groups });
+    return res.status(200).json({ day, items });
   } catch (err) {
     return res.status(err.status || 500).json({ error: err.message });
   }

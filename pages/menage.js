@@ -124,6 +124,7 @@ function Menage() {
         <button onClick={() => window.print()} disabled={!shownTotal}>Imprimer</button>
 
         <span className="status">{status}</span>
+        <Link href="/couts" className="navlink">Coûts →</Link>
         <Link href="/linge" className="navlink">Linge →</Link>
         <Link href="/" className="navlink">Fiches de police →</Link>
       </div>

@@ -1,4 +1,8 @@
 // pages/linge.js
+// Linge à commander — Résidence Le Belleville uniquement.
+// Ligne 1 : nombre de personnes attendues. Ligne 2 : numéro d'appartement.
+// Lignes suivantes : types de linge, cases vides à remplir par le personnel.
+
 import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
 import Link from "next/link";
@@ -25,7 +29,7 @@ function fmtFr(d) {
 
 function Linge() {
   const [day, setDay] = useState(isoDay(new Date()));
-  const [data, setData] = useState(null);
+  const [items, setItems] = useState([]);
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const [creds, setCreds] = useState({ account: "", key: "" });
@@ -47,12 +51,11 @@ function Linge() {
       });
       const j = await res.json();
       if (!res.ok) throw new Error(j.error || "Erreur");
-      setData(j);
-      const n = j.groups.reduce((s, g) => s + g.items.length, 0);
-      setStatus(n ? `${n} appartement(s) à faire` : "Aucun appartement à faire");
+      setItems(j.items || []);
+      setStatus(j.items?.length ? `${j.items.length} appartement(s) à faire` : "Aucun appartement à faire");
     } catch (err) {
       setStatus("Erreur : " + err.message);
-      setData(null);
+      setItems([]);
     } finally {
       setLoading(false);
     }
@@ -68,8 +71,6 @@ function Linge() {
     setDay(isoDay(d));
   }
 
-  const allItems = (data?.groups || []).flatMap(g => g.items.map(it => ({ ...it, residence: g.residence })));
-
   return (
     <>
       <Head><title>Linge à commander — {fmtFr(day)}</title></Head>
@@ -83,27 +84,28 @@ function Linge() {
         </div>
         <button onClick={() => setDay(isoDay(new Date()))}>Aujourd&apos;hui</button>
         <button onClick={() => load(day, creds.account, creds.key)} disabled={loading} title="Actualiser">↻</button>
-        <button className="primary" onClick={() => window.print()} disabled={!allItems.length}>Imprimer</button>
+        <button className="primary" onClick={() => window.print()} disabled={!items.length}>Imprimer</button>
         <span className="status">{status}</span>
         <Link href="/menage" className="navlink">Ménages →</Link>
+        <Link href="/couts" className="navlink">Coûts ménage →</Link>
         <Link href="/" className="navlink">Fiches →</Link>
       </div>
 
       <div className="linge-page">
-        {allItems.length === 0 && !loading && (
-          <div className="empty-state">Aucun appartement à faire ce jour.</div>
+        {items.length === 0 && !loading && (
+          <div className="empty-state">Aucun appartement Belleville à faire ce jour.</div>
         )}
 
-        {allItems.length > 0 && (
+        {items.length > 0 && (
           <div className="linge-sheet">
-            <div className="linge-title">LINGE SALE</div>
+            <div className="linge-title">LINGE SALE — Résidence Le Belleville</div>
             <div className="linge-date">Date : <strong>{fmtFr(day)}</strong></div>
 
             <table className="linge-tbl">
               <thead>
                 <tr>
-                  <th className="rowlabel">PRÉNOM :</th>
-                  {allItems.map((it, i) => (
+                  <th className="rowlabel">Nombre de personnes</th>
+                  {items.map((it, i) => (
                     <th key={i} className="pax">
                       {it.attendu != null ? `${it.attendu}P` : "—"}
                     </th>
@@ -111,8 +113,8 @@ function Linge() {
                 </tr>
                 <tr>
                   <th className="rowlabel">N° Appartement</th>
-                  {allItems.map((it, i) => (
-                    <th key={i} className="aptnum">{it.unitNumber || "—"}</th>
+                  {items.map((it, i) => (
+                    <th key={i} className="aptnum">{it.unitNumber}</th>
                   ))}
                 </tr>
               </thead>
@@ -120,16 +122,14 @@ function Linge() {
                 {LINEN_ROWS.map(row => (
                   <tr key={row}>
                     <td className="rowlabel">{row}</td>
-                    {allItems.map((_, i) => <td key={i} className="blank" />)}
+                    {items.map((_, i) => <td key={i} className="blank" />)}
                   </tr>
                 ))}
               </tbody>
             </table>
 
-            <div className="linge-legend">
-              {Array.from(new Set(allItems.map(it => it.residence))).map(r => (
-                <span key={r} className="legend-tag">{r}</span>
-              ))}
+            <div className="linge-footer">
+              <div className="linge-signature">Prénom (personnel de ménage) : ____________________</div>
             </div>
           </div>
         )}
