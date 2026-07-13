@@ -6,7 +6,6 @@ import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import Gate from "../components/Gate";
-import { getApartmentInfo } from "../lib/apartments";
 
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
@@ -49,18 +48,18 @@ function Couts() {
       const j = await res.json();
       if (!res.ok) throw new Error(j.error || "Erreur");
 
-      // Chaque item de départ -> tarif via la table statique (par listingId)
+      // Chaque item de départ porte déjà son tarif, résolu côté serveur
+      // (gère les listings multi-unit via reservationUnit).
       const flat = [];
       for (const g of j.groups || []) {
         for (const it of g.items) {
-          const info = getApartmentInfo(it.listingId);
           flat.push({
-            residence: info?.residence || g.residence,
-            appartement: info?.appartement || it.appartement,
-            unitNumber: info?.unitNumber || it.unitNumber || "—",
+            residence: g.residence,
+            appartement: it.appartement,
+            unitNumber: it.unitNumber || "—",
             depart: it.depart,
-            menageHT: info?.menageHT ?? null,
-            amenitiesHT: info?.amenitiesHT ?? null,
+            menageHT: it.menageHT,
+            amenitiesHT: it.amenitiesHT,
           });
         }
       }
@@ -159,10 +158,6 @@ function Couts() {
                 Tarifs HT fixes par appartement · {filtered.length} ménage(s)
                 {unknownCount > 0 && ` · ${unknownCount} sans tarif connu`}
               </div>
-            </div>
-            <div className="recap-total">
-              <div className="n">{euros(grandTotal)}</div>
-              <div className="l">total HT</div>
             </div>
           </div>
 

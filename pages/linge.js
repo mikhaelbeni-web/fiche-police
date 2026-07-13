@@ -52,7 +52,12 @@ function Linge() {
       const j = await res.json();
       if (!res.ok) throw new Error(j.error || "Erreur");
       setItems(j.items || []);
-      setStatus(j.items?.length ? `${j.items.length} appartement(s) à faire` : "Aucun appartement à faire");
+      const n = j.items?.length || 0;
+      const u = j.unresolved?.length || 0;
+      setStatus(
+        (n ? `${n} appartement(s) à faire` : "Aucun appartement à faire") +
+        (u ? ` · ⚠ ${u} départ(s) non identifié(s), vérifie manuellement` : "")
+      );
     } catch (err) {
       setStatus("Erreur : " + err.message);
       setItems([]);

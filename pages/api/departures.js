@@ -1,8 +1,10 @@
 // pages/api/departures.js
-// Lecture seule. Renvoie les DÉPARTS (check-outs) sur une période, groupés par résidence,
-// avec le numéro de sous-unité exact de chaque appartement.
+// Lecture seule. Départs (check-outs) sur une période, groupés par résidence.
+// Numéro d'appartement et tarifs résolus via lib/apartments.js (table statique +
+// résolution multi-unit via reservationUnit), avec repli sur les tags Hostaway.
 
 import { verifySession, getAccessToken, getListingMap, isActive, fetchReservations } from "../../lib/hostaway";
+import { resolveApartment } from "../../lib/apartments";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -26,7 +28,7 @@ export default async function handler(req, res) {
 
   try {
     const accessToken = await getAccessToken(accountId, apiKey);
-    const listingMap = await getListingMap(accessToken, accountId);
+    const listingMap = await getListingMap(accessToken, accountId); // repli si totalement inconnu
 
     const all = (await fetchReservations(accessToken, {
       departureStartDate: from,
@@ -43,19 +45,27 @@ export default async function handler(req, res) {
     const byResidence = {};
     for (const rv of inRange) {
       const lid = String(rv.listingMapId ?? rv.listingId ?? "");
-      const info = listingMap[lid] || { residence: "Sans résidence", appartement: rv.listingName || "—", unitNumber: "" };
+      let info = resolveApartment(rv, lid);
+      if (!info) {
+        const fb = listingMap[lid];
+        info = fb
+          ? { residence: fb.residence, appartement: fb.appartement, unitNumber: fb.unitNumber, menageHT: null, amenitiesHT: null }
+          : { residence: "Sans résidence", appartement: rv.listingName || "—", unitNumber: "", menageHT: null, amenitiesHT: null };
+      }
       const key = info.residence;
       if (!byResidence[key]) byResidence[key] = { residence: key, count: 0, items: [] };
       byResidence[key].count += 1;
       byResidence[key].items.push({
         listingId: lid,
-        appartement: info.appartement || rv.listingName || "—",
+        appartement: info.appartement,
         unitNumber: info.unitNumber || "",
         depart: (rv.departureDate || rv.checkOutDate || "").slice(0, 10),
         arrivee: (rv.arrivalDate || rv.checkInDate || "").slice(0, 10),
         client: rv.guestName || [rv.guestFirstName, rv.guestLastName].filter(Boolean).join(" ") || "—",
         reservation: rv.hostawayReservationId || rv.channelReservationId || rv.id || "",
         voyageurs: rv.numberOfGuests ?? rv.adults ?? "",
+        menageHT: info.menageHT,
+        amenitiesHT: info.amenitiesHT,
       });
     }
 
@@ -64,7 +74,7 @@ export default async function handler(req, res) {
       g.items.sort((a, b) => (a.unitNumber || a.appartement).localeCompare(b.unitNumber || b.appartement, undefined, { numeric: true }));
     }
 
-    const residences = Array.from(new Set(Object.values(listingMap).map(v => v.residence))).sort((a, b) => a.localeCompare(b));
+    const residences = Array.from(new Set(groups.map(g => g.residence))).sort((a, b) => a.localeCompare(b));
 
     return res.status(200).json({ from, to, total: inRange.length, residences, groups });
   } catch (err) {
