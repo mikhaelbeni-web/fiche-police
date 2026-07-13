@@ -192,3 +192,35 @@ body {
   .recap { box-shadow: none; max-width: 100%; padding: 10mm; }
   .resid { page-break-inside: avoid; }
 }
+
+/* --- Page Linge à commander --- */
+.linge-page { padding: 24px; display: flex; justify-content: center; }
+.linge-sheet {
+  background: #fff; width: 100%; max-width: 1100px; border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.1); padding: 24px 28px;
+}
+.linge-title { font-size: 20px; font-weight: 800; letter-spacing: .5px; }
+.linge-date { font-size: 14px; margin: 6px 0 16px; }
+
+.linge-tbl { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.linge-tbl th, .linge-tbl td {
+  border: 1px solid var(--line); padding: 8px 6px; text-align: center; font-size: 13px;
+}
+.linge-tbl th.rowlabel, .linge-tbl td.rowlabel {
+  text-align: left; font-weight: 700; background: #f4f4f4; width: 170px; white-space: nowrap;
+}
+.linge-tbl th.pax { background: #eef3f9; font-weight: 700; font-size: 13px; }
+.linge-tbl th.aptnum { background: var(--accent); color: #fff; font-weight: 800; font-size: 14px; }
+.linge-tbl td.blank { height: 34px; }
+
+.linge-legend { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
+.legend-tag {
+  font-size: 10px; text-transform: uppercase; letter-spacing: .4px; color: var(--muted);
+  border: 1px solid #ddd; border-radius: 4px; padding: 3px 8px;
+}
+
+@media print {
+  .linge-page { padding: 0; }
+  .linge-sheet { box-shadow: none; max-width: 100%; padding: 8mm; }
+  .linge-tbl th, .linge-tbl td { font-size: 11px; padding: 5px 4px; }
+}

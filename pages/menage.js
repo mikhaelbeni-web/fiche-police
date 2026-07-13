@@ -70,10 +70,10 @@ function Menage() {
   const shownTotal = groups.reduce((s, g) => s + g.count, 0);
 
   function downloadCSV() {
-    const rows = [["Résidence", "Appartement", "Date de départ", "Client", "Voyageurs", "Réservation"]];
+    const rows = [["Résidence", "N°", "Appartement", "Date de départ", "Client", "Voyageurs", "Réservation"]];
     for (const g of groups) {
       for (const it of g.items) {
-        rows.push([g.residence, it.appartement, fmtFr(it.depart), it.client, it.voyageurs, it.reservation]);
+        rows.push([g.residence, it.unitNumber, it.appartement, fmtFr(it.depart), it.client, it.voyageurs, it.reservation]);
       }
     }
     const csv = rows
@@ -124,6 +124,7 @@ function Menage() {
         <button onClick={() => window.print()} disabled={!shownTotal}>Imprimer</button>
 
         <span className="status">{status}</span>
+        <Link href="/linge" className="navlink">Linge →</Link>
         <Link href="/" className="navlink">Fiches de police →</Link>
       </div>
 
@@ -153,6 +154,7 @@ function Menage() {
               <table className="tbl">
                 <thead>
                   <tr>
+                    <th>N°</th>
                     <th>Appartement</th>
                     <th>Départ</th>
                     <th>Client</th>
@@ -163,7 +165,8 @@ function Menage() {
                 <tbody>
                   {g.items.map((it, i) => (
                     <tr key={i}>
-                      <td className="apt">{it.appartement}</td>
+                      <td className="apt">{it.unitNumber || "—"}</td>
+                      <td>{it.appartement}</td>
                       <td>{fmtFr(it.depart)}</td>
                       <td>{it.client}</td>
                       <td className="c">{it.voyageurs}</td>
