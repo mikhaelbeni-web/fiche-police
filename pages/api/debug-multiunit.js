@@ -1,9 +1,11 @@
 // pages/api/debug-multiunit.js
-// Outil de diagnostic temporaire. Lecture seule. Renvoie la structure JSON BRUTE
-// des réservations Cosy/Confort/Chic sur une période, pour identifier le champ exact
-// qui porte le numéro de sous-unité chez Hostaway (au lieu de deviner).
+// Outil de diagnostic. Lecture seule. Pour chaque départ d'une période, affiche
+// le nom du listing, l'ID top-level, l'ID de sous-unité réel (reservationUnit[].listingUnitId)
+// et ce que la résolution actuelle en déduit. Permet de repérer d'un coup d'œil
+// les cas où un listing (ex. Villiers V6) est en réalité multi-unit sans qu'on le sache.
 
 import { verifySession, getAccessToken, isActive, fetchReservations } from "../../lib/hostaway";
+import { resolveApartment } from "../../lib/apartments";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -29,14 +31,23 @@ export default async function handler(req, res) {
       departureStartDate: from, departureEndDate: to, limit: "500", includeResources: "1",
     })).filter(isActive);
 
-    // Ne garder que les réservations dont le nom de logement évoque un multi-unit Belleville
-    const multiUnit = all.filter(rv => /chic|confort|cosy/i.test(rv.listingName || ""));
+    const rows = all.map(rv => {
+      const lid = String(rv.listingMapId ?? rv.listingId ?? "");
+      const ru = Array.isArray(rv.reservationUnit) ? rv.reservationUnit[0] : null;
+      const resolved = resolveApartment(rv, lid);
+      return {
+        guest: rv.guestName || [rv.guestFirstName, rv.guestLastName].filter(Boolean).join(" "),
+        depart: (rv.departureDate || rv.checkOutDate || "").slice(0, 10),
+        listingName: rv.listingName,
+        listingMapId: lid,
+        reservationUnitListingUnitId: ru?.listingUnitId ?? null,
+        resoluResidence: resolved?.residence ?? null,
+        resoluAppartement: resolved?.appartement ?? null,
+        resoluNumero: resolved?.unitNumber ?? null,
+      };
+    }).sort((a, b) => (a.listingName || "").localeCompare(b.listingName || ""));
 
-    // Renvoie l'objet réservation COMPLET pour les 3 premiers cas, sans rien filtrer
-    return res.status(200).json({
-      count: multiUnit.length,
-      raw: multiUnit.slice(0, 3),
-    });
+    return res.status(200).json({ count: rows.length, rows });
   } catch (err) {
     return res.status(err.status || 500).json({ error: err.message });
   }

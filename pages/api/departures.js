@@ -71,7 +71,10 @@ export default async function handler(req, res) {
 
     const groups = Object.values(byResidence).sort((a, b) => a.residence.localeCompare(b.residence));
     for (const g of groups) {
-      g.items.sort((a, b) => (a.unitNumber || a.appartement).localeCompare(b.unitNumber || b.appartement, undefined, { numeric: true }));
+      g.items.sort((a, b) => {
+        if (a.depart !== b.depart) return a.depart.localeCompare(b.depart);
+        return (a.unitNumber || a.appartement).localeCompare(b.unitNumber || b.appartement, undefined, { numeric: true });
+      });
     }
 
     const residences = Array.from(new Set(groups.map(g => g.residence))).sort((a, b) => a.localeCompare(b));

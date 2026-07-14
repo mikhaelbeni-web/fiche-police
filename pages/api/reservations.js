@@ -137,16 +137,13 @@ export default async function handler(req, res) {
     const data = await r.json();
     const all = data.result || [];
 
-    // Exclure les réservations annulées / refusées / expirées.
-    // Liste noire (plus sûre qu'une liste blanche : au pire on garde une arrivée,
-    // on ne risque pas d'en masquer une vraie). Statuts Hostaway insensibles à la casse.
-    const CANCELLED_STATUSES = new Set([
-      "cancelled", "canceled", "declined", "expired", "denied", "aborted",
-    ]);
+    // Liste BLANCHE : ne garder que les réservations réellement confirmées.
+    // Exclut par défaut tout ce qui n'est pas confirmé (demandes, en attente,
+    // non payées) en plus des annulées. Statuts confirmés Hostaway : new, modified, ownerStay.
+    const CONFIRMED_STATUSES = new Set(["new", "modified", "ownerstay"]);
     const active = all.filter(resv => {
       const status = (resv.status || "").toString().toLowerCase();
-      if (CANCELLED_STATUSES.has(status)) return false;
-      // Repli : champs d'annulation explicites si le statut n'est pas fiable
+      if (!CONFIRMED_STATUSES.has(status)) return false;
       if (resv.isCancelled === true) return false;
       if (resv.cancellationDate) return false;
       return true;
