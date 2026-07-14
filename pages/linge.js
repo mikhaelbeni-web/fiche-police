@@ -110,11 +110,17 @@ function Linge() {
               <thead>
                 <tr>
                   <th className="rowlabel">Nombre de personnes</th>
-                  {items.map((it, i) => (
-                    <th key={i} className="pax">
-                      {it.attendu != null ? `${it.attendu}P` : "—"}
-                    </th>
-                  ))}
+                  {items.map((it, i) => {
+                    // Lits doubles : arrondir au pair supérieur pour le linge.
+                    // 1 -> 2, 3 -> 4, 2 -> 2, 4 -> 4, 5 -> 6...
+                    const n = it.attendu;
+                    const affiche = (n != null && n > 0) ? (n % 2 === 0 ? n : n + 1) : null;
+                    return (
+                      <th key={i} className="pax">
+                        {affiche != null ? `${affiche}P` : "—"}
+                      </th>
+                    );
+                  })}
                 </tr>
                 <tr>
                   <th className="rowlabel">N° Appartement</th>
