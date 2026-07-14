@@ -61,7 +61,11 @@ function Sheet({ r }) {
       <div className="grid">
         <div className="section-label">Séjour / Stay</div>
         <Cell lbl="N° de réservation / Booking ref." value={esc(r.hostawayReservationId || r.channelReservationId || r.id)} />
-        <Cell lbl="Logement / Room" value={esc(r.listingName || r.listingMapId)} />
+        <Cell lbl="Logement / Room" value={esc(
+          r.resolvedUnitNumber
+            ? `${r.listingName || ""} — N° ${r.resolvedUnitNumber}`.trim()
+            : (r.listingName || r.listingMapId)
+        )} />
         <Cell lbl="Date d'arrivée / Date of arrival" value={fmtDate(r.arrivalDate || r.checkInDate)} />
         <Cell lbl="Date de départ prévue / Intended departure" value={fmtDate(r.departureDate || r.checkOutDate)} />
 

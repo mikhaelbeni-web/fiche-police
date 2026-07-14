@@ -5,6 +5,8 @@
 // Gère les multi-units : un multi-unit = un listingMapId unique, donc si le parent
 // est taggé, toutes ses sous-unités passent le filtre.
 
+import { resolveApartment } from "../../lib/apartments";
+
 let tokenCache = { key: null, accessToken: null, expiresAt: 0 };
 
 // Cache des IDs de listings Belleville (évite de recharger les listings à chaque appel)
@@ -159,10 +161,22 @@ export default async function handler(req, res) {
       return lname.includes(TAG_FILTER);
     });
 
+    // Enrichit chaque réservation avec le numéro de sous-unité réel (résolution
+    // multi-unit via reservationUnit[].listingUnitId, comme pour le ménage).
+    const enriched = filtered.map(resv => {
+      const lid = String(resv.listingMapId ?? resv.listingId ?? "");
+      const info = resolveApartment(resv, lid);
+      return {
+        ...resv,
+        resolvedUnitNumber: info?.unitNumber || null,
+        resolvedAppartement: info?.appartement || null,
+      };
+    });
+
     // Mode debug : renvoyer aussi les infos de diagnostic
     if (debug === "1") {
       return res.status(200).json({
-        result: filtered,
+        result: enriched,
         _debug: {
           bellevilleListingIds: Array.from(bellevilleIds),
           totalReservations: all.length,
@@ -175,7 +189,7 @@ export default async function handler(req, res) {
       });
     }
 
-    return res.status(200).json({ result: filtered });
+    return res.status(200).json({ result: enriched });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
