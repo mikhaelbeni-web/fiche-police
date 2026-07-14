@@ -70,10 +70,10 @@ function Menage() {
   const shownTotal = groups.reduce((s, g) => s + g.count, 0);
 
   function downloadCSV() {
-    const rows = [["Résidence", "N°", "Appartement", "Date de départ", "Client", "Voyageurs", "Réservation"]];
+    const rows = [["Résidence", "N°", "Appartement", "Date de départ", "Client", "Note", "Réservation"]];
     for (const g of groups) {
       for (const it of g.items) {
-        rows.push([g.residence, it.unitNumber, it.appartement, fmtFr(it.depart), it.client, it.voyageurs, it.reservation]);
+        rows.push([g.residence, it.unitNumber, it.appartement, fmtFr(it.depart), it.client, "", it.reservation]);
       }
     }
     const csv = rows
@@ -159,7 +159,7 @@ function Menage() {
                     <th>Appartement</th>
                     <th>Départ</th>
                     <th>Client</th>
-                    <th className="c">Pers.</th>
+                    <th className="note-col">Note</th>
                     <th className="c">Fait</th>
                   </tr>
                 </thead>
@@ -170,7 +170,7 @@ function Menage() {
                       <td>{it.appartement}</td>
                       <td>{fmtFr(it.depart)}</td>
                       <td>{it.client}</td>
-                      <td className="c">{it.voyageurs}</td>
+                      <td className="note-col"></td>
                       <td className="c"><span className="box" /></td>
                     </tr>
                   ))}

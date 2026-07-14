@@ -233,3 +233,9 @@ body {
   padding-top: 14px; border-top: 2px solid var(--line); font-size: 14px;
 }
 .grand-total .gt { font-weight: 800; font-size: 16px; color: var(--accent); }
+
+/* Colonne Note (menage) : large et vide, pour écrire à la main après impression */
+.tbl .note-col { min-width: 220px; }
+@media print {
+  .tbl .note-col { min-width: 260px; border-left: 1px solid #ccc; }
+}
