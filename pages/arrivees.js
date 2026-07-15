@@ -1,4 +1,4 @@
-// pages/menage.js
+// pages/arrivees.js
 import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
 import Link from "next/link";
@@ -14,7 +14,7 @@ function fmtFr(d) {
   return isNaN(x) ? d : x.toLocaleDateString("fr-FR");
 }
 
-function Menage() {
+function Arrivees() {
   const today = isoDay(new Date());
   const [from, setFrom] = useState(today);
   const [to, setTo] = useState(today);
@@ -35,13 +35,13 @@ function Menage() {
     setLoading(true);
     setStatus("Chargement…");
     try {
-      const res = await fetch(`/api/departures?from=${f}&to=${t}`, {
+      const res = await fetch(`/api/arrivals?from=${f}&to=${t}`, {
         headers: { "x-hostaway-account": acc, "x-hostaway-key": key },
       });
       const d = await res.json();
       if (!res.ok) throw new Error(d.error || "Erreur");
       setData(d);
-      setStatus(`${d.total} ménage(s) sur la période`);
+      setStatus(`${d.total} arrivée(s) sur la période`);
     } catch (err) {
       setStatus("Erreur : " + err.message);
       setData(null);
@@ -70,32 +70,31 @@ function Menage() {
   const shownTotal = groups.reduce((s, g) => s + g.count, 0);
 
   function downloadCSV() {
-    const rows = [["Résidence", "N°", "Appartement", "Date de départ", "Client", "Note", "Réservation"]];
+    const rows = [["Résidence", "N°", "Appartement", "Date d'arrivée", "Client", "Note", "Réservation"]];
     for (const g of groups) {
       for (const it of g.items) {
-        rows.push([g.residence, it.unitNumber, it.appartement, fmtFr(it.depart), it.client, "", it.reservation]);
+        rows.push([g.residence, it.unitNumber, it.appartement, fmtFr(it.arrivee), it.client, "", it.reservation]);
       }
     }
     const csv = rows
       .map(r => r.map(c => `"${String(c ?? "").replace(/"/g, '""')}"`).join(";"))
       .join("\r\n");
-    // BOM UTF-8 pour Excel
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     const label = from === to ? from : `${from}_${to}`;
-    a.download = `menages_${label}.csv`;
+    a.download = `arrivees_${label}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
 
   return (
     <>
-      <Head><title>Ménages — Résidences</title></Head>
+      <Head><title>Arrivées — Résidences</title></Head>
 
       <div className="toolbar">
-        <h1>Ménages</h1>
+        <h1>Arrivées</h1>
 
         <div className="quick">
           <button onClick={setToday}>Aujourd&apos;hui</button>
@@ -124,7 +123,7 @@ function Menage() {
         <button onClick={() => window.print()} disabled={!shownTotal}>Imprimer</button>
 
         <span className="status">{status}</span>
-        <Link href="/arrivees" className="navlink">Arrivées →</Link>
+        <Link href="/menage" className="navlink">Ménages →</Link>
         <Link href="/couts" className="navlink">Coûts →</Link>
         <Link href="/linge" className="navlink">Linge →</Link>
         <Link href="/" className="navlink">Fiches de police →</Link>
@@ -136,14 +135,14 @@ function Menage() {
             <div>
               <div className="recap-title">
                 {from === to
-                  ? `Ménages du ${fmtFr(from)}`
-                  : `Ménages du ${fmtFr(from)} au ${fmtFr(to)}`}
+                  ? `Arrivées du ${fmtFr(from)}`
+                  : `Arrivées du ${fmtFr(from)} au ${fmtFr(to)}`}
               </div>
-              <div className="recap-sub">Un check-out = un ménage · réservations annulées exclues</div>
+              <div className="recap-sub">Un check-in = une arrivée · réservations annulées et demandes exclues</div>
             </div>
             <div className="recap-total">
               <div className="n">{shownTotal}</div>
-              <div className="l">ménage{shownTotal > 1 ? "s" : ""}</div>
+              <div className="l">arrivée{shownTotal > 1 ? "s" : ""}</div>
             </div>
           </div>
 
@@ -151,14 +150,14 @@ function Menage() {
             <div className="resid" key={g.residence}>
               <div className="resid-head">
                 <span className="resid-name">{g.residence}</span>
-                <span className="resid-count">{g.count} ménage{g.count > 1 ? "s" : ""}</span>
+                <span className="resid-count">{g.count} arrivée{g.count > 1 ? "s" : ""}</span>
               </div>
               <table className="tbl">
                 <thead>
                   <tr>
                     <th>N°</th>
                     <th>Appartement</th>
-                    <th>Départ</th>
+                    <th>Arrivée</th>
                     <th>Client</th>
                     <th className="note-col">Note</th>
                     <th className="c">Fait</th>
@@ -169,7 +168,7 @@ function Menage() {
                     <tr key={i}>
                       <td className="apt">{it.unitNumber || "—"}</td>
                       <td>{it.appartement}</td>
-                      <td>{fmtFr(it.depart)}</td>
+                      <td>{fmtFr(it.arrivee)}</td>
                       <td>{it.client}</td>
                       <td className="note-col"></td>
                       <td className="c"><span className="box" /></td>
@@ -181,7 +180,7 @@ function Menage() {
           ))}
 
           {!loading && shownTotal === 0 && (
-            <div className="empty-state">Aucun ménage sur cette période.</div>
+            <div className="empty-state">Aucune arrivée sur cette période.</div>
           )}
         </div>
       </div>
@@ -189,10 +188,10 @@ function Menage() {
   );
 }
 
-export default function MenagePage() {
+export default function ArriveesPage() {
   return (
     <Gate>
-      <Menage />
+      <Arrivees />
     </Gate>
   );
 }
