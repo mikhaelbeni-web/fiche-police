@@ -128,6 +128,7 @@ function Menage() {
         <Link href="/taxes" className="navlink">Taxes séjour →</Link>
         <Link href="/couts" className="navlink">Coûts →</Link>
         <Link href="/linge" className="navlink">Linge →</Link>
+        <Link href="/commande-linge" className="navlink">Commande linge →</Link>
         <Link href="/" className="navlink">Fiches de police →</Link>
       </div>
 
