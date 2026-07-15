@@ -1,4 +1,4 @@
-// pages/menage.js
+// pages/taxes.js
 import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
 import Link from "next/link";
@@ -13,10 +13,14 @@ function fmtFr(d) {
   const x = new Date(d + "T12:00:00");
   return isNaN(x) ? d : x.toLocaleDateString("fr-FR");
 }
+function euros(n) {
+  if (n == null) return "—";
+  return Number(n).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+}
 
-function Menage() {
+function Taxes() {
   const today = isoDay(new Date());
-  const [from, setFrom] = useState(today);
+  const [from, setFrom] = useState("2026-07-10"); // départ fixe : 10 juillet
   const [to, setTo] = useState(today);
   const [residence, setResidence] = useState("__all__");
   const [data, setData] = useState(null);
@@ -25,9 +29,10 @@ function Menage() {
   const [creds, setCreds] = useState({ account: "", key: "" });
 
   useEffect(() => {
-    const a = window.localStorage.getItem(ACCOUNT_KEY) || "";
-    const k = window.localStorage.getItem(KEY_KEY) || "";
-    setCreds({ account: a, key: k });
+    setCreds({
+      account: window.localStorage.getItem(ACCOUNT_KEY) || "",
+      key: window.localStorage.getItem(KEY_KEY) || "",
+    });
   }, []);
 
   const load = useCallback(async (f, t, acc, key) => {
@@ -35,13 +40,13 @@ function Menage() {
     setLoading(true);
     setStatus("Chargement…");
     try {
-      const res = await fetch(`/api/departures?from=${f}&to=${t}`, {
+      const res = await fetch(`/api/tourist-tax?from=${f}&to=${t}`, {
         headers: { "x-hostaway-account": acc, "x-hostaway-key": key },
       });
       const d = await res.json();
       if (!res.ok) throw new Error(d.error || "Erreur");
       setData(d);
-      setStatus(`${d.total} ménage(s) sur la période`);
+      setStatus(`${d.total} réservation(s) · ${euros(d.totalTax)} de taxe`);
     } catch (err) {
       setStatus("Erreur : " + err.message);
       setData(null);
@@ -54,55 +59,44 @@ function Menage() {
     if (creds.account && creds.key) load(from, to, creds.account, creds.key);
   }, [from, to, creds, load]);
 
-  function setToday() { setFrom(today); setTo(today); }
-  function setTomorrow() {
-    const t = isoDay(new Date(Date.now() + 864e5));
-    setFrom(t); setTo(t);
-  }
-  function setWeek() {
-    setFrom(today);
-    setTo(isoDay(new Date(Date.now() + 6 * 864e5)));
-  }
+  const residences = Array.from(new Set((data?.items || []).map(i => i.residence))).sort((a, b) => a.localeCompare(b));
+  const items = (data?.items || []).filter(i => residence === "__all__" || i.residence === residence);
 
-  const groups = (data?.groups || []).filter(
-    g => residence === "__all__" || g.residence === residence
-  );
-  const shownTotal = groups.reduce((s, g) => s + g.count, 0);
+  // Regroupement par résidence
+  const byResidence = {};
+  for (const it of items) {
+    if (!byResidence[it.residence]) byResidence[it.residence] = { residence: it.residence, items: [], sum: 0 };
+    byResidence[it.residence].items.push(it);
+    byResidence[it.residence].sum += it.taxeSejour || 0;
+  }
+  const groups = Object.values(byResidence).sort((a, b) => a.residence.localeCompare(b.residence));
+  const shownTotal = items.reduce((s, it) => s + (it.taxeSejour || 0), 0);
 
   function downloadCSV() {
-    const rows = [["Résidence", "N°", "Appartement", "Date de départ", "Client", "Note", "Réservation"]];
+    const rows = [["Résidence", "N°", "Appartement", "Arrivée", "Départ", "Client", "Statut paiement", "Taxe séjour", "Réservation"]];
     for (const g of groups) {
       for (const it of g.items) {
-        rows.push([g.residence, it.unitNumber, it.appartement, fmtFr(it.depart), it.client, "", it.reservation]);
+        rows.push([g.residence, it.unitNumber, it.appartement, fmtFr(it.arrivee), fmtFr(it.depart), it.client, it.paymentStatus, it.taxeSejour, it.reservation]);
       }
     }
-    const csv = rows
-      .map(r => r.map(c => `"${String(c ?? "").replace(/"/g, '""')}"`).join(";"))
-      .join("\r\n");
-    // BOM UTF-8 pour Excel
+    rows.push([]);
+    rows.push(["TOTAL", "", "", "", "", "", "", shownTotal.toFixed(2), ""]);
+    const csv = rows.map(r => r.map(c => `"${String(c ?? "").replace(/"/g, '""')}"`).join(";")).join("\r\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    const label = from === to ? from : `${from}_${to}`;
-    a.download = `menages_${label}.csv`;
+    a.download = `taxes_sejour_${from}_${to}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
 
   return (
     <>
-      <Head><title>Ménages — Résidences</title></Head>
+      <Head><title>Taxes de séjour impayées</title></Head>
 
       <div className="toolbar">
-        <h1>Ménages</h1>
-
-        <div className="quick">
-          <button onClick={setToday}>Aujourd&apos;hui</button>
-          <button onClick={setTomorrow}>Demain</button>
-          <button onClick={setWeek}>7 jours</button>
-        </div>
-
+        <h1>Taxes de séjour</h1>
         <div className="field">
           <label>Du</label>
           <input type="date" value={from} onChange={e => setFrom(e.target.value)} />
@@ -115,20 +109,15 @@ function Menage() {
           <label>Résidence</label>
           <select value={residence} onChange={e => setResidence(e.target.value)}>
             <option value="__all__">Toutes</option>
-            {(data?.residences || []).map(r => <option key={r} value={r}>{r}</option>)}
+            {residences.map(r => <option key={r} value={r}>{r}</option>)}
           </select>
         </div>
-
         <button onClick={() => load(from, to, creds.account, creds.key)} disabled={loading} title="Actualiser">↻</button>
-        <button className="primary" onClick={downloadCSV} disabled={!shownTotal}>Télécharger CSV</button>
-        <button onClick={() => window.print()} disabled={!shownTotal}>Imprimer</button>
-
+        <button className="primary" onClick={downloadCSV} disabled={!items.length}>Télécharger CSV</button>
+        <button onClick={() => window.print()} disabled={!items.length}>Imprimer</button>
         <span className="status">{status}</span>
-        <Link href="/arrivees" className="navlink">Arrivées →</Link>
-        <Link href="/taxes" className="navlink">Taxes séjour →</Link>
-        <Link href="/couts" className="navlink">Coûts →</Link>
-        <Link href="/linge" className="navlink">Linge →</Link>
-        <Link href="/" className="navlink">Fiches de police →</Link>
+        <Link href="/menage" className="navlink">Ménages →</Link>
+        <Link href="/" className="navlink">Fiches →</Link>
       </div>
 
       <div className="menage-page">
@@ -136,15 +125,15 @@ function Menage() {
           <div className="recap-head">
             <div>
               <div className="recap-title">
-                {from === to
-                  ? `Ménages du ${fmtFr(from)}`
-                  : `Ménages du ${fmtFr(from)} au ${fmtFr(to)}`}
+                Taxes de séjour impayées · {fmtFr(from)} → {fmtFr(to)}
               </div>
-              <div className="recap-sub">Un check-out = un ménage · réservations annulées exclues</div>
+              <div className="recap-sub">
+                Booking.com uniquement · partiellement payé · check-in passé · réservations confirmées
+              </div>
             </div>
             <div className="recap-total">
-              <div className="n">{shownTotal}</div>
-              <div className="l">ménage{shownTotal > 1 ? "s" : ""}</div>
+              <div className="n">{euros(shownTotal)}</div>
+              <div className="l">taxe due</div>
             </div>
           </div>
 
@@ -152,17 +141,18 @@ function Menage() {
             <div className="resid" key={g.residence}>
               <div className="resid-head">
                 <span className="resid-name">{g.residence}</span>
-                <span className="resid-count">{g.count} ménage{g.count > 1 ? "s" : ""}</span>
+                <span className="resid-count">{g.items.length} résa · {euros(g.sum)}</span>
               </div>
               <table className="tbl">
                 <thead>
                   <tr>
                     <th>N°</th>
                     <th>Appartement</th>
-                    <th>Départ</th>
+                    <th>Arrivée</th>
                     <th>Client</th>
-                    <th className="note-col">Note</th>
-                    <th className="c">Fait</th>
+                    <th>Statut</th>
+                    <th className="c">Taxe séjour</th>
+                    <th className="c">Réglé</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -170,9 +160,10 @@ function Menage() {
                     <tr key={i}>
                       <td className="apt">{it.unitNumber || "—"}</td>
                       <td>{it.appartement}</td>
-                      <td>{fmtFr(it.depart)}</td>
+                      <td>{fmtFr(it.arrivee)}</td>
                       <td>{it.client}</td>
-                      <td className="note-col"></td>
+                      <td>{it.paymentStatus}</td>
+                      <td className="c">{euros(it.taxeSejour)}</td>
                       <td className="c"><span className="box" /></td>
                     </tr>
                   ))}
@@ -181,8 +172,14 @@ function Menage() {
             </div>
           ))}
 
-          {!loading && shownTotal === 0 && (
-            <div className="empty-state">Aucun ménage sur cette période.</div>
+          {!loading && items.length === 0 && (
+            <div className="empty-state">Aucune taxe de séjour impayée sur cette période.</div>
+          )}
+
+          {groups.length > 0 && (
+            <div className="grand-total">
+              <span className="gt">Total taxe due : {euros(shownTotal)}</span>
+            </div>
           )}
         </div>
       </div>
@@ -190,10 +187,10 @@ function Menage() {
   );
 }
 
-export default function MenagePage() {
+export default function TaxesPage() {
   return (
     <Gate>
-      <Menage />
+      <Taxes />
     </Gate>
   );
 }

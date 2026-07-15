@@ -239,3 +239,61 @@ body {
 @media print {
   .tbl .note-col { min-width: 260px; border-left: 1px solid #ccc; }
 }
+
+/* ============================================================
+   RESPONSIVE MOBILE — n'affecte que l'écran, jamais l'impression
+   ============================================================ */
+@media screen and (max-width: 768px) {
+  /* Barre d'outils : compacte, empile proprement, ne déborde plus */
+  .toolbar {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  .toolbar h1 { font-size: 14px; margin-right: 8px; }
+  .toolbar button, .toolbar select, .toolbar input {
+    font-size: 12px; padding: 7px 10px;
+  }
+  .field input, .toolbar select { min-width: 0; width: 100%; }
+  .field { flex: 1 1 100px; }
+  .daynav .daylabel { min-width: 0; font-size: 12px; }
+  .navlink { font-size: 11px; padding: 6px 9px; margin-left: 0; }
+  .status { width: 100%; order: 99; margin-left: 0; }
+  .quick { flex-wrap: wrap; }
+
+  /* Fiche de police A4 : plein écran au lieu de 210mm fixe */
+  .sheets { padding: 10px; }
+  .sheet {
+    width: 100%; min-height: auto; padding: 5vw;
+    box-sizing: border-box;
+  }
+  .sheet-head { flex-direction: column; gap: 8px; }
+  .sheet-head .doc-title { text-align: left; }
+  .grid { grid-template-columns: 1fr; }
+  .cell { border-right: none !important; }
+  .footer-block { flex-direction: column; gap: 16px; }
+
+  /* Ménages / Coûts / Linge : tableaux larges -> scroll horizontal plutôt que débordement cassé */
+  .menage-page, .linge-page { padding: 10px; }
+  .recap, .linge-sheet { padding: 14px; max-width: 100%; }
+  .recap-head { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .recap-total { align-self: flex-end; }
+
+  .tbl, .linge-tbl { display: block; overflow-x: auto; white-space: nowrap; }
+  .tbl thead, .linge-tbl thead,
+  .tbl tbody, .linge-tbl tbody,
+  .tbl tr, .linge-tbl tr { display: table; width: 100%; table-layout: auto; }
+  .tbl .note-col { min-width: 140px; }
+
+  .resid-head { flex-direction: column; align-items: flex-start; gap: 4px; }
+
+  /* Verrou de code d'accès : tient dans l'écran sans déborder */
+  .gate-box { width: 88vw; max-width: 320px; padding: 24px 20px; }
+
+  /* Coûts ménage : total en bas de page reste lisible */
+  .grand-total { flex-direction: column; align-items: flex-end; gap: 6px; }
+}
+
+@media screen and (max-width: 480px) {
+  .toolbar h1 { display: none; } /* le titre cède la place aux contrôles sur très petit écran */
+  .recap-title { font-size: 16px; }
+}
