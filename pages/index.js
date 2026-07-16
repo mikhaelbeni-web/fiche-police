@@ -1,8 +1,6 @@
 // pages/index.js
 import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
-import Link from "next/link";
-import Gate from "../components/Gate";
 
 const HOTEL = {
   name: "Hôtel Le Belleville",
@@ -109,11 +107,7 @@ const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
 
 export default function App() {
-  return (
-    <Gate>
-      <Home />
-    </Gate>
-  );
+  return <Home />;
 }
 
 function Home() {
@@ -232,7 +226,6 @@ function Home() {
         )}
 
         <span className="status">{status}</span>
-        <Link href="/menage" className="navlink">Ménages →</Link>
         {saved && !showSetup && (
           <button className="ghost forget" onClick={forgetCreds} title="Oublier les identifiants">Déconnecter</button>
         )}

@@ -4,8 +4,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
-import Link from "next/link";
-import Gate from "../components/Gate";
 
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
@@ -144,7 +142,6 @@ function Couts() {
         <button onClick={() => load(from, to, creds.account, creds.key)} disabled={loading} title="Actualiser">↻</button>
         <button className="primary" onClick={downloadCSV} disabled={!filtered.length}>Télécharger CSV</button>
         <span className="status">{status}</span>
-        <Link href="/menage" className="navlink">Ménages →</Link>
       </div>
 
       <div className="menage-page">
@@ -210,9 +207,5 @@ function Couts() {
 }
 
 export default function CoutsPage() {
-  return (
-    <Gate>
-      <Couts />
-    </Gate>
-  );
+  return <Couts />;
 }

@@ -1,8 +1,6 @@
 // pages/taxes.js
 import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
-import Link from "next/link";
-import Gate from "../components/Gate";
 
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
@@ -116,8 +114,6 @@ function Taxes() {
         <button className="primary" onClick={downloadCSV} disabled={!items.length}>Télécharger CSV</button>
         <button onClick={() => window.print()} disabled={!items.length}>Imprimer</button>
         <span className="status">{status}</span>
-        <Link href="/menage" className="navlink">Ménages →</Link>
-        <Link href="/" className="navlink">Fiches →</Link>
       </div>
 
       <div className="menage-page">
@@ -188,9 +184,5 @@ function Taxes() {
 }
 
 export default function TaxesPage() {
-  return (
-    <Gate>
-      <Taxes />
-    </Gate>
-  );
+  return <Taxes />;
 }

@@ -1,8 +1,6 @@
 // pages/arrivees.js
 import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
-import Link from "next/link";
-import Gate from "../components/Gate";
 
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
@@ -123,10 +121,6 @@ function Arrivees() {
         <button onClick={() => window.print()} disabled={!shownTotal}>Imprimer</button>
 
         <span className="status">{status}</span>
-        <Link href="/menage" className="navlink">Ménages →</Link>
-        <Link href="/couts" className="navlink">Coûts →</Link>
-        <Link href="/linge" className="navlink">Linge →</Link>
-        <Link href="/" className="navlink">Fiches de police →</Link>
       </div>
 
       <div className="menage-page">
@@ -189,9 +183,5 @@ function Arrivees() {
 }
 
 export default function ArriveesPage() {
-  return (
-    <Gate>
-      <Arrivees />
-    </Gate>
-  );
+  return <Arrivees />;
 }

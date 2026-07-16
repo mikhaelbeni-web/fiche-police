@@ -4,8 +4,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
-import Link from "next/link";
-import Gate from "../components/Gate";
 import { LINEN_ARTICLES, emptyQuantities, expectedReception, orderWindow, sumUsage, computeDefectSettlements, PANTIN_CODES, PANTIN_CLIENT } from "../lib/linen";
 import { isFirebaseConfigured } from "../lib/firebase";
 
@@ -91,8 +89,6 @@ function CommandeLinge() {
     return (
       <>
         <Head><title>Commande linge</title></Head>
-        <div className="toolbar"><h1>Commande linge</h1>
-          <Link href="/menage" className="navlink">Ménages →</Link></div>
         <div className="menage-page"><div className="recap">
           <div className="recap-title">Configuration Firebase requise</div>
           <p style={{ color: "#666", fontSize: 14, lineHeight: 1.6 }}>
@@ -119,8 +115,6 @@ function CommandeLinge() {
           <button onClick={() => setTab("defects")} className={tab === "defects" ? "primary" : ""}>Défectueux</button>
         </div>
         <span className="status">{status}</span>
-        <Link href="/menage" className="navlink">Ménages →</Link>
-        <Link href="/" className="navlink">Fiches →</Link>
       </div>
 
       <div className="menage-page">
@@ -912,9 +906,5 @@ function PositionTab({ fs, stock, orders, receptions, usage, defects, thresholds
 }
 
 export default function CommandeLingePage() {
-  return (
-    <Gate>
-      <CommandeLinge />
-    </Gate>
-  );
+  return <CommandeLinge />;
 }

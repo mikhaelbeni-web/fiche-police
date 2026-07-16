@@ -1,8 +1,6 @@
 // pages/menage.js
 import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
-import Link from "next/link";
-import Gate from "../components/Gate";
 
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
@@ -124,12 +122,6 @@ function Menage() {
         <button onClick={() => window.print()} disabled={!shownTotal}>Imprimer</button>
 
         <span className="status">{status}</span>
-        <Link href="/arrivees" className="navlink">Arrivées →</Link>
-        <Link href="/taxes" className="navlink">Taxes séjour →</Link>
-        <Link href="/couts" className="navlink">Coûts →</Link>
-        <Link href="/linge" className="navlink">Linge →</Link>
-        <Link href="/commande-linge" className="navlink">Commande linge →</Link>
-        <Link href="/" className="navlink">Fiches de police →</Link>
       </div>
 
       <div className="menage-page">
@@ -192,9 +184,5 @@ function Menage() {
 }
 
 export default function MenagePage() {
-  return (
-    <Gate>
-      <Menage />
-    </Gate>
-  );
+  return <Menage />;
 }

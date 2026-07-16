@@ -5,7 +5,6 @@
 // (signe qu'il s'agit d'un multi-unit non encore mappé dans lib/apartments.js).
 import { useState, useEffect } from "react";
 import Head from "next/head";
-import Gate from "../components/Gate";
 
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
@@ -106,9 +105,5 @@ function Debug() {
 }
 
 export default function DebugPage() {
-  return (
-    <Gate>
-      <Debug />
-    </Gate>
-  );
+  return <Debug />;
 }
