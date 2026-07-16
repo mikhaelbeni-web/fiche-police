@@ -6,7 +6,7 @@ import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import Gate from "../components/Gate";
-import { LINEN_ARTICLES, emptyQuantities, expectedReception, orderWindow, sumUsage, computeDefectSettlements } from "../lib/linen";
+import { LINEN_ARTICLES, emptyQuantities, expectedReception, orderWindow, sumUsage, computeDefectSettlements, PANTIN_CODES, PANTIN_CLIENT } from "../lib/linen";
 import { isFirebaseConfigured } from "../lib/firebase";
 
 function isoDay(d) { return d.toISOString().slice(0, 10); }
@@ -270,6 +270,44 @@ function OrdersTab({ fs, orders, usage, reload, setStatus }) {
     await reload();
   }
 
+  // Génère le fichier Excel "Bon de Ramassage", même structure que le modèle Pantin,
+  // rempli avec la date et les quantités de la commande sélectionnée.
+  async function exportExcel(order) {
+    const XLSX = await import("xlsx");
+    const d = fmtFr(order.date);
+
+    const rows = [
+      ["MAJ-BLANCHISSERIE DE PANTIN", "BON DE RAMASSAGE", null, PANTIN_CLIENT.residence],
+      ["ELIS PANTIN", "LINGE SERVICE", null, PANTIN_CLIENT.adresse],
+      ["31 Che. Latéral au Chemin de Fer", "du", null, PANTIN_CLIENT.ville],
+      [null, `( ${d} )`, null, null],
+      [null, null, null, null],
+      [null, null, null, null],
+      [null, null, null, null],
+      [null, null, null, null],
+      ["N° client", "Zone", "Tournée", "Fréquence de Passage"],
+      [PANTIN_CLIENT.nClient, PANTIN_CLIENT.zone, PANTIN_CLIENT.tournee, PANTIN_CLIENT.frequence],
+      [null, null, null, null],
+      [null, null, null, null],
+      ["Code article", "Libellé article", null, null],
+    ];
+    for (const a of LINEN_ARTICLES) {
+      const info = PANTIN_CODES[a.key];
+      const qty = Number(order.quantities?.[a.key]) || 0;
+      rows.push([info?.code || "", info?.libelle || a.label, null, qty]);
+    }
+    rows.push([null, null, null, null]);
+    rows.push(["Document à envoyer tous les mardis et jeudis avant midi", null, null, null]);
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws["!cols"] = [{ wch: 34 }, { wch: 34 }, { wch: 10 }, { wch: 24 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "RES LE BELLEVILLE");
+
+    const label = order.type + "_" + order.date;
+    XLSX.writeFile(wb, `Bon_de_ramassage_${label}.xls`);
+  }
+
   return (
     <>
       <div className="recap-head">
@@ -310,7 +348,7 @@ function OrdersTab({ fs, orders, usage, reload, setStatus }) {
           <tr>
             <th>Date</th><th>Type</th>
             {LINEN_ARTICLES.map(a => <th key={a.key} className="c">{a.label}</th>)}
-            <th>Réception prévue</th><th>Statut</th><th></th>
+            <th>Réception prévue</th><th>Statut</th><th>Export</th><th></th>
           </tr>
         </thead>
         <tbody>
@@ -320,11 +358,26 @@ function OrdersTab({ fs, orders, usage, reload, setStatus }) {
               <td style={{ textTransform: "capitalize" }}>{o.type}</td>
               {LINEN_ARTICLES.map(a => <td key={a.key} className="c">{o.quantities?.[a.key] || 0}</td>)}
               <td>{fmtFr(o.expectedReception)}</td>
-              <td>{o.status === "recue" ? "✓ Reçue" : "En attente"}</td>
-              <td><button onClick={() => del(o.id)} className="ghost" style={{ color: "#e74c3c" }}>✕</button></td>
+              <td>{(() => {
+                const s = o.status;
+                if (s === "recue") return <span style={{ color: "#1f7a3f" }}>✓ Reçue</span>;
+                if (s === "commandee" || !s) return <span style={{ color: "#e67e22" }}>En attente livraison</span>;
+                return <span style={{ color: "#999" }}>{s}</span>;
+              })()}</td>
+              <td><button onClick={() => exportExcel(o)} className="ghost" style={{ color: "#1f7a3f" }}>📥 Excel</button></td>
+              <td style={{ whiteSpace: "nowrap" }}>
+                {o.status === "recue" && (
+                  <button onClick={async () => {
+                    if (!confirm("Remettre cette commande en 'En attente livraison' ?")) return;
+                    await fs.updateDoc(fs.doc(fs.db, "linen_orders", o.id), { status: "commandee" });
+                    await reload();
+                  }} className="ghost" style={{ color: "#e67e22", fontSize: 11 }}>↩ Annuler réception</button>
+                )}
+                <button onClick={() => del(o.id)} className="ghost" style={{ color: "#e74c3c" }}>✕</button>
+              </td>
             </tr>
           ))}
-          {orders.length === 0 && <tr><td colSpan={LINEN_ARTICLES.length + 5} className="empty-state">Aucune commande.</td></tr>}
+          {orders.length === 0 && <tr><td colSpan={LINEN_ARTICLES.length + 6} className="empty-state">Aucune commande.</td></tr>}
         </tbody>
       </table>
     </>
@@ -419,7 +472,11 @@ function ReceptionsTab({ fs, orders, receptions, defects, reload, setStatus }) {
           <label>Commande liée
             <select value={orderId} onChange={e => setOrderId(e.target.value)}>
               <option value="">— (réception libre) —</option>
-              {pending.map(o => <option key={o.id} value={o.id}>{fmtFr(o.date)} · {o.type}</option>)}
+              {pending.map(o => (
+                <option key={o.id} value={o.id}>
+                  {fmtFr(o.date)} · {o.type} (réception prévue {fmtFr(o.expectedReception)})
+                </option>
+              ))}
             </select>
           </label>
           <label>Date réception <input type="date" value={date} onChange={e => setDate(e.target.value)} /></label>
