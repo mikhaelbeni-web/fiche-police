@@ -16,7 +16,10 @@ const MAIN = [
 const MORE = [
   { href: "/couts", label: "Coûts ménage" },
   { href: "/linge", label: "Linge Belleville" },
-  { href: "/taxes", label: "Taxes de séjour" },
+  { href: "/taxes", label: "Taxes de séjour / Espèces" },
+  { href: "/consignes", label: "Consignes à bagages" },
+  { href: "/contacts", label: "Contacts" },
+  { href: "/codes", label: "Codes d'accès" },
 ];
 
 export default function Nav() {

@@ -359,3 +359,19 @@ body {
   .main-nav { padding: 0 6px; }
   .main-nav-item { font-size: 11px; padding: 10px 10px; }
 }
+
+/* --- Consignes à bagages --- */
+.locker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin: 10px 0 4px; }
+.locker-card {
+  border: 1px solid #ddd; border-radius: 8px; padding: 12px; background: #f6faf6;
+}
+.locker-card.occupied { background: #fdf3ec; border-color: #f0c9a8; }
+.locker-card.fixed { background: #f0f0f0; border-color: #ddd; }
+.locker-card-title { font-weight: 700; font-size: 13px; margin-bottom: 6px; }
+.locker-status { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; margin-bottom: 4px; }
+.locker-status.free { color: #1f7a3f; }
+.locker-status.occ { color: #d35400; }
+.locker-status.fixed { color: #888; }
+.locker-detail { font-size: 12px; color: var(--ink); }
+.locker-detail.small { font-size: 11px; color: var(--muted); }
+.locker-upcoming { margin-top: 6px; padding-top: 6px; border-top: 1px dashed #ccc; }

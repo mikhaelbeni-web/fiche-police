@@ -45,3 +45,8 @@ Firebase Auth. Pour l'instant, l'accès reste limité par le fait que l'URL et l
 - `linen_used` : linge utilisé
 - `linen_defects` : linge défectueux (propre arrivé sale)
 - `linen_thresholds/belleville` : seuils d'alerte par article
+- `cash_entries` : paiements clients en espèces + dépenses hôtel
+- `cash_recoveries` : historique des récupérations d'espèces
+- `locker_bookings` : réservations des consignes à bagages (Villiers, Lantiez)
+- `contacts` : répertoire des contacts fournisseurs/sociétés
+- `access_codes` : codes des boîtes à clés statiques par résidence
