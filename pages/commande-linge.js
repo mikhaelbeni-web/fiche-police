@@ -270,42 +270,27 @@ function OrdersTab({ fs, orders, usage, reload, setStatus }) {
     await reload();
   }
 
-  // Génère le fichier Excel "Bon de Ramassage", même structure que le modèle Pantin,
-  // rempli avec la date et les quantités de la commande sélectionnée.
+  // Génère le bon de ramassage via la route serveur (copie fidèle du template Pantin).
   async function exportExcel(order) {
-    const XLSX = await import("xlsx");
-    const d = fmtFr(order.date);
-
-    const rows = [
-      ["MAJ-BLANCHISSERIE DE PANTIN", "BON DE RAMASSAGE", null, PANTIN_CLIENT.residence],
-      ["ELIS PANTIN", "LINGE SERVICE", null, PANTIN_CLIENT.adresse],
-      ["31 Che. Latéral au Chemin de Fer", "du", null, PANTIN_CLIENT.ville],
-      [null, `( ${d} )`, null, null],
-      [null, null, null, null],
-      [null, null, null, null],
-      [null, null, null, null],
-      [null, null, null, null],
-      ["N° client", "Zone", "Tournée", "Fréquence de Passage"],
-      [PANTIN_CLIENT.nClient, PANTIN_CLIENT.zone, PANTIN_CLIENT.tournee, PANTIN_CLIENT.frequence],
-      [null, null, null, null],
-      [null, null, null, null],
-      ["Code article", "Libellé article", null, null],
-    ];
-    for (const a of LINEN_ARTICLES) {
-      const info = PANTIN_CODES[a.key];
-      const qty = Number(order.quantities?.[a.key]) || 0;
-      rows.push([info?.code || "", info?.libelle || a.label, null, qty]);
-    }
-    rows.push([null, null, null, null]);
-    rows.push(["Document à envoyer tous les mardis et jeudis avant midi", null, null, null]);
-
-    const ws = XLSX.utils.aoa_to_sheet(rows);
-    ws["!cols"] = [{ wch: 34 }, { wch: 34 }, { wch: 10 }, { wch: 24 }];
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "RES LE BELLEVILLE");
-
-    const label = order.type + "_" + order.date;
-    XLSX.writeFile(wb, `Bon_de_ramassage_${label}.xls`);
+    try {
+      const res = await fetch("/api/bon-ramassage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date: order.date,
+          expectedReception: order.expectedReception,
+          quantities: order.quantities,
+        }),
+      });
+      if (!res.ok) { const e = await res.json(); alert("Erreur : " + e.error); return; }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Bon_de_ramassage_${order.type}_${order.date}.xls`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) { alert("Erreur : " + err.message); }
   }
 
   return (
@@ -366,14 +351,17 @@ function OrdersTab({ fs, orders, usage, reload, setStatus }) {
               })()}</td>
               <td><button onClick={() => exportExcel(o)} className="ghost" style={{ color: "#1f7a3f" }}>📥 Excel</button></td>
               <td style={{ whiteSpace: "nowrap" }}>
-                {o.status === "recue" && (
-                  <button onClick={async () => {
-                    if (!confirm("Remettre cette commande en 'En attente livraison' ?")) return;
-                    await fs.updateDoc(fs.doc(fs.db, "linen_orders", o.id), { status: "commandee" });
-                    await reload();
-                  }} className="ghost" style={{ color: "#e67e22", fontSize: 11 }}>↩ Annuler réception</button>
-                )}
-                <button onClick={() => del(o.id)} className="ghost" style={{ color: "#e74c3c" }}>✕</button>
+                <div style={{ display: "flex", gap: 4, alignItems: "center", flexWrap: "nowrap" }}>
+                  <button onClick={() => exportExcel(o)} className="ghost" style={{ color: "#1f7a3f" }}>📥 Excel</button>
+                  {o.status === "recue" && (
+                    <button onClick={async () => {
+                      if (!confirm("Remettre cette commande en 'En attente livraison' ?")) return;
+                      await fs.updateDoc(fs.doc(fs.db, "linen_orders", o.id), { status: "commandee" });
+                      await reload();
+                    }} className="ghost" style={{ color: "#e67e22", fontSize: 11 }}>↩</button>
+                  )}
+                  <button onClick={() => del(o.id)} className="ghost" style={{ color: "#e74c3c" }}>✕</button>
+                </div>
               </td>
             </tr>
           ))}
