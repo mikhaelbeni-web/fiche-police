@@ -1,16 +1,12 @@
 // pages/api/bon-ramassage.js
-// Génère le bon de ramassage en copiant FIDÈLEMENT le fichier modèle Pantin.
-// Seules les cellules variables sont modifiées :
-//   - R4C2 : date d'envoi (la commande)
-//   - R4C1 : date du modèle précédent -> remplacé par date de réception prévue
-//   - R14-20 col D (index 3) : quantités par article (dans l'ordre du modèle)
-// Tout le reste (formatage, structure, bordures, logos) est préservé à l'identique.
+// Génère le bon de ramassage en copiant FIDÈLEMENT le template .xlsx (converti depuis le .xls original).
+// Utilise exceljs (Node.js pur, pas de Python) — fonctionne sur Vercel.
+// Seules les cellules variables sont modifiées, tout le formatage est préservé.
 
 import path from "path";
-import fs from "fs";
+import ExcelJS from "exceljs";
 
-// Ordre exact des lignes d'articles dans le fichier modèle (R14→R20, index 13→19)
-// Code Pantin → clé article interne
+// Ordre exact des articles dans le fichier modèle (lignes 14→20, colonne D)
 const ARTICLE_ORDER = [
   "grande_serviette", // R14 : 3244 Drap bain COCOON blc
   "housse",           // R15 : 41115 Housse Stella S
@@ -24,7 +20,7 @@ const ARTICLE_ORDER = [
 function fmtDate(iso) {
   if (!iso) return "";
   const [y, m, d] = iso.split("-");
-  return `${d}/${m}/${y}`;
+  return `( ${d}/${m}/${y})`;
 }
 
 export default async function handler(req, res) {
@@ -39,47 +35,29 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Charger xlrd et xlutils côté serveur
-    const { execSync } = await import("child_process");
-    const templatePath = path.join(process.cwd(), "public", "bon_de_ramassage_template.xls");
-    const outPath = path.join("/tmp", `bon_ramassage_${Date.now()}.xls`);
+    const templatePath = path.join(process.cwd(), "public", "Bon_de_ramassage_14_juillet.xlsx");
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.readFile(templatePath);
 
-    // On passe les données via un script Python inline
-    const dateEnvoi = fmtDate(date);
-    const dateRecep = fmtDate(expectedReception);
-    const qtys = ARTICLE_ORDER.map(key => Number(quantities[key]) || 0).join(",");
+    const ws = wb.getWorksheet("RES LE BELLEVILLE") || wb.getWorksheet(1);
 
-    const script = `
-import sys
-from xlrd import open_workbook
-from xlutils.copy import copy
+    // R4C1 : date de réception prévue (remplace la date du modèle précédent)
+    ws.getCell("A4").value = fmtDate(expectedReception);
+    // R4C2 : date d'envoi (date de la commande)
+    ws.getCell("B4").value = fmtDate(date);
 
-wb = open_workbook(${JSON.stringify(templatePath)}, formatting_info=True)
-wbc = copy(wb)
-ws = wbc.get_sheet(0)
+    // R14→R20, colonne D : quantités par article, dans l'ordre exact du modèle
+    ARTICLE_ORDER.forEach((key, i) => {
+      const row = 14 + i;
+      ws.getCell(`D${row}`).value = Number(quantities[key]) || 0;
+    });
 
-# Date du modèle (R4C1) → date de réception prévue
-ws.write(3, 0, "( ${dateRecep})")
-# Date d'envoi (R4C2) → date de la commande
-ws.write(3, 1, "( ${dateEnvoi})")
+    // Générer le buffer et l'envoyer
+    const buffer = await wb.xlsx.writeBuffer();
 
-# Quantités articles, dans l'ordre du modèle (R14→R20, colonne D = index 3)
-qtys = [${qtys}]
-for i, q in enumerate(qtys):
-    ws.write(13 + i, 3, q)
-
-wbc.save(${JSON.stringify(outPath)})
-print("OK")
-`;
-
-    execSync(`python3 -c '${script.replace(/'/g, "'\\''")}'`);
-
-    const fileBuffer = fs.readFileSync(outPath);
-    fs.unlinkSync(outPath);
-
-    res.setHeader("Content-Type", "application/vnd.ms-excel");
-    res.setHeader("Content-Disposition", `attachment; filename="Bon_de_ramassage_${date}.xls"`);
-    res.send(fileBuffer);
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename="Bon_de_ramassage_${date}.xlsx"`);
+    res.send(Buffer.from(buffer));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Erreur génération Excel : " + err.message });

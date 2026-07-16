@@ -287,7 +287,7 @@ function OrdersTab({ fs, orders, usage, reload, setStatus }) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Bon_de_ramassage_${order.type}_${order.date}.xls`;
+      a.download = `Bon_de_ramassage_${order.type}_${order.date}.xlsx`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) { alert("Erreur : " + err.message); }
