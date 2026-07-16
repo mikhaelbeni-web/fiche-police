@@ -333,7 +333,7 @@ function OrdersTab({ fs, orders, usage, reload, setStatus }) {
           <tr>
             <th>Date</th><th>Type</th>
             {LINEN_ARTICLES.map(a => <th key={a.key} className="c">{a.label}</th>)}
-            <th>Réception prévue</th><th>Statut</th><th>Export</th><th></th>
+            <th>Réception prévue</th><th>Statut</th><th></th>
           </tr>
         </thead>
         <tbody>
@@ -346,26 +346,25 @@ function OrdersTab({ fs, orders, usage, reload, setStatus }) {
               <td>{(() => {
                 const s = o.status;
                 if (s === "recue") return <span style={{ color: "#1f7a3f" }}>✓ Reçue</span>;
-                if (s === "commandee" || !s) return <span style={{ color: "#e67e22" }}>En attente livraison</span>;
+                if (s === "commandee" || !s) return <span style={{ color: "#e67e22" }}>En attente</span>;
                 return <span style={{ color: "#999" }}>{s}</span>;
               })()}</td>
-              <td><button onClick={() => exportExcel(o)} className="ghost" style={{ color: "#1f7a3f" }}>📥 Excel</button></td>
-              <td style={{ whiteSpace: "nowrap" }}>
-                <div style={{ display: "flex", gap: 4, alignItems: "center", flexWrap: "nowrap" }}>
-                  <button onClick={() => exportExcel(o)} className="ghost" style={{ color: "#1f7a3f" }}>📥 Excel</button>
+              <td>
+                <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                  <button onClick={() => exportExcel(o)} className="ghost" style={{ color: "#1f7a3f", padding: "4px 6px", fontSize: 12 }}>📥</button>
                   {o.status === "recue" && (
                     <button onClick={async () => {
                       if (!confirm("Remettre cette commande en 'En attente livraison' ?")) return;
                       await fs.updateDoc(fs.doc(fs.db, "linen_orders", o.id), { status: "commandee" });
                       await reload();
-                    }} className="ghost" style={{ color: "#e67e22", fontSize: 11 }}>↩</button>
+                    }} className="ghost" style={{ color: "#e67e22", padding: "4px 6px", fontSize: 12 }}>↩</button>
                   )}
-                  <button onClick={() => del(o.id)} className="ghost" style={{ color: "#e74c3c" }}>✕</button>
+                  <button onClick={() => del(o.id)} className="ghost" style={{ color: "#e74c3c", padding: "4px 6px", fontSize: 12 }}>✕</button>
                 </div>
               </td>
             </tr>
           ))}
-          {orders.length === 0 && <tr><td colSpan={LINEN_ARTICLES.length + 6} className="empty-state">Aucune commande.</td></tr>}
+          {orders.length === 0 && <tr><td colSpan={LINEN_ARTICLES.length + 5} className="empty-state">Aucune commande.</td></tr>}
         </tbody>
       </table>
     </>
