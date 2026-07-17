@@ -220,40 +220,6 @@ function CashManagement() {
     setStatus("");
   }
 
-  // Bouton TEMPORAIRE : supprime uniquement les entrées marquées imported:true
-  // (l'historique importé depuis l'Excel). N'affecte jamais les entrées saisies
-  // normalement à la réception. À retirer une fois l'historique validé/nettoyé.
-  // Supprime toutes les récupérations d'espèces. Remet les entrées liées en
-  // "non récupérées" (recoveryId: null) pour qu'elles réapparaissent dans la vue
-  // courante — sinon elles resteraient invisibles avec un recoveryId orphelin.
-  async function deleteAllRecoveries() {
-    if (recoveries.length === 0) { setStatus("Aucune récupération à supprimer."); return; }
-    const affectedEntries = entries.filter(e => e.recoveryId);
-    if (!confirm(`Supprimer les ${recoveries.length} récupération(s) ? Les ${affectedEntries.length} entrée(s) liée(s) redeviendront "en cours" (non récupérées).`)) return;
-    try {
-      setStatus("Suppression en cours…");
-      // 1) Libère les entrées liées à une récupération
-      for (let i = 0; i < affectedEntries.length; i += 450) {
-        const batch = fs.writeBatch(fs.db);
-        const chunk = affectedEntries.slice(i, i + 450);
-        for (const item of chunk) {
-          batch.update(fs.doc(fs.db, "cash_entries", item.id), { recoveryId: null });
-        }
-        await batch.commit();
-      }
-      // 2) Supprime les documents de récupération eux-mêmes
-      for (let i = 0; i < recoveries.length; i += 450) {
-        const batch = fs.writeBatch(fs.db);
-        const chunk = recoveries.slice(i, i + 450);
-        for (const item of chunk) {
-          batch.delete(fs.doc(fs.db, "cash_recoveries", item.id));
-        }
-        await batch.commit();
-      }
-      await loadAll(fs);
-      setStatus(`${recoveries.length} récupération(s) supprimée(s), entrées restaurées.`);
-    } catch (err) { setStatus("Erreur suppression : " + err.message); }
-  }
 
   if (!ready) return <div className="menage-page"><div className="recap"><div className="empty-state">Chargement…</div></div></div>;
   if (!configured) {
@@ -277,7 +243,6 @@ function CashManagement() {
       <div className="toolbar">
         <h1>Gestion des espèces</h1>
         <span className="status">{status}</span>
-        <button onClick={deleteAllRecoveries} style={{ color: "#e74c3c" }}>Supprimer les récupérations</button>
         <button onClick={() => setShowHistory(!showHistory)}>{showHistory ? "← Retour" : "Historique →"}</button>
       </div>
 
