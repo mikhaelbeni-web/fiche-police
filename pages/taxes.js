@@ -223,22 +223,35 @@ function CashManagement() {
   // Bouton TEMPORAIRE : supprime uniquement les entrées marquées imported:true
   // (l'historique importé depuis l'Excel). N'affecte jamais les entrées saisies
   // normalement à la réception. À retirer une fois l'historique validé/nettoyé.
-  async function deleteHistorique() {
-    const toDelete = entries.filter(e => e.imported);
-    if (toDelete.length === 0) { setStatus("Aucune entrée d'historique importé à supprimer."); return; }
-    if (!confirm(`Supprimer les ${toDelete.length} entrée(s) d'historique importé ? Cette action ne touche pas aux entrées saisies normalement.`)) return;
+  // Supprime toutes les récupérations d'espèces. Remet les entrées liées en
+  // "non récupérées" (recoveryId: null) pour qu'elles réapparaissent dans la vue
+  // courante — sinon elles resteraient invisibles avec un recoveryId orphelin.
+  async function deleteAllRecoveries() {
+    if (recoveries.length === 0) { setStatus("Aucune récupération à supprimer."); return; }
+    const affectedEntries = entries.filter(e => e.recoveryId);
+    if (!confirm(`Supprimer les ${recoveries.length} récupération(s) ? Les ${affectedEntries.length} entrée(s) liée(s) redeviendront "en cours" (non récupérées).`)) return;
     try {
       setStatus("Suppression en cours…");
-      for (let i = 0; i < toDelete.length; i += 450) {
+      // 1) Libère les entrées liées à une récupération
+      for (let i = 0; i < affectedEntries.length; i += 450) {
         const batch = fs.writeBatch(fs.db);
-        const chunk = toDelete.slice(i, i + 450);
+        const chunk = affectedEntries.slice(i, i + 450);
         for (const item of chunk) {
-          batch.delete(fs.doc(fs.db, "cash_entries", item.id));
+          batch.update(fs.doc(fs.db, "cash_entries", item.id), { recoveryId: null });
+        }
+        await batch.commit();
+      }
+      // 2) Supprime les documents de récupération eux-mêmes
+      for (let i = 0; i < recoveries.length; i += 450) {
+        const batch = fs.writeBatch(fs.db);
+        const chunk = recoveries.slice(i, i + 450);
+        for (const item of chunk) {
+          batch.delete(fs.doc(fs.db, "cash_recoveries", item.id));
         }
         await batch.commit();
       }
       await loadAll(fs);
-      setStatus(`${toDelete.length} entrée(s) d'historique supprimée(s).`);
+      setStatus(`${recoveries.length} récupération(s) supprimée(s), entrées restaurées.`);
     } catch (err) { setStatus("Erreur suppression : " + err.message); }
   }
 
@@ -264,7 +277,7 @@ function CashManagement() {
       <div className="toolbar">
         <h1>Gestion des espèces</h1>
         <span className="status">{status}</span>
-        <button onClick={deleteHistorique} style={{ color: "#e74c3c" }}>Supprimer l&apos;historique importé</button>
+        <button onClick={deleteAllRecoveries} style={{ color: "#e74c3c" }}>Supprimer les récupérations</button>
         <button onClick={() => setShowHistory(!showHistory)}>{showHistory ? "← Retour" : "Historique →"}</button>
       </div>
 
