@@ -21,8 +21,8 @@ function Consignes() {
   const [status, setStatus] = useState("");
   const [formResidence, setFormResidence] = useState("Lantiez");
   const [formLocker, setFormLocker] = useState("1");
-  const [startDate, setStartDate] = useState(today());
-  const [endDate, setEndDate] = useState(today());
+  const [date, setDate] = useState(today());
+  const [bookingType, setBookingType] = useState("checkin");
   const [appartement, setAppartement] = useState("");
   const [client, setClient] = useState("");
   const [code, setCode] = useState("");
@@ -49,15 +49,14 @@ function Consignes() {
 
   async function addBooking() {
     if (!appartement && !client) { setStatus("Renseigne au moins l'appartement ou le nom du client."); return; }
-    if (endDate < startDate) { setStatus("La date de fin doit être après la date de début."); return; }
 
-    // Vérifie les chevauchements sur ce casier avant d'enregistrer
+    // Vérifie les chevauchements sur ce casier avant d'enregistrer (date unique : startDate=endDate=date)
     const conflict = bookings.find(b =>
       b.residence === formResidence && b.lockerId === formLocker &&
-      overlaps(startDate, endDate, b.startDate, b.endDate)
+      overlaps(date, date, b.startDate, b.endDate)
     );
     if (conflict) {
-      setStatus(`Conflit : ce casier est déjà réservé du ${fmtFr(conflict.startDate)} au ${fmtFr(conflict.endDate)} (${conflict.client || conflict.appartement || "—"}).`);
+      setStatus(`Conflit : ce casier est déjà réservé le ${fmtFr(conflict.startDate)} (${conflict.client || conflict.appartement || "—"}).`);
       return;
     }
 
@@ -65,7 +64,8 @@ function Consignes() {
       setStatus("Enregistrement…");
       await fs.addDoc(fs.collection(fs.db, "locker_bookings"), {
         residence: formResidence, lockerId: formLocker,
-        startDate, endDate, appartement: appartement || "", client: client || "", code: code || "",
+        startDate: date, endDate: date, bookingType,
+        appartement: appartement || "", client: client || "", code: code || "",
         createdAt: new Date().toISOString(),
       });
       setAppartement(""); setClient(""); setCode("");
@@ -129,7 +129,7 @@ function Consignes() {
                         <>
                           <div className="locker-status occ">Occupée</div>
                           <div className="locker-detail">{occ.appartement || "—"} {occ.client ? `· ${occ.client}` : ""}</div>
-                          <div className="locker-detail small">jusqu&apos;au {fmtFr(occ.endDate)}</div>
+                          <div className="locker-detail small">{occ.bookingType === "checkout" ? "Check-out" : "Check-in"} · {fmtFr(occ.startDate)}</div>
                         </>
                       ) : (
                         <div className="locker-status free">Libre</div>
@@ -138,7 +138,7 @@ function Consignes() {
                         <div className="locker-upcoming">
                           {upcoming.slice(0, 2).map(u => (
                             <div key={u.id} className="locker-detail small">
-                              À venir : {fmtFr(u.startDate)}{u.startDate !== u.endDate ? `→${fmtFr(u.endDate)}` : ""} · {u.appartement || u.client || "—"}
+                              À venir : {fmtFr(u.startDate)} ({u.bookingType === "checkout" ? "check-out" : "check-in"}) · {u.appartement || u.client || "—"}
                             </div>
                           ))}
                         </div>
@@ -170,8 +170,13 @@ function Consignes() {
                   {LOCKERS_CONFIG[formResidence].bookable.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
                 </select>
               </label>
-              <label>Du <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} /></label>
-              <label>Au <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} /></label>
+              <label>Date <input type="date" value={date} onChange={e => setDate(e.target.value)} /></label>
+              <label>Type
+                <select value={bookingType} onChange={e => setBookingType(e.target.value)}>
+                  <option value="checkin">Check-in client</option>
+                  <option value="checkout">Check-out client</option>
+                </select>
+              </label>
             </div>
             <div className="linen-form-row">
               <label>Appartement <input type="text" value={appartement} onChange={e => setAppartement(e.target.value)} style={{ width: 130 }} /></label>
@@ -184,7 +189,7 @@ function Consignes() {
           <div className="recap-title" style={{ fontSize: 15, marginTop: 24 }}>Réservations à venir et en cours</div>
           <table className="tbl">
             <thead>
-              <tr><th>Résidence</th><th>Consigne</th><th>Du</th><th>Au</th><th>Appartement</th><th>Client</th><th>Code</th><th></th></tr>
+              <tr><th>Résidence</th><th>Consigne</th><th>Date</th><th>Type</th><th>Appartement</th><th>Client</th><th>Code</th><th></th></tr>
             </thead>
             <tbody>
               {activeAndFuture.sort((a, b) => a.startDate.localeCompare(b.startDate)).map(b => (
@@ -192,7 +197,7 @@ function Consignes() {
                   <td>{b.residence}</td>
                   <td>{LOCKERS_CONFIG[b.residence]?.bookable.find(l => l.id === b.lockerId)?.label || b.lockerId}</td>
                   <td>{fmtFr(b.startDate)}</td>
-                  <td>{fmtFr(b.endDate)}</td>
+                  <td>{b.bookingType === "checkout" ? "Check-out" : "Check-in"}</td>
                   <td>{b.appartement || "—"}</td>
                   <td>{b.client || "—"}</td>
                   <td>{b.code || "—"}</td>

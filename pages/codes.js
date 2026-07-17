@@ -6,21 +6,13 @@ import { useState, useEffect } from "react";
 import Head from "next/head";
 
 function emptyForm() {
-  return { residence: "", emplacement: "", code: "" };
+  return { residence: "Lantiez", residenceAutre: "", emplacement: "", code: "" };
 }
 
-// Codes connus pour Lantiez (Levloft), extraits du fichier fourni par l'exploitant.
-const LANTIEZ_KNOWN_CODES = [
-  { residence: "Lantiez", emplacement: "Portail", code: "1406" },
-  { residence: "Lantiez", emplacement: "Universel appartements A1 à A8", code: "141995" },
-  { residence: "Lantiez", emplacement: "Accès sous-sol (boîte à clé)", code: "3817" },
-  { residence: "Lantiez", emplacement: "Accès local staff sous-sol (boîte à clé)", code: "1814" },
-  { residence: "Lantiez", emplacement: "Consigne bagages — Cabine 1 (deux compartiments)", code: "1112" },
-  { residence: "Lantiez", emplacement: "Consigne bagages — Cabine 2", code: "2223" },
-  { residence: "Lantiez", emplacement: "Consigne bagages — Cabine 3", code: "3334" },
-  { residence: "Lantiez", emplacement: "Consigne bagages — Cabine 4", code: "4445" },
-  { residence: "Lantiez", emplacement: "Consigne bagages — Cabine 5 (livraisons Amazon)", code: "5551" },
-];
+// Résidences fixes proposées par défaut. "Autre" permet de saisir un nom libre
+// pour une résidence non listée, sans jamais recréer une variante mal orthographiée
+// des résidences connues (ce qui causait des doublons "Lantiez" / "LANTIEZ").
+const RESIDENCES_FIXED = ["Lantiez", "Villiers", "Belleville"];
 
 function Codes() {
   const [ready, setReady] = useState(false);
@@ -61,18 +53,24 @@ function Codes() {
   }
   function openEdit(c) {
     setEditId(c.id);
-    setForm({ residence: c.residence || "", emplacement: c.emplacement || "", code: c.code || "" });
+    const isFixed = RESIDENCES_FIXED.includes(c.residence);
+    setForm({
+      residence: isFixed ? c.residence : "Autre",
+      residenceAutre: isFixed ? "" : (c.residence || ""),
+      emplacement: c.emplacement || "", code: c.code || "",
+    });
     setShowForm(true);
   }
 
   async function save() {
-    if (!form.residence.trim() || !form.emplacement.trim() || !form.code.trim()) {
+    const finalResidence = form.residence === "Autre" ? form.residenceAutre.trim() : form.residence;
+    if (!finalResidence || !form.emplacement.trim() || !form.code.trim()) {
       setStatus("Résidence, emplacement et code sont requis.");
       return;
     }
     try {
       setStatus("Enregistrement…");
-      const payload = { residence: form.residence.trim(), emplacement: form.emplacement.trim(), code: form.code.trim() };
+      const payload = { residence: finalResidence, emplacement: form.emplacement.trim(), code: form.code.trim() };
       if (editId) await fs.updateDoc(fs.doc(fs.db, "access_codes", editId), payload);
       else await fs.addDoc(fs.collection(fs.db, "access_codes"), { ...payload, createdAt: new Date().toISOString() });
       setShowForm(false);
@@ -85,21 +83,6 @@ function Codes() {
     if (!confirm("Êtes-vous sûr de vouloir supprimer ce code ?")) return;
     await fs.deleteDoc(fs.doc(fs.db, "access_codes", id));
     await loadAll(fs);
-  }
-
-  async function importLantiez() {
-    const existing = new Set(codes.filter(c => c.residence === "Lantiez").map(c => c.emplacement));
-    const toAdd = LANTIEZ_KNOWN_CODES.filter(c => !existing.has(c.emplacement));
-    if (toAdd.length === 0) { setStatus("Les codes Lantiez connus sont déjà tous présents."); return; }
-    if (!confirm(`Importer ${toAdd.length} code(s) Lantiez connu(s) ?`)) return;
-    try {
-      setStatus("Import…");
-      for (const c of toAdd) {
-        await fs.addDoc(fs.collection(fs.db, "access_codes"), { ...c, createdAt: new Date().toISOString() });
-      }
-      await loadAll(fs);
-      setStatus(`${toAdd.length} code(s) importé(s).`);
-    } catch (err) { setStatus("Erreur : " + err.message); }
   }
 
   if (!ready) return <div className="menage-page"><div className="recap"><div className="empty-state">Chargement…</div></div></div>;
@@ -125,8 +108,12 @@ function Codes() {
 
   const byResidence = {};
   for (const c of filtered) {
-    if (!byResidence[c.residence]) byResidence[c.residence] = [];
-    byResidence[c.residence].push(c);
+    // Fusionne visuellement les doublons de casse déjà en base (ex. "LANTIEZ" vs "Lantiez")
+    // en les regroupant sous le libellé canonique si ça correspond à une résidence fixe.
+    const match = RESIDENCES_FIXED.find(r => r.toLowerCase() === (c.residence || "").trim().toLowerCase());
+    const key = match || c.residence;
+    if (!byResidence[key]) byResidence[key] = [];
+    byResidence[key].push(c);
   }
   const residences = Object.keys(byResidence).sort((a, b) => a.localeCompare(b));
 
@@ -140,7 +127,6 @@ function Codes() {
           <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="résidence, emplacement, code…" style={{ minWidth: 200 }} />
         </div>
         <button className="primary" onClick={openNew}>+ Nouveau code</button>
-        <button onClick={importLantiez}>Importer codes Lantiez connus</button>
         <span className="status">{status}</span>
       </div>
 
@@ -152,7 +138,15 @@ function Codes() {
                 {editId ? "Modifier le code" : "Nouveau code"}
               </div>
               <div className="linen-form-row">
-                <label>Résidence <input type="text" value={form.residence} onChange={e => setForm({ ...form, residence: e.target.value })} placeholder="ex. Lantiez, Villiers, Belleville" style={{ width: 180 }} /></label>
+                <label>Résidence
+                  <select value={form.residence} onChange={e => setForm({ ...form, residence: e.target.value })}>
+                    {RESIDENCES_FIXED.map(r => <option key={r} value={r}>{r}</option>)}
+                    <option value="Autre">Autre…</option>
+                  </select>
+                </label>
+                {form.residence === "Autre" && (
+                  <label>Nom de la résidence <input type="text" value={form.residenceAutre} onChange={e => setForm({ ...form, residenceAutre: e.target.value })} placeholder="ex. rue Lecourbe" style={{ width: 180 }} /></label>
+                )}
                 <label>Emplacement <input type="text" value={form.emplacement} onChange={e => setForm({ ...form, emplacement: e.target.value })} placeholder="ex. boîte à clé ménage, portail…" style={{ width: 260 }} /></label>
                 <label>Code <input type="text" value={form.code} onChange={e => setForm({ ...form, code: e.target.value })} style={{ width: 120 }} /></label>
               </div>

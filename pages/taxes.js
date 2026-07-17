@@ -220,6 +220,43 @@ function CashManagement() {
     setStatus("");
   }
 
+  async function importHistorique() {
+    const alreadyImported = entries.some(e => e.imported);
+    if (alreadyImported) {
+      if (!confirm("Un import historique semble déjà avoir été fait (des entrées 'imported' existent). Importer quand même une seconde fois ? Cela créera des doublons.")) return;
+    } else {
+      if (!confirm("Importer l'historique Excel (543 lignes) ? Les dates de séjour restent au format texte d'origine (ex. \"23 AU 25 FEVRIER\") car l'année n'est pas connue avec certitude — la date exacte ne sera pas remplie, seulement conservée dans la désignation.")) return;
+    }
+    try {
+      setStatus("Import en cours…");
+      const res = await fetch("/cash_history_import.json");
+      const rows = await res.json();
+      const toWrite = [];
+      for (const r of rows) {
+        if (r.espece > 0) {
+          const desig = [r.designation, `Séjour : ${r.periode}`].filter(Boolean).join(" · ");
+          toWrite.push({ type: "client", date: "", client: r.client, appartement: "", arrivalDate: "", designation: desig, amount: r.espece, recoveryId: null, imported: true, createdAt: new Date().toISOString() });
+        }
+        if (r.depense > 0) {
+          const desig = r.designation || `Dépense (séjour ${r.client}, ${r.periode})`;
+          toWrite.push({ type: "expense", date: "", designation: desig, amount: r.depense, recoveryId: null, imported: true, createdAt: new Date().toISOString() });
+        }
+      }
+      // Écriture par lots de 450 (limite Firestore batch = 500)
+      for (let i = 0; i < toWrite.length; i += 450) {
+        const batch = fs.writeBatch(fs.db);
+        const chunk = toWrite.slice(i, i + 450);
+        for (const item of chunk) {
+          const ref = fs.doc(fs.collection(fs.db, "cash_entries"));
+          batch.set(ref, item);
+        }
+        await batch.commit();
+      }
+      await loadAll(fs);
+      setStatus(`${toWrite.length} entrée(s) importée(s) depuis l'historique Excel.`);
+    } catch (err) { setStatus("Erreur import : " + err.message); }
+  }
+
   if (!ready) return <div className="menage-page"><div className="recap"><div className="empty-state">Chargement…</div></div></div>;
   if (!configured) {
     return (
@@ -242,6 +279,7 @@ function CashManagement() {
       <div className="toolbar">
         <h1>Gestion des espèces</h1>
         <span className="status">{status}</span>
+        <button onClick={importHistorique}>Importer historique Excel</button>
         <button onClick={() => setShowHistory(!showHistory)}>{showHistory ? "← Retour" : "Historique →"}</button>
       </div>
 

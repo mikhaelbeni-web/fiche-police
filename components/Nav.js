@@ -11,11 +11,11 @@ const MAIN = [
   { href: "/arrivees", label: "Arrivées" },
   { href: "/menage", label: "Ménages" },
   { href: "/commande-linge", label: "Commande linge" },
+  { href: "/linge", label: "Linge Belleville" },
 ];
 
 const MORE = [
   { href: "/couts", label: "Coûts ménage" },
-  { href: "/linge", label: "Linge Belleville" },
   { href: "/taxes", label: "Taxes de séjour / Espèces" },
   { href: "/consignes", label: "Consignes à bagages" },
   { href: "/contacts", label: "Contacts" },
