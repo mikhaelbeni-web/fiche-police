@@ -21,11 +21,25 @@ function Menage() {
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const [creds, setCreds] = useState({ account: "", key: "" });
+  const [extraMenages, setExtraMenages] = useState([]);
 
   useEffect(() => {
     const a = window.localStorage.getItem(ACCOUNT_KEY) || "";
     const k = window.localStorage.getItem(KEY_KEY) || "";
     setCreds({ account: a, key: k });
+  }, []);
+
+  // Ménages supplémentaires ajoutés depuis /linge (Firebase) — doivent apparaître
+  // dans la liste opérationnelle du jour, pas seulement dans les coûts.
+  useEffect(() => {
+    (async () => {
+      const { isFirebaseConfigured } = await import("../lib/firebase");
+      if (!isFirebaseConfigured()) return;
+      const { db } = await import("../lib/firebase");
+      const { collection, getDocs, query, orderBy } = await import("firebase/firestore");
+      const snap = await getDocs(query(collection(db, "extra_menages"), orderBy("date", "desc")));
+      setExtraMenages(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    })();
   }, []);
 
   const load = useCallback(async (f, t, acc, key) => {
@@ -65,13 +79,35 @@ function Menage() {
   const groups = (data?.groups || []).filter(
     g => residence === "__all__" || g.residence === residence
   );
-  const shownTotal = groups.reduce((s, g) => s + g.count, 0);
+
+  // Ménages supplémentaires dans la plage de dates et la résidence sélectionnées,
+  // marqués distinctement (badge + motif) mais comptés avec les autres.
+  const extraFiltered = extraMenages.filter(e => {
+    if (residence !== "__all__" && e.residence !== residence) return false;
+    return e.date >= from && e.date <= to;
+  });
+
+  const byResidence = {};
+  for (const g of groups) {
+    byResidence[g.residence] = { residence: g.residence, items: [...g.items], count: g.count };
+  }
+  for (const e of extraFiltered) {
+    if (!byResidence[e.residence]) byResidence[e.residence] = { residence: e.residence, items: [], count: 0 };
+    byResidence[e.residence].items.push({
+      unitNumber: e.unitNumber, appartement: e.appartement, depart: e.date,
+      client: null, extra: true, motif: e.motif,
+    });
+    byResidence[e.residence].count += 1;
+  }
+  const mergedGroups = Object.values(byResidence).sort((a, b) => a.residence.localeCompare(b.residence));
+  const shownTotal = mergedGroups.reduce((s, g) => s + g.count, 0);
 
   function downloadCSV() {
     const rows = [["Résidence", "N°", "Appartement", "Date de départ", "Client", "Note", "Réservation"]];
-    for (const g of groups) {
+    for (const g of mergedGroups) {
       for (const it of g.items) {
-        rows.push([g.residence, it.unitNumber, it.appartement, fmtFr(it.depart), it.client, "", it.reservation]);
+        const note = it.extra ? `Ménage supplémentaire : ${it.motif}` : "";
+        rows.push([g.residence, it.unitNumber, it.appartement, fmtFr(it.depart), it.client || "", note, it.reservation || ""]);
       }
     }
     const csv = rows
@@ -141,7 +177,7 @@ function Menage() {
             </div>
           </div>
 
-          {groups.map(g => (
+          {mergedGroups.map(g => (
             <div className="resid" key={g.residence}>
               <div className="resid-head">
                 <span className="resid-name">{g.residence}</span>
@@ -160,12 +196,16 @@ function Menage() {
                 </thead>
                 <tbody>
                   {g.items.map((it, i) => (
-                    <tr key={i}>
+                    <tr key={i} style={it.extra ? { background: "#fff8ec" } : undefined}>
                       <td className="apt">{it.unitNumber || "—"}</td>
                       <td>{it.appartement}</td>
                       <td>{fmtFr(it.depart)}</td>
-                      <td>{it.client}</td>
-                      <td className="note-col"></td>
+                      <td>
+                        {it.extra
+                          ? <span style={{ color: "#b8860b", fontWeight: 700, fontSize: 12 }}>SUPPLÉMENTAIRE</span>
+                          : it.client}
+                      </td>
+                      <td className="note-col">{it.extra ? <span style={{ fontStyle: "italic", color: "var(--muted)" }}>{it.motif}</span> : null}</td>
                       <td className="c"><span className="box" /></td>
                     </tr>
                   ))}

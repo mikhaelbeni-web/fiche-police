@@ -129,6 +129,18 @@ function Linge() {
     setDay(isoDay(d));
   }
 
+  // Ménages supplémentaires Belleville du jour affiché : ajoutés comme colonnes
+  // supplémentaires sur la feuille de linge, pour que le personnel sache qu'il
+  // faut aussi passer dans cet appartement (même sans check-out réel ce jour-là).
+  const extraToday = extraMenages.filter(e => e.residence === "Belleville" && e.date === day);
+  const sheetItems = [
+    ...items,
+    ...extraToday.map(e => ({
+      unitNumber: e.unitNumber, appartement: e.appartement, attendu: null,
+      extra: true, motif: e.motif,
+    })),
+  ];
+
   return (
     <>
       <Head><title>Linge à commander — {fmtFr(day)}</title></Head>
@@ -142,7 +154,7 @@ function Linge() {
         </div>
         <button onClick={() => setDay(isoDay(new Date()))}>Aujourd&apos;hui</button>
         <button onClick={() => load(day, creds.account, creds.key)} disabled={loading} title="Actualiser">↻</button>
-        <button className="primary" onClick={() => window.print()} disabled={!items.length}>Imprimer</button>
+        <button className="primary" onClick={() => window.print()} disabled={!sheetItems.length}>Imprimer</button>
         <span className="status">{status}</span>
       </div>
 
@@ -194,11 +206,11 @@ function Linge() {
           </div>
         )}
 
-        {items.length === 0 && !loading && (
+        {sheetItems.length === 0 && !loading && (
           <div className="empty-state">Aucun appartement Belleville à faire ce jour.</div>
         )}
 
-        {items.length > 0 && (
+        {sheetItems.length > 0 && (
           <div className="linge-sheet">
             <div className="linge-title">LINGE SALE — Résidence Le Belleville</div>
             <div className="linge-date">Date : <strong>{fmtFr(day)}</strong></div>
@@ -207,22 +219,22 @@ function Linge() {
               <thead>
                 <tr>
                   <th className="rowlabel">Nombre de personnes</th>
-                  {items.map((it, i) => {
+                  {sheetItems.map((it, i) => {
                     // Lits doubles : arrondir au pair supérieur pour le linge.
                     // 1 -> 2, 3 -> 4, 2 -> 2, 4 -> 4, 5 -> 6...
                     const n = it.attendu;
                     const affiche = (n != null && n > 0) ? (n % 2 === 0 ? n : n + 1) : null;
                     return (
                       <th key={i} className="pax">
-                        {affiche != null ? `${affiche}P` : "—"}
+                        {it.extra ? <span style={{ color: "#b8860b" }}>SUPPL.</span> : (affiche != null ? `${affiche}P` : "—")}
                       </th>
                     );
                   })}
                 </tr>
                 <tr>
                   <th className="rowlabel">N° Appartement</th>
-                  {items.map((it, i) => (
-                    <th key={i} className="aptnum">{it.unitNumber}</th>
+                  {sheetItems.map((it, i) => (
+                    <th key={i} className="aptnum" title={it.extra ? it.motif : undefined}>{it.unitNumber}</th>
                   ))}
                 </tr>
               </thead>
@@ -230,7 +242,7 @@ function Linge() {
                 {LINEN_ROWS.map(row => (
                   <tr key={row}>
                     <td className="rowlabel">{row}</td>
-                    {items.map((_, i) => <td key={i} className="blank" />)}
+                    {sheetItems.map((_, i) => <td key={i} className="blank" />)}
                   </tr>
                 ))}
               </tbody>
