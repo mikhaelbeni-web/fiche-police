@@ -220,100 +220,6 @@ function CashManagement() {
     setStatus("");
   }
 
-  // Import de l'historique Excel : lignes clients (paiements + dépenses hôtel séparées)
-  // et récupérations. Date volontairement vide sur les entrées (période en désignation)
-  // car le fichier source n'a que du texte libre. Toutes les entrées sont marquées
-  // imported:true pour un retrait ciblé possible via un bouton temporaire.
-  async function importHistorique() {
-    const alreadyImported = entries.some(e => e.imported) || recoveries.some(r => r.imported);
-    if (alreadyImported && !confirm("Un import a déjà été fait. Réimporter créera des doublons. Continuer quand même ?")) return;
-    if (!alreadyImported && !confirm("Importer l'historique Excel : environ 658 entrées et 23 récupérations. Les entrées auront la date vide (période dans la désignation) car le fichier source n'a pas de dates fiables. Les récupérations ont leur date extraite du libellé ou approximée. Continuer ?")) return;
-    try {
-      setStatus("Import en cours…");
-      const res = await fetch("/cash_history_import.json");
-      if (!res.ok) throw new Error("Fichier d'import introuvable.");
-      const data = await res.json();
-
-      // 1) Entrées clients + dépenses (date vide, période en désignation)
-      const entriesToWrite = data.entries.map(e => ({
-        type: e.type,
-        date: "",
-        client: e.type === "client" ? (e.client || "") : "",
-        appartement: "",
-        arrivalDate: "",
-        designation: e.designation || "",
-        amount: e.amount,
-        recoveryId: null,
-        imported: true,
-        importSource: "excel_v2",
-        createdAt: new Date().toISOString(),
-      }));
-
-      // 2) Récupérations (date extraite du libellé, sinon approximée)
-      const recoveriesToWrite = data.recoveries.map(r => ({
-        date: r.date || "",
-        amountRecovered: r.espece || 0,
-        amountLeftInBox: 0,
-        note: r.approx
-          ? `Import Excel — ${r.label} (date approximée)`
-          : `Import Excel — ${r.label}`,
-        totalAvant: (r.espece || 0) + (r.depense || 0),
-        entryIds: [],
-        imported: true,
-        importSource: "excel_v2",
-        createdAt: new Date().toISOString(),
-      }));
-
-      // Écriture par lots (limite Firestore = 500 opérations par batch)
-      const all = [...entriesToWrite.map(x => ({ col: "cash_entries", data: x })),
-                   ...recoveriesToWrite.map(x => ({ col: "cash_recoveries", data: x }))];
-      for (let i = 0; i < all.length; i += 450) {
-        const batch = fs.writeBatch(fs.db);
-        for (const item of all.slice(i, i + 450)) {
-          const ref = fs.doc(fs.collection(fs.db, item.col));
-          batch.set(ref, item.data);
-        }
-        await batch.commit();
-      }
-      await loadAll(fs);
-      setStatus(`Import terminé : ${entriesToWrite.length} entrées, ${recoveriesToWrite.length} récupérations.`);
-    } catch (err) { setStatus("Erreur import : " + err.message); }
-  }
-
-  // Bouton TEMPORAIRE : supprime toutes les données marquées importSource:"excel_v2"
-  // (les 658+23 lignes de l'import), sans toucher aux données saisies normalement.
-  async function deleteImportV2() {
-    const eImp = entries.filter(e => e.importSource === "excel_v2");
-    const rImp = recoveries.filter(r => r.importSource === "excel_v2");
-    const affected = entries.filter(e => e.recoveryId && rImp.some(r => r.id === e.recoveryId));
-    if (eImp.length === 0 && rImp.length === 0) { setStatus("Aucun import v2 à supprimer."); return; }
-    if (!confirm(`Supprimer ${eImp.length} entrée(s) et ${rImp.length} récupération(s) importées ?`)) return;
-    try {
-      setStatus("Suppression en cours…");
-      // Libère les entrées liées à une récup importée
-      for (let i = 0; i < affected.length; i += 450) {
-        const batch = fs.writeBatch(fs.db);
-        for (const item of affected.slice(i, i + 450)) {
-          batch.update(fs.doc(fs.db, "cash_entries", item.id), { recoveryId: null });
-        }
-        await batch.commit();
-      }
-      // Supprime toutes les données v2
-      const all = [...eImp.map(x => ({ col: "cash_entries", id: x.id })),
-                   ...rImp.map(x => ({ col: "cash_recoveries", id: x.id }))];
-      for (let i = 0; i < all.length; i += 450) {
-        const batch = fs.writeBatch(fs.db);
-        for (const item of all.slice(i, i + 450)) {
-          batch.delete(fs.doc(fs.db, item.col, item.id));
-        }
-        await batch.commit();
-      }
-      await loadAll(fs);
-      setStatus(`Import v2 supprimé : ${eImp.length + rImp.length} lignes retirées.`);
-    } catch (err) { setStatus("Erreur : " + err.message); }
-  }
-
-
   if (!ready) return <div className="menage-page"><div className="recap"><div className="empty-state">Chargement…</div></div></div>;
   if (!configured) {
     return (
@@ -336,8 +242,6 @@ function CashManagement() {
       <div className="toolbar">
         <h1>Gestion des espèces</h1>
         <span className="status">{status}</span>
-        <button onClick={importHistorique} style={{ color: "#1f7a3f" }}>Importer historique Excel</button>
-        <button onClick={deleteImportV2} style={{ color: "#e74c3c" }}>Supprimer import v2</button>
         <button onClick={() => setShowHistory(!showHistory)}>{showHistory ? "← Retour" : "Historique →"}</button>
       </div>
 
