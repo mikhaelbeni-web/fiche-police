@@ -223,6 +223,7 @@ body {
   .linge-page { padding: 0; }
   .linge-sheet { box-shadow: none; max-width: 100%; padding: 8mm; }
   .linge-tbl th, .linge-tbl td { font-size: 11px; padding: 5px 4px; }
+  .linge-page .linen-form { display: none; }
 }
 
 .linge-footer { margin-top: 18px; }
