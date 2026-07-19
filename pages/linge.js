@@ -83,7 +83,7 @@ function Linge() {
       setExtraStatus("Enregistrement…");
       await fs.addDoc(fs.collection(fs.db, "extra_menages"), {
         listingId: extraApt, residence: info.residence, appartement: info.appartement,
-        unitNumber: info.unitNumber, menageHT: info.menageHT,
+        unitNumber: info.unitNumber, menageHT: info.menageHT, amenitiesHT: info.amenitiesHT,
         date: extraDate, motif: extraMotif.trim(), createdAt: new Date().toISOString(),
       });
       setExtraMotif("");
@@ -181,7 +181,7 @@ function Linge() {
                   {["Belleville", "Lantiez", "Villiers"].map(res => (
                     <optgroup key={res} label={res}>
                       {apartments.filter(a => a.residence === res).map(a => (
-                        <option key={a.id} value={a.id}>{a.appartement} ({euros(a.menageHT)})</option>
+                        <option key={a.id} value={a.id}>{a.appartement} ({euros(a.menageHT + (a.amenitiesHT || 0))} = ménage {euros(a.menageHT)} + amenities {euros(a.amenitiesHT || 0)})</option>
                       ))}
                     </optgroup>
                   ))}
@@ -208,7 +208,7 @@ function Linge() {
                       <td>{e.residence}</td>
                       <td>{e.appartement}</td>
                       <td>{e.motif}</td>
-                      <td className="c">{euros(e.menageHT)}</td>
+                      <td className="c">{euros((e.menageHT || 0) + (e.amenitiesHT || 0))}</td>
                       <td><button onClick={() => delExtraMenage(e.id)} className="ghost" style={{ color: "#e74c3c" }}>✕</button></td>
                     </tr>
                   ))}

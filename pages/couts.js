@@ -118,6 +118,7 @@ function Couts() {
   for (const e of extraFiltered) {
     if (!byResidence[e.residence]) byResidence[e.residence] = { residence: e.residence, items: [], menage: 0, amenities: 0, unknown: 0, extras: [] };
     byResidence[e.residence].menage += e.menageHT || 0;
+    byResidence[e.residence].amenities += e.amenitiesHT || 0;
     byResidence[e.residence].extras.push(e);
   }
   const groups = Object.values(byResidence).sort((a, b) => a.residence.localeCompare(b.residence));
@@ -135,7 +136,7 @@ function Couts() {
         headerRows.push([g.residence, it.unitNumber, it.appartement, fmtFr(it.depart), it.menageHT ?? "?", it.amenitiesHT ?? "—", total]);
       }
       for (const e of g.extras) {
-        headerRows.push([g.residence, e.unitNumber, e.appartement, `${fmtFr(e.date)} (supplémentaire : ${e.motif})`, e.menageHT ?? "?", "—", e.menageHT ?? 0]);
+        headerRows.push([g.residence, e.unitNumber, e.appartement, `${fmtFr(e.date)} (supplémentaire : ${e.motif})`, e.menageHT ?? "?", e.amenitiesHT ?? "—", (e.menageHT ?? 0) + (e.amenitiesHT ?? 0)]);
       }
     }
     headerRows.push([]);
@@ -226,7 +227,7 @@ function Couts() {
                       <span className="apt">{e.appartement}</span>
                       <span>{fmtFr(e.date)}</span>
                       <span className="motif">{e.motif}</span>
-                      <span className="c">{euros(e.menageHT)}</span>
+                      <span className="c">{euros((e.menageHT || 0) + (e.amenitiesHT || 0))}</span>
                     </div>
                   ))}
                 </div>
