@@ -50,3 +50,4 @@ Firebase Auth. Pour l'instant, l'accès reste limité par le fait que l'URL et l
 - `locker_bookings` : réservations des consignes à bagages (Villiers, Lantiez)
 - `contacts` : répertoire des contacts fournisseurs/sociétés
 - `access_codes` : codes des boîtes à clés statiques par résidence
+- `extra_menages` : ménages supplémentaires ajoutés manuellement (répercutés sur les coûts)

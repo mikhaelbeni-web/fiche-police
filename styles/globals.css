@@ -375,3 +375,20 @@ body {
 .locker-detail { font-size: 12px; color: var(--ink); }
 .locker-detail.small { font-size: 11px; color: var(--muted); }
 .locker-upcoming { margin-top: 6px; padding-top: 6px; border-top: 1px dashed #ccc; }
+
+/* --- Ménages supplémentaires (couts.js) --- */
+.extra-menages {
+  margin-top: 6px; padding: 10px 14px; background: #fff8ec;
+  border: 1px solid #f0dca8; border-radius: 6px;
+}
+.extra-menages-title { font-size: 11px; font-weight: 700; color: #b8860b; text-transform: uppercase; letter-spacing: .3px; margin-bottom: 6px; }
+.extra-menages-row {
+  display: grid; grid-template-columns: 90px 90px 1fr 80px; gap: 10px;
+  font-size: 13px; padding: 4px 0; border-top: 1px solid #f0e2c0;
+}
+.extra-menages-row:first-of-type { border-top: none; }
+.extra-menages-row .motif { color: var(--muted); font-style: italic; }
+
+@media screen and (max-width: 768px) {
+  .extra-menages-row { grid-template-columns: 1fr; gap: 2px; }
+}

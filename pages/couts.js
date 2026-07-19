@@ -27,12 +27,25 @@ function Couts() {
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const [creds, setCreds] = useState({ account: "", key: "" });
+  const [extraMenages, setExtraMenages] = useState([]);
 
   useEffect(() => {
     setCreds({
       account: window.localStorage.getItem(ACCOUNT_KEY) || "",
       key: window.localStorage.getItem(KEY_KEY) || "",
     });
+  }, []);
+
+  // Ménages supplémentaires ajoutés depuis /linge (Firebase) — indépendants de Hostaway.
+  useEffect(() => {
+    (async () => {
+      const { isFirebaseConfigured } = await import("../lib/firebase");
+      if (!isFirebaseConfigured()) return;
+      const { db } = await import("../lib/firebase");
+      const { collection, getDocs, query, orderBy } = await import("firebase/firestore");
+      const snap = await getDocs(query(collection(db, "extra_menages"), orderBy("date", "desc")));
+      setExtraMenages(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    })();
   }, []);
 
   const load = useCallback(async (f, t, acc, key) => {
@@ -86,19 +99,33 @@ function Couts() {
   const residences = Array.from(new Set(rows.map(r => r.residence))).sort((a, b) => a.localeCompare(b));
   const filtered = rows.filter(r => residence === "__all__" || r.residence === residence);
 
+  // Ménages supplémentaires dans la plage de dates sélectionnée
+  const extraFiltered = extraMenages.filter(e => {
+    if (residence !== "__all__" && e.residence !== residence) return false;
+    return e.date >= from && e.date <= to;
+  });
+
   const byResidence = {};
   for (const r of filtered) {
-    if (!byResidence[r.residence]) byResidence[r.residence] = { residence: r.residence, items: [], menage: 0, amenities: 0, unknown: 0 };
+    if (!byResidence[r.residence]) byResidence[r.residence] = { residence: r.residence, items: [], menage: 0, amenities: 0, unknown: 0, extras: [] };
     byResidence[r.residence].items.push(r);
     if (r.menageHT != null) byResidence[r.residence].menage += r.menageHT;
     else byResidence[r.residence].unknown += 1;
     if (r.amenitiesHT != null) byResidence[r.residence].amenities += r.amenitiesHT;
+  }
+  // Intègre les ménages supplémentaires : ajoutés au total ménage de leur résidence,
+  // et listés à part pour rester traçables avec leur motif.
+  for (const e of extraFiltered) {
+    if (!byResidence[e.residence]) byResidence[e.residence] = { residence: e.residence, items: [], menage: 0, amenities: 0, unknown: 0, extras: [] };
+    byResidence[e.residence].menage += e.menageHT || 0;
+    byResidence[e.residence].extras.push(e);
   }
   const groups = Object.values(byResidence).sort((a, b) => a.residence.localeCompare(b.residence));
   const grandMenage = groups.reduce((s, g) => s + g.menage, 0);
   const grandAmenities = groups.reduce((s, g) => s + g.amenities, 0);
   const grandTotal = grandMenage + grandAmenities;
   const unknownCount = groups.reduce((s, g) => s + g.unknown, 0);
+  const extraCount = extraFiltered.length;
 
   function downloadCSV() {
     const headerRows = [["Résidence", "N°", "Appartement", "Départ", "Ménage HT", "Amenities HT", "Total HT"]];
@@ -106,6 +133,9 @@ function Couts() {
       for (const it of g.items) {
         const total = (it.menageHT ?? 0) + (it.amenitiesHT ?? 0);
         headerRows.push([g.residence, it.unitNumber, it.appartement, fmtFr(it.depart), it.menageHT ?? "?", it.amenitiesHT ?? "—", total]);
+      }
+      for (const e of g.extras) {
+        headerRows.push([g.residence, e.unitNumber, e.appartement, `${fmtFr(e.date)} (supplémentaire : ${e.motif})`, e.menageHT ?? "?", "—", e.menageHT ?? 0]);
       }
     }
     headerRows.push([]);
@@ -154,6 +184,7 @@ function Couts() {
               <div className="recap-sub">
                 Tarifs HT fixes par appartement · {filtered.length} ménage(s)
                 {unknownCount > 0 && ` · ${unknownCount} sans tarif connu`}
+                {extraCount > 0 && ` · ${extraCount} ménage(s) supplémentaire(s) ajouté(s)`}
               </div>
             </div>
           </div>
@@ -186,6 +217,20 @@ function Couts() {
                   ))}
                 </tbody>
               </table>
+
+              {g.extras.length > 0 && (
+                <div className="extra-menages">
+                  <div className="extra-menages-title">Ménage(s) supplémentaire(s) ajouté(s) manuellement</div>
+                  {g.extras.map(e => (
+                    <div key={e.id} className="extra-menages-row">
+                      <span className="apt">{e.appartement}</span>
+                      <span>{fmtFr(e.date)}</span>
+                      <span className="motif">{e.motif}</span>
+                      <span className="c">{euros(e.menageHT)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
 
