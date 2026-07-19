@@ -16,6 +16,19 @@ function euros(n) {
   return Number(n).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
 }
 
+// Mot de passe demandé avant de supprimer un solde de départ ou une ligne de
+// taxe de séjour. Ce n'est pas une vraie sécurité (comparaison faite dans le
+// navigateur) — juste un frein volontaire contre une suppression accidentelle
+// ou par une personne non autorisée à qui l'accès à l'app a été partagé.
+// Changeable via NEXT_PUBLIC_DELETE_PASSWORD sur Vercel.
+const DELETE_PASSWORD = process.env.NEXT_PUBLIC_DELETE_PASSWORD || "2305";
+function checkDeletePassword() {
+  const entered = prompt("Mot de passe requis pour cette suppression :");
+  if (entered === null) return false; // annulé
+  if (entered !== DELETE_PASSWORD) { alert("Mot de passe incorrect."); return false; }
+  return true;
+}
+
 function TaxesImpayees() {
   const today = isoDay(new Date());
   const [from, setFrom] = useState("2026-07-10"); // départ fixe : 10 juillet
@@ -331,9 +344,12 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
     } catch (err) { setStatus("Erreur : " + err.message); }
   }
 
-  async function delEntry(id) {
+  async function delEntry(entry) {
+    const isTaxeSejour = (entry.designation || "").toLowerCase().includes("taxe de séjour")
+      || (entry.designation || "").toLowerCase().includes("taxe de sejour");
+    if (isTaxeSejour && !checkDeletePassword()) return;
     if (!confirm("Êtes-vous sûr de vouloir supprimer cette entrée ?")) return;
-    await fs.deleteDoc(fs.doc(fs.db, "cash_entries", id));
+    await fs.deleteDoc(fs.doc(fs.db, "cash_entries", entry.id));
     await reload();
   }
 
@@ -429,7 +445,7 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
               <td className="c" style={{ color: e.type === "expense" ? "#e74c3c" : "#1f7a3f", fontWeight: 600 }}>
                 {e.type === "expense" ? "−" : "+"}{euros2(e.amount)}
               </td>
-              <td><button onClick={() => delEntry(e.id)} className="ghost" style={{ color: "#e74c3c" }}>✕</button></td>
+              <td><button onClick={() => delEntry(e)} className="ghost" style={{ color: "#e74c3c" }}>✕</button></td>
             </tr>
           ))}
           {unrecovered.length === 0 && <tr><td colSpan={7} className="empty-state">Rien depuis la dernière récupération.</td></tr>}
@@ -547,6 +563,9 @@ function CashHistory({ recoveries, entries, fs, reload, setStatus }) {
   // document). Libère d'abord les entrées liées si besoin, pour ne jamais les
   // laisser orphelines avec un recoveryId pointant vers un document supprimé.
   async function delRecovery(rec) {
+    const isSoldeDepart = (rec.note || "").toLowerCase().includes("solde de départ")
+      || (rec.note || "").toLowerCase().includes("solde de depart");
+    if (isSoldeDepart && !checkDeletePassword()) return;
     if (!confirm(`Êtes-vous sûr de vouloir supprimer "${rec.note || "cette récupération"}" du ${fmtFrShort(rec.date)} ?`)) return;
     try {
       setStatus("Suppression…");
