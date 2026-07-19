@@ -10,6 +10,17 @@ import { listApartments } from "../lib/apartments";
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
 
+// Même mot de passe que pour les suppressions sensibles de Gestion des espèces
+// (solde de départ / lignes taxe de séjour). Frein volontaire côté navigateur,
+// pas une vraie sécurité. Changeable via NEXT_PUBLIC_DELETE_PASSWORD sur Vercel.
+const DELETE_PASSWORD = process.env.NEXT_PUBLIC_DELETE_PASSWORD || "2305";
+function checkDeletePassword() {
+  const entered = prompt("Mot de passe requis pour cette suppression :");
+  if (entered === null) return false;
+  if (entered !== DELETE_PASSWORD) { alert("Mot de passe incorrect."); return false; }
+  return true;
+}
+
 const LINEN_ROWS = [
   "Grande serviette",
   "Housse",
@@ -82,6 +93,7 @@ function Linge() {
   }
 
   async function delExtraMenage(id) {
+    if (!checkDeletePassword()) return;
     if (!confirm("Êtes-vous sûr de vouloir supprimer ce ménage supplémentaire ?")) return;
     await fs.deleteDoc(fs.doc(fs.db, "extra_menages", id));
     await loadExtras(fs);
