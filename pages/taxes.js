@@ -255,7 +255,7 @@ function CashManagement() {
               reload={() => loadAll(fs)} setStatus={setStatus}
             />
           ) : (
-            <CashHistory recoveries={recoveries} entries={entries} />
+            <CashHistory recoveries={recoveries} entries={entries} fs={fs} reload={() => loadAll(fs)} setStatus={setStatus} />
           )}
         </div>
       </div>
@@ -526,7 +526,7 @@ function RecoverForm({ fs, unrecovered, totalEnCaisse, onDone, setStatus }) {
 }
 
 // ---- Historique des récupérations ----
-function CashHistory({ recoveries, entries }) {
+function CashHistory({ recoveries, entries, fs, reload, setStatus }) {
   function exportRecoveryCSV(rec) {
     const linked = entries.filter(e => e.recoveryId === rec.id);
     const rows = [["Type", "Date", "Client", "Appartement", "Date arrivée", "Désignation", "Montant"]];
@@ -541,6 +541,27 @@ function CashHistory({ recoveries, entries }) {
     rows.push(["Récupéré", "", "", "", "", "", rec.amountRecovered]);
     rows.push(["Laissé en caisse", "", "", "", "", "", rec.amountLeftInBox]);
     downloadEntriesCSV(`recuperation_especes_${rec.date}.csv`, rows);
+  }
+
+  // Supprime une récupération (ou un solde de départ, qui est le même type de
+  // document). Libère d'abord les entrées liées si besoin, pour ne jamais les
+  // laisser orphelines avec un recoveryId pointant vers un document supprimé.
+  async function delRecovery(rec) {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer "${rec.note || "cette récupération"}" du ${fmtFrShort(rec.date)} ?`)) return;
+    try {
+      setStatus("Suppression…");
+      const linked = entries.filter(e => e.recoveryId === rec.id);
+      if (linked.length > 0) {
+        const batch = fs.writeBatch(fs.db);
+        for (const e of linked) {
+          batch.update(fs.doc(fs.db, "cash_entries", e.id), { recoveryId: null });
+        }
+        await batch.commit();
+      }
+      await fs.deleteDoc(fs.doc(fs.db, "cash_recoveries", rec.id));
+      await reload();
+      setStatus("Récupération supprimée.");
+    } catch (err) { setStatus("Erreur : " + err.message); }
   }
 
   return (
@@ -566,7 +587,10 @@ function CashHistory({ recoveries, entries }) {
               <td className="c" style={{ fontWeight: 700, color: "#1f7a3f" }}>{euros2(r.amountRecovered)}</td>
               <td className="c">{euros2(r.amountLeftInBox)}</td>
               <td>{r.note || "—"}</td>
-              <td><button onClick={() => exportRecoveryCSV(r)} className="ghost" style={{ color: "#1f7a3f" }}>📥 Excel</button></td>
+              <td style={{ whiteSpace: "nowrap" }}>
+                <button onClick={() => exportRecoveryCSV(r)} className="ghost" style={{ color: "#1f7a3f" }}>📥 Excel</button>
+                <button onClick={() => delRecovery(r)} className="ghost" style={{ color: "#e74c3c" }}>✕</button>
+              </td>
             </tr>
           ))}
           {recoveries.length === 0 && <tr><td colSpan={6} className="empty-state">Aucune récupération enregistrée.</td></tr>}
