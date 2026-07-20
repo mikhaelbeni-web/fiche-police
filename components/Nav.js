@@ -12,6 +12,7 @@ const MAIN = [
   { href: "/menage", label: "Ménages" },
   { href: "/commande-linge", label: "Commande linge" },
   { href: "/linge", label: "Linge Belleville" },
+  { href: "/transition", label: "Rapport transition" },
 ];
 
 const MORE = [
