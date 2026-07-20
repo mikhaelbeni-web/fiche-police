@@ -144,11 +144,11 @@ function Transition() {
       <div className="menage-page">
         <div className="recap">
           {tab === "jour" && todayReport && (
-            <ReportForm report={todayReport} onSave={saveReport} onDelete={deleteReport} locked={false} />
+            <ReportForm report={todayReport} onSave={saveReport} locked={false} />
           )}
           {tab === "hier" && (
             yesterdayReport
-              ? <ReportForm report={yesterdayReport} onSave={saveReport} onDelete={deleteReport} locked={isLocked(yesterdayReport.date)} />
+              ? <ReportForm report={yesterdayReport} onSave={saveReport} locked={isLocked(yesterdayReport.date)} />
               : <div className="empty-state">Aucun rapport enregistré pour hier.</div>
           )}
           {tab === "historique" && !selectedReport && (
@@ -157,7 +157,7 @@ function Transition() {
           {tab === "historique" && selectedReport && (
             <>
               <button onClick={() => setSelectedReport(null)} className="ghost" style={{ marginBottom: 12 }}>← Retour à la liste</button>
-              <ReportForm report={selectedReport} onSave={saveReport} onDelete={deleteReport} locked={isLocked(selectedReport.date)} />
+              <ReportForm report={selectedReport} onSave={saveReport} locked={isLocked(selectedReport.date)} />
             </>
           )}
         </div>
@@ -167,7 +167,7 @@ function Transition() {
 }
 
 // ---- Formulaire d'un rapport (édition ou lecture seule si verrouillé) ----
-function ReportForm({ report, onSave, onDelete, locked }) {
+function ReportForm({ report, onSave, locked }) {
   const [draft, setDraft] = useState(report);
   useEffect(() => { setDraft(report); }, [report]);
 
@@ -195,9 +195,6 @@ function ReportForm({ report, onSave, onDelete, locked }) {
       {locked && draft.author && (
         <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 14 }}>Rédigé par <strong>{draft.author}</strong></div>
       )}
-      <div style={{ marginBottom: 14 }}>
-        <button onClick={() => onDelete(draft)} className="ghost" style={{ color: "#e74c3c", fontSize: 12 }}>Supprimer ce rapport</button>
-      </div>
 
       {RESIDENCES.map(res => (
         <div className="resid" key={res}>
