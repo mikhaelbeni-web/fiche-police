@@ -7,11 +7,23 @@ import { useState, useEffect } from "react";
 import Head from "next/head";
 import { RESIDENCES, QUESTIONS, emptyReport, today, yesterday, isLocked, hasAlert } from "../lib/shiftReport";
 
+// Même mot de passe que les autres suppressions sensibles de l'app. Frein
+// volontaire côté navigateur, pas une vraie sécurité. Changeable via
+// NEXT_PUBLIC_DELETE_PASSWORD sur Vercel.
+const DELETE_PASSWORD = process.env.NEXT_PUBLIC_DELETE_PASSWORD || "2305";
+function checkDeletePassword() {
+  const entered = prompt("Mot de passe requis pour cette suppression :");
+  if (entered === null) return false;
+  if (entered !== DELETE_PASSWORD) { alert("Mot de passe incorrect."); return false; }
+  return true;
+}
+
 function fmtFr(d) {
   if (!d) return "";
   const x = new Date(d + "T12:00:00");
   return isNaN(x) ? d : x.toLocaleDateString("fr-FR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
 }
+
 
 function Transition() {
   const [ready, setReady] = useState(false);
@@ -30,8 +42,8 @@ function Transition() {
       const { isFirebaseConfigured } = await import("../lib/firebase");
       if (!isFirebaseConfigured()) { setConfigured(false); setReady(true); return; }
       const { db } = await import("../lib/firebase");
-      const { collection, doc, getDoc, getDocs, setDoc, query, orderBy } = await import("firebase/firestore");
-      const api = { db, collection, doc, getDoc, getDocs, setDoc, query, orderBy };
+      const { collection, doc, getDoc, getDocs, setDoc, deleteDoc, query, orderBy } = await import("firebase/firestore");
+      const api = { db, collection, doc, getDoc, getDocs, setDoc, deleteDoc, query, orderBy };
       setFs(api);
       await loadToday(api);
       await loadYesterday(api);
@@ -60,6 +72,40 @@ function Transition() {
       await fs.setDoc(fs.doc(fs.db, "shift_reports", report.date), report);
       setTodayReport(report);
       setStatus("Rapport enregistré.");
+    } catch (err) { setStatus("Erreur : " + err.message); }
+  }
+
+  // Suppression protégée par mot de passe. Le rapport peut être supprimé qu'il
+  // soit verrouillé ou non — la protection par date ne concerne que l'édition.
+  async function deleteReport(report) {
+    if (!checkDeletePassword()) return;
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer le rapport du ${fmtFr(report.date)} ?`)) return;
+    try {
+      setStatus("Suppression…");
+      await fs.deleteDoc(fs.doc(fs.db, "shift_reports", report.date));
+      if (report.date === today()) setTodayReport(emptyReport(today()));
+      if (report.date === yesterday()) setYesterdayReport(null);
+      setAllReports(prev => prev.filter(r => r.date !== report.date));
+      setSelectedReport(null);
+      setStatus("Rapport supprimé.");
+    } catch (err) { setStatus("Erreur : " + err.message); }
+  }
+
+  // Suppression protégée par mot de passe, réservée aux rapports verrouillés
+  // (hier / historique) — jamais au rapport du jour en cours de rédaction.
+  async function deleteReport(report) {
+    if (!checkDeletePassword()) return;
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer le rapport du ${fmtFr(report.date)} ?`)) return;
+    try {
+      setStatus("Suppression…");
+      const { deleteDoc, doc } = await import("firebase/firestore");
+      await deleteDoc(doc(fs.db, "shift_reports", report.date));
+      if (tab === "hier") setYesterdayReport(null);
+      if (tab === "historique") {
+        setSelectedReport(null);
+        await loadHistorique(fs);
+      }
+      setStatus("Rapport supprimé.");
     } catch (err) { setStatus("Erreur : " + err.message); }
   }
 
@@ -98,20 +144,20 @@ function Transition() {
       <div className="menage-page">
         <div className="recap">
           {tab === "jour" && todayReport && (
-            <ReportForm report={todayReport} onSave={saveReport} locked={false} />
+            <ReportForm report={todayReport} onSave={saveReport} onDelete={deleteReport} locked={false} />
           )}
           {tab === "hier" && (
             yesterdayReport
-              ? <ReportForm report={yesterdayReport} onSave={saveReport} locked={isLocked(yesterdayReport.date)} />
+              ? <ReportForm report={yesterdayReport} onSave={saveReport} onDelete={deleteReport} locked={isLocked(yesterdayReport.date)} />
               : <div className="empty-state">Aucun rapport enregistré pour hier.</div>
           )}
           {tab === "historique" && !selectedReport && (
-            <HistoriqueList reports={allReports} onSelect={setSelectedReport} />
+            <HistoriqueList reports={allReports} onSelect={setSelectedReport} onDelete={deleteReport} />
           )}
           {tab === "historique" && selectedReport && (
             <>
               <button onClick={() => setSelectedReport(null)} className="ghost" style={{ marginBottom: 12 }}>← Retour à la liste</button>
-              <ReportForm report={selectedReport} onSave={saveReport} locked={isLocked(selectedReport.date)} />
+              <ReportForm report={selectedReport} onSave={saveReport} onDelete={deleteReport} locked={isLocked(selectedReport.date)} />
             </>
           )}
         </div>
@@ -121,7 +167,7 @@ function Transition() {
 }
 
 // ---- Formulaire d'un rapport (édition ou lecture seule si verrouillé) ----
-function ReportForm({ report, onSave, locked }) {
+function ReportForm({ report, onSave, onDelete, locked }) {
   const [draft, setDraft] = useState(report);
   useEffect(() => { setDraft(report); }, [report]);
 
@@ -149,6 +195,9 @@ function ReportForm({ report, onSave, locked }) {
       {locked && draft.author && (
         <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 14 }}>Rédigé par <strong>{draft.author}</strong></div>
       )}
+      <div style={{ marginBottom: 14 }}>
+        <button onClick={() => onDelete(draft)} className="ghost" style={{ color: "#e74c3c", fontSize: 12 }}>Supprimer ce rapport</button>
+      </div>
 
       {RESIDENCES.map(res => (
         <div className="resid" key={res}>
@@ -186,7 +235,7 @@ function ReportForm({ report, onSave, locked }) {
 }
 
 // ---- Liste historique de tous les rapports, avec badge d'alerte ----
-function HistoriqueList({ reports, onSelect }) {
+function HistoriqueList({ reports, onSelect, onDelete }) {
   return (
     <>
       <div className="recap-head">
@@ -205,7 +254,10 @@ function HistoriqueList({ reports, onSelect }) {
               <td style={{ textTransform: "capitalize" }}>{fmtFr(r.date)}</td>
               <td>{r.author || "—"}</td>
               <td className="c">{hasAlert(r) ? "🔴" : "🟢"}</td>
-              <td><button onClick={() => onSelect(r)} className="ghost" style={{ color: "#2980b9" }}>Consulter</button></td>
+              <td style={{ whiteSpace: "nowrap" }}>
+                <button onClick={() => onSelect(r)} className="ghost" style={{ color: "#2980b9" }}>Consulter</button>
+                <button onClick={() => onDelete(r)} className="ghost" style={{ color: "#e74c3c" }}>✕</button>
+              </td>
             </tr>
           ))}
           {reports.length === 0 && <tr><td colSpan={4} className="empty-state">Aucun rapport enregistré.</td></tr>}
