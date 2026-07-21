@@ -222,12 +222,19 @@ function StockTab({ fs, stock, setStock, orders, receptions, usage, defects, set
 // ---------- COMMANDES ----------
 function OrdersTab({ fs, orders, usage, reload, setStatus }) {
   const [date, setDate] = useState(isoDay(new Date()));
-  const [type, setType] = useState("jeudi");
   const [q, setQ] = useState(emptyQuantities());
   const [calcInfo, setCalcInfo] = useState("");
 
+  // Le type (mardi/jeudi) est déduit du jour réel de la date choisie, jamais
+  // sélectionné à la main : un décalage date/type causait un mauvais calcul de
+  // fenêtre (chevauchement avec une commande déjà passée, double comptage).
+  const weekday = new Date(date + "T12:00:00").getDay(); // 0=dim..6=sam
+  const type = weekday === 2 ? "mardi" : weekday === 4 ? "jeudi" : null;
+  const dateValide = type !== null;
+
   // Calcule la commande = linge utilisé exactement sur la fenêtre correspondante.
   function calculerDepuisUsage() {
+    if (!dateValide) { setCalcInfo(""); setStatus("La date doit être un mardi ou un jeudi."); return; }
     const win = orderWindow(date, type); // { from, toExclusive }
     // Entrées de linge utilisé dont la date est dans [from, toExclusive[
     const entries = usage.filter(u => {
@@ -242,6 +249,7 @@ function OrdersTab({ fs, orders, usage, reload, setStatus }) {
   }
 
   async function addOrder() {
+    if (!dateValide) { setStatus("La date doit être un mardi ou un jeudi."); return; }
     try {
       setStatus("Ajout commande…");
       const clean = {};
@@ -300,17 +308,26 @@ function OrdersTab({ fs, orders, usage, reload, setStatus }) {
         <div className="linen-form-row">
           <label>Date <input type="date" value={date} onChange={e => setDate(e.target.value)} /></label>
           <label>Type
-            <select value={type} onChange={e => setType(e.target.value)}>
-              <option value="mardi">Mardi</option>
-              <option value="jeudi">Jeudi</option>
-            </select>
+            <div style={{ padding: "7px 9px", fontWeight: 600, color: dateValide ? "inherit" : "#e74c3c" }}>
+              {dateValide ? (type === "mardi" ? "Mardi" : "Jeudi") : "⚠ Ni mardi ni jeudi"}
+            </div>
           </label>
           <span style={{ fontSize: 12, color: "#666" }}>Réception prévue : {fmtFr(expectedReception(date))}</span>
-          <button onClick={calculerDepuisUsage} style={{ background: "#2ecc71", color: "#073", fontWeight: 600 }}>
+          <button onClick={calculerDepuisUsage} disabled={!dateValide} style={{ background: dateValide ? "#2ecc71" : "#ccc", color: dateValide ? "#073" : "#666", fontWeight: 600 }}>
             Calculer depuis le linge utilisé
           </button>
         </div>
+        {!dateValide && (
+          <div style={{ fontSize: 12, color: "#e74c3c", marginBottom: 10 }}>
+            Les commandes ne se font que le mardi ou le jeudi. Choisis une date correspondant à l&apos;un de ces deux jours.
+          </div>
+        )}
         {calcInfo && <div style={{ fontSize: 12, color: "#1f7a3f", marginBottom: 10 }}>{calcInfo}</div>}
+        {dateValide && orders.some(o => o.date === date && o.type === type) && (
+          <div style={{ fontSize: 12, color: "#e67e22", marginBottom: 10 }}>
+            ⚠ Une commande existe déjà pour ce {type === "mardi" ? "mardi" : "jeudi"} ({fmtFr(date)}) — vérifie la liste ci-dessous avant d&apos;en ajouter une nouvelle.
+          </div>
+        )}
         <div className="linen-qty-grid">
           {LINEN_ARTICLES.map(a => (
             <label key={a.key} className="qty-cell">
@@ -319,7 +336,7 @@ function OrdersTab({ fs, orders, usage, reload, setStatus }) {
             </label>
           ))}
         </div>
-        <button className="primary" onClick={addOrder}>Ajouter la commande</button>
+        <button className="primary" onClick={addOrder} disabled={!dateValide}>Ajouter la commande</button>
       </div>
 
       <table className="tbl" style={{ marginTop: 18 }}>
