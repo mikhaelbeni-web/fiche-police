@@ -13,6 +13,10 @@ function fmtFr(d) {
   const x = new Date(d + "T12:00:00");
   return isNaN(x) ? d : x.toLocaleDateString("fr-FR");
 }
+function euros(n) {
+  if (n == null || isNaN(n)) return "—";
+  return Number(n).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+}
 
 function CommandeLinge() {
   const [tab, setTab] = useState("position");
