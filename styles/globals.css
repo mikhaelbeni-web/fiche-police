@@ -329,12 +329,14 @@ body {
 .linen-qty-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 14px; }
 .qty-cell {
   display: grid; grid-template-rows: minmax(32px, auto) auto; gap: 4px; font-size: 12px;
+  min-width: 0;
 }
 .qty-cell span {
   color: var(--muted); font-weight: 600; line-height: 1.25;
-  display: flex; align-items: flex-end;
+  display: block; white-space: normal; overflow-wrap: break-word; word-break: break-word;
+  align-self: end;
 }
-.qty-cell input { padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; text-align: center; }
+.qty-cell input { padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; text-align: center; width: 100%; min-width: 0; box-sizing: border-box; }
 
 @media screen and (max-width: 768px) {
   .linen-qty-grid { grid-template-columns: repeat(2, 1fr); }
