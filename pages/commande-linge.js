@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
-import { LINEN_ARTICLES, emptyQuantities, expectedReception, orderWindow, sumUsage, computeDefectSettlements, PANTIN_CODES, PANTIN_CLIENT } from "../lib/linen";
+import { LINEN_ARTICLES, emptyQuantities, expectedReception, orderWindow, sumUsage, computeDefectSettlements, PANTIN_CODES, PANTIN_CLIENT, ELIS_INVOICE_ARTICLES } from "../lib/linen";
 import { isFirebaseConfigured } from "../lib/firebase";
 
 function isoDay(d) { return d.toISOString().slice(0, 10); }
@@ -26,6 +26,8 @@ function CommandeLinge() {
   const [usage, setUsage] = useState([]);
   const [defects, setDefects] = useState([]);
   const [thresholds, setThresholds] = useState({});
+  const [invoices, setInvoices] = useState([]);
+  const [prices, setPrices] = useState({});
   const [status, setStatus] = useState("");
 
   // Firestore helpers chargés dynamiquement (évite le SSR sur firebase)
@@ -73,6 +75,17 @@ function CommandeLinge() {
 
       const defSnap = await api.getDocs(api.query(api.collection(api.db, "linen_defects"), api.orderBy("date", "desc")));
       setDefects(defSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+
+      const invSnap = await api.getDocs(api.query(api.collection(api.db, "linen_invoices"), api.orderBy("periodFrom", "desc")));
+      setInvoices(invSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+
+      const priceSnap = await api.getDoc(api.doc(api.db, "linen_prices", "belleville"));
+      if (priceSnap.exists()) setPrices(priceSnap.data());
+      else {
+        // Prix par défaut, extraits de la facture Elis (identiques pour les
+        // variantes Cocoon/Horizon, donc un seul prix par catégorie suffit).
+        setPrices({ drap: 1.804, grande_serviette: 1.157, housse: 3.788, petite_serviette: 0.545, taie: 0.558, tapis_bain: 0.759, torchon: 0.651 });
+      }
       setStatus("");
     } catch (err) {
       setStatus("Erreur Firestore : " + err.message);
@@ -113,6 +126,7 @@ function CommandeLinge() {
           <button onClick={() => setTab("receptions")} className={tab === "receptions" ? "primary" : ""}>Réceptions</button>
           <button onClick={() => setTab("usage")} className={tab === "usage" ? "primary" : ""}>Linge utilisé</button>
           <button onClick={() => setTab("defects")} className={tab === "defects" ? "primary" : ""}>Défectueux</button>
+          <button onClick={() => setTab("cout")} className={tab === "cout" ? "primary" : ""}>Coût linge</button>
         </div>
         <span className="status">{status}</span>
       </div>
@@ -125,6 +139,7 @@ function CommandeLinge() {
           {tab === "receptions" && <ReceptionsTab fs={fs} orders={orders} receptions={receptions} defects={defects} reload={() => loadAll(fs)} setStatus={setStatus} />}
           {tab === "usage" && <UsageTab fs={fs} usage={usage} reload={() => loadAll(fs)} setStatus={setStatus} />}
           {tab === "defects" && <DefectsTab fs={fs} defects={defects} reload={() => loadAll(fs)} setStatus={setStatus} />}
+          {tab === "cout" && <CostTab fs={fs} invoices={invoices} receptions={receptions} prices={prices} setPrices={setPrices} reload={() => loadAll(fs)} setStatus={setStatus} />}
         </div>
       </div>
     </>
@@ -918,6 +933,318 @@ function PositionTab({ fs, stock, orders, receptions, usage, defects, thresholds
         <strong style={{ color: "#e67e22" }}> Défectueux non rendu</strong> = renvoyé à Pantin, pas encore revenu.
         Les deux sont déduits du <strong>stock réel</strong>. Le tableau roule en continu et ne se remet jamais à zéro.
       </p>
+    </>
+  );
+}
+
+// ---------- COÛT LINGE (pointage des factures Elis) ----------
+// Reproduit exactement la structure de la facture Elis (9 lignes réelles, dont
+// deux variantes Cocoon/Horizon pour draps de bain et serviettes éponge) et
+// rapproche automatiquement les quantités facturées avec ce qui a été
+// réceptionné dans l'app sur la même période, pour pointer les écarts.
+function emptyInvoiceLines() {
+  const l = {};
+  for (const a of ELIS_INVOICE_ARTICLES) l[a.id] = { qte: 0, prixUnitaire: 0 };
+  return l;
+}
+
+function CostTab({ fs, invoices, receptions, prices, setPrices, reload, setStatus }) {
+  const [showForm, setShowForm] = useState(false);
+  const [numFacture, setNumFacture] = useState("");
+  const [dateFacture, setDateFacture] = useState(isoDay(new Date()));
+  const [periodFrom, setPeriodFrom] = useState(isoDay(new Date()));
+  const [periodTo, setPeriodTo] = useState(isoDay(new Date()));
+  const [lines, setLines] = useState(emptyInvoiceLines());
+  const [participationPerte, setParticipationPerte] = useState(0);
+
+  // ---- Estimation automatique : Du/Au -> total anticipé à partir des
+  // réceptions déjà enregistrées, sans ressaisie. C'est la réponse directe à
+  // "combien vais-je être facturé par Elis sur cette période ?".
+  const today = isoDay(new Date());
+  const [estFrom, setEstFrom] = useState(today);
+  const [estTo, setEstTo] = useState(today);
+  const [editPrices, setEditPrices] = useState(false);
+  const [draftPrices, setDraftPrices] = useState(prices);
+  useEffect(() => { setDraftPrices(prices); }, [prices]);
+
+  const estReceived = {};
+  for (const a of LINEN_ARTICLES) estReceived[a.key] = 0;
+  for (const r of receptions) {
+    const d = (r.date || "").slice(0, 10);
+    if (d < estFrom || d > estTo) continue;
+    for (const a of LINEN_ARTICLES) estReceived[a.key] += Number(r.quantities?.[a.key]) || 0;
+  }
+  const estTotal = LINEN_ARTICLES.reduce((s, a) => s + estReceived[a.key] * (Number(prices[a.key]) || 0), 0);
+
+  async function savePrices() {
+    try {
+      setStatus("Enregistrement des prix…");
+      const clean = {};
+      for (const a of LINEN_ARTICLES) clean[a.key] = Number(draftPrices[a.key]) || 0;
+      await fs.setDoc(fs.doc(fs.db, "linen_prices", "belleville"), clean);
+      setPrices(clean);
+      setEditPrices(false);
+      setStatus("Prix enregistrés.");
+    } catch (err) { setStatus("Erreur : " + err.message); }
+  }
+
+  function setLine(id, field, value) {
+    setLines(l => ({ ...l, [id]: { ...l[id], [field]: value } }));
+  }
+
+  // Référence en direct : total déjà reçu (app) par catégorie sur la période
+  // choisie, pour aider à saisir des quantités réalistes avant l'arrivée de
+  // la vraie facture. Les gammes Cocoon/Horizon partagent la même référence
+  // (l'app ne distingue pas la gamme reçue), affichée sur chacune des 2 lignes.
+  const receivedRef = {};
+  for (const a of LINEN_ARTICLES) receivedRef[a.key] = 0;
+  for (const r of receptions) {
+    const d = (r.date || "").slice(0, 10);
+    if (d < periodFrom || d > periodTo) continue;
+    for (const a of LINEN_ARTICLES) receivedRef[a.key] += Number(r.quantities?.[a.key]) || 0;
+  }
+
+  const sousTotalHT = ELIS_INVOICE_ARTICLES.reduce((s, a) => {
+    const l = lines[a.id];
+    return s + (Number(l.qte) || 0) * (Number(l.prixUnitaire) || 0);
+  }, 0);
+  const totalHT = sousTotalHT + (Number(participationPerte) || 0);
+  const tva = totalHT * 0.20;
+  const netAPayer = totalHT + tva;
+
+  async function saveInvoice() {
+    if (!numFacture.trim()) { setStatus("Le numéro de facture est requis."); return; }
+    try {
+      setStatus("Enregistrement…");
+      const cleanLines = {};
+      for (const a of ELIS_INVOICE_ARTICLES) {
+        cleanLines[a.id] = { qte: Number(lines[a.id].qte) || 0, prixUnitaire: Number(lines[a.id].prixUnitaire) || 0 };
+      }
+      await fs.addDoc(fs.collection(fs.db, "linen_invoices"), {
+        numFacture: numFacture.trim(), dateFacture, periodFrom, periodTo,
+        lines: cleanLines, sousTotalHT, participationPerte: Number(participationPerte) || 0,
+        totalHT, tva, netAPayer, createdAt: new Date().toISOString(),
+      });
+      setNumFacture(""); setLines(emptyInvoiceLines()); setParticipationPerte(0);
+      setShowForm(false);
+      await reload();
+      setStatus("Facture enregistrée.");
+    } catch (err) { setStatus("Erreur : " + err.message); }
+  }
+
+  async function delInvoice(id) {
+    if (!confirm("Êtes-vous sûr de vouloir supprimer cette facture ?")) return;
+    await fs.deleteDoc(fs.doc(fs.db, "linen_invoices", id));
+    await reload();
+  }
+
+  return (
+    <>
+      <div className="recap-head">
+        <div>
+          <div className="recap-title">Coût linge anticipé</div>
+          <div className="recap-sub">Calculé automatiquement à partir des réceptions déjà enregistrées — aucune ressaisie</div>
+        </div>
+        <button onClick={() => setEditPrices(!editPrices)} style={{ fontSize: 12 }}>{editPrices ? "Annuler" : "Modifier les prix unitaires"}</button>
+      </div>
+
+      <div className="linen-form" style={{ background: "#eef7ee", borderColor: "#bfe3bf" }}>
+        <div className="linen-form-row">
+          <label>Du <input type="date" value={estFrom} onChange={e => setEstFrom(e.target.value)} /></label>
+          <label>Au <input type="date" value={estTo} onChange={e => setEstTo(e.target.value)} /></label>
+        </div>
+
+        <table className="tbl" style={{ marginBottom: 10 }}>
+          <thead>
+            <tr><th>Article</th><th className="c">Reçu (app)</th><th className="c">Prix unit. HT</th><th className="c">Montant estimé</th></tr>
+          </thead>
+          <tbody>
+            {LINEN_ARTICLES.map(a => {
+              const qte = estReceived[a.key] || 0;
+              const prix = editPrices ? (draftPrices[a.key] ?? 0) : (prices[a.key] ?? 0);
+              const montant = qte * (Number(prix) || 0);
+              return (
+                <tr key={a.key}>
+                  <td>{a.label}</td>
+                  <td className="c">{qte}</td>
+                  <td className="c">
+                    {editPrices
+                      ? <input type="number" min="0" step="0.001" value={draftPrices[a.key] ?? 0}
+                          onChange={e => setDraftPrices({ ...draftPrices, [a.key]: e.target.value })}
+                          style={{ width: 80, textAlign: "center" }} />
+                      : `${euros(prix)}`}
+                  </td>
+                  <td className="c" style={{ fontWeight: 600 }}>{euros(montant)}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        {editPrices
+          ? <button className="primary" onClick={savePrices}>Enregistrer les prix</button>
+          : (
+            <div style={{ fontSize: 16, fontWeight: 700, color: "#1f7a3f" }}>
+              Total HT estimé sur la période : {euros(estTotal)}
+            </div>
+          )}
+        <p style={{ fontSize: 12, color: "#666", marginTop: 8 }}>
+          Cocoon et Horizon partagent le même prix unitaire chez Elis — un seul prix par catégorie suffit pour cette estimation.
+          Ce montant est une anticipation, pas la facture officielle (hors TVA et participation perte éventuelle).
+        </p>
+      </div>
+
+      <div className="recap-head" style={{ marginTop: 28 }}>
+        <div>
+          <div className="recap-title" style={{ fontSize: 16 }}>Factures Elis reçues</div>
+          <div className="recap-sub">Pour comparer le montant estimé ci-dessus à la vraie facture, une fois reçue</div>
+        </div>
+        <button className="primary" onClick={() => setShowForm(!showForm)}>{showForm ? "Annuler" : "+ Nouvelle facture"}</button>
+      </div>
+
+      {showForm && (
+        <div className="linen-form">
+          <div className="linen-form-row">
+            <label>N° facture <input type="text" value={numFacture} onChange={e => setNumFacture(e.target.value)} placeholder="ex. 2600104-997498" style={{ width: 180 }} /></label>
+            <label>Date facture <input type="date" value={dateFacture} onChange={e => setDateFacture(e.target.value)} /></label>
+          </div>
+          <div className="linen-form-row">
+            <label>Période du <input type="date" value={periodFrom} onChange={e => setPeriodFrom(e.target.value)} /></label>
+            <label>au <input type="date" value={periodTo} onChange={e => setPeriodTo(e.target.value)} /></label>
+            <button type="button" onClick={() => {
+              // Pré-remplit chaque ligne avec le reçu (app) de sa catégorie ; pour les
+              // paires Cocoon/Horizon, met tout sur la première ligne — à répartir
+              // manuellement selon ce qui a réellement été livré dans chaque gamme.
+              const seen = new Set();
+              setLines(l => {
+                const next = { ...l };
+                for (const a of ELIS_INVOICE_ARTICLES) {
+                  if (seen.has(a.key)) { next[a.id] = { ...next[a.id], qte: 0 }; continue; }
+                  seen.add(a.key);
+                  next[a.id] = { ...next[a.id], qte: receivedRef[a.key] || 0 };
+                }
+                return next;
+              });
+            }} style={{ fontSize: 12 }}>Pré-remplir depuis les réceptions</button>
+          </div>
+
+          <table className="tbl" style={{ marginBottom: 12 }}>
+            <thead>
+              <tr><th>Article (Elis)</th><th className="c">Reçu (app, réf.)</th><th className="c">Qté livrée</th><th className="c">Prix unit. HT</th><th className="c">Montant HT</th></tr>
+            </thead>
+            <tbody>
+              {ELIS_INVOICE_ARTICLES.map(a => {
+                const l = lines[a.id];
+                const montant = (Number(l.qte) || 0) * (Number(l.prixUnitaire) || 0);
+                return (
+                  <tr key={a.id}>
+                    <td>{a.label}</td>
+                    <td className="c" style={{ color: "#999" }}>{receivedRef[a.key] || 0}</td>
+                    <td className="c"><input type="number" min="0" value={l.qte} onChange={e => setLine(a.id, "qte", e.target.value)} style={{ width: 70, textAlign: "center" }} /></td>
+                    <td className="c"><input type="number" min="0" step="0.001" value={l.prixUnitaire} onChange={e => setLine(a.id, "prixUnitaire", e.target.value)} style={{ width: 80, textAlign: "center" }} /></td>
+                    <td className="c">{euros(montant)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          <p style={{ fontSize: 12, color: "#666", marginTop: -6, marginBottom: 12 }}>
+            « Reçu (app, réf.) » = total déjà enregistré dans Réceptions sur la période choisie, pour t&apos;aider à estimer avant l&apos;arrivée de la vraie facture. Les lignes Cocoon/Horizon partagent la même référence (l&apos;app ne distingue pas la gamme reçue).
+          </p>
+
+          <div className="linen-form-row">
+            <label>Participation pour perte € <input type="number" min="0" step="0.01" value={participationPerte} onChange={e => setParticipationPerte(e.target.value)} style={{ width: 100 }} /></label>
+          </div>
+          <p style={{ fontSize: 13, marginBottom: 12 }}>
+            Sous-total HT : <strong>{euros(sousTotalHT)}</strong> · + Participation perte : <strong>{euros(participationPerte)}</strong> ·
+            Total HT : <strong>{euros(totalHT)}</strong> · TVA (20%) : <strong>{euros(tva)}</strong> · <strong style={{ color: "#1f7a3f" }}>Net à payer : {euros(netAPayer)}</strong>
+          </p>
+          <button className="primary" onClick={saveInvoice}>Enregistrer la facture</button>
+        </div>
+      )}
+
+      <table className="tbl" style={{ marginTop: 18 }}>
+        <thead>
+          <tr><th>N° facture</th><th>Date</th><th>Période</th><th className="c">Net à payer</th><th></th></tr>
+        </thead>
+        <tbody>
+          {invoices.map(inv => (
+            <InvoiceRow key={inv.id} inv={inv} receptions={receptions} onDelete={() => delInvoice(inv.id)} />
+          ))}
+          {invoices.length === 0 && <tr><td colSpan={5} className="empty-state">Aucune facture enregistrée.</td></tr>}
+        </tbody>
+      </table>
+    </>
+  );
+}
+
+// Une ligne de facture, dépliable pour voir le rapprochement avec les
+// réceptions de la période (par catégorie suivie dans l'app).
+function InvoiceRow({ inv, receptions, onDelete }) {
+  const [open, setOpen] = useState(false);
+
+  // Quantités reçues (app) par catégorie, sur la période de la facture
+  const receivedByKey = {};
+  for (const a of LINEN_ARTICLES) receivedByKey[a.key] = 0;
+  for (const r of receptions) {
+    const d = (r.date || "").slice(0, 10);
+    if (d < inv.periodFrom || d > inv.periodTo) continue;
+    for (const a of LINEN_ARTICLES) receivedByKey[a.key] += Number(r.quantities?.[a.key]) || 0;
+  }
+  // Quantités facturées par catégorie (somme des variantes Cocoon+Horizon le cas échéant)
+  const invoicedByKey = {};
+  for (const a of LINEN_ARTICLES) invoicedByKey[a.key] = 0;
+  for (const line of ELIS_INVOICE_ARTICLES) {
+    invoicedByKey[line.key] += Number(inv.lines?.[line.id]?.qte) || 0;
+  }
+
+  return (
+    <>
+      <tr>
+        <td>{inv.numFacture}</td>
+        <td>{fmtFr(inv.dateFacture)}</td>
+        <td>{fmtFr(inv.periodFrom)} → {fmtFr(inv.periodTo)}</td>
+        <td className="c" style={{ fontWeight: 700 }}>{euros(inv.netAPayer)}</td>
+        <td style={{ whiteSpace: "nowrap" }}>
+          <button onClick={() => setOpen(!open)} className="ghost" style={{ color: "#2980b9" }}>{open ? "Masquer" : "Pointer"}</button>
+          <button onClick={onDelete} className="ghost" style={{ color: "#e74c3c" }}>✕</button>
+        </td>
+      </tr>
+      {open && (
+        <tr>
+          <td colSpan={5} style={{ background: "#f8f9fb", padding: 14 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", marginBottom: 8, textTransform: "uppercase" }}>
+              Rapprochement : facturé vs réceptionné dans l&apos;app sur la période
+            </div>
+            <table className="tbl">
+              <thead>
+                <tr><th>Catégorie</th><th className="c">Facturé (Elis)</th><th className="c">Réceptionné (app)</th><th className="c">Écart</th></tr>
+              </thead>
+              <tbody>
+                {LINEN_ARTICLES.map(a => {
+                  const fact = invoicedByKey[a.key];
+                  const recu = receivedByKey[a.key];
+                  const ecart = recu - fact;
+                  if (fact === 0 && recu === 0) return null;
+                  return (
+                    <tr key={a.key}>
+                      <td>{a.label}</td>
+                      <td className="c">{fact}</td>
+                      <td className="c">{recu}</td>
+                      <td className="c" style={{ fontWeight: 700, color: ecart === 0 ? "#1f7a3f" : "#e67e22" }}>
+                        {ecart === 0 ? "✓" : (ecart > 0 ? `+${ecart}` : ecart)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            <p style={{ fontSize: 11, color: "#999", marginTop: 8 }}>
+              Écart = réceptionné dans l&apos;app − facturé par Elis. Un écart peut venir d&apos;une réception non liée
+              à cette période exacte, d&apos;un décalage de livraison, ou d&apos;une facture partielle.
+            </p>
+          </td>
+        </tr>
+      )}
     </>
   );
 }
