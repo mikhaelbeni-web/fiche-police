@@ -6,9 +6,11 @@
   --accent: #1f3a5f;
 }
 * { box-sizing: border-box; }
+html { overflow-x: hidden; width: 100%; }
 body {
   font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
   margin: 0; background: var(--bg); color: var(--ink);
+  overflow-x: hidden; width: 100%; max-width: 100vw;
 }
 
 .toolbar {
@@ -260,6 +262,23 @@ body {
   .navlink { font-size: 11px; padding: 6px 9px; margin-left: 0; }
   .status { width: 100%; order: 99; margin-left: 0; }
   .quick { flex-wrap: wrap; }
+
+  /* Formulaires (commande-linge, consignes, codes, contacts, espèces) :
+     empilement vertical complet plutôt qu'un simple retour à la ligne, pour
+     que les select/input ne dépassent jamais la largeur de l'écran iPhone. */
+  .linen-form-row {
+    flex-direction: column; align-items: stretch; gap: 10px;
+  }
+  .linen-form-row label {
+    width: 100% !important; max-width: 100% !important;
+  }
+  .linen-form-row input,
+  .linen-form-row select,
+  .linen-form-row textarea {
+    width: 100% !important; max-width: 100% !important; min-width: 0 !important;
+    box-sizing: border-box;
+  }
+  .linen-form { padding: 12px; }
 
   /* Fiche de police A4 : plein écran au lieu de 210mm fixe */
   .sheets { padding: 10px; }
