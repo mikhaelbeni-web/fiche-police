@@ -31,7 +31,11 @@ const LINEN_ROWS = [
   "Drap",
 ];
 
-function isoDay(d) { return d.toISOString().slice(0, 10); }
+function isoDay(d) {
+  // Date locale (pas UTC) : evite le decalage "hier" observe entre minuit
+  // et l'heure UTC en France (ete/hiver), car toISOString() est en UTC.
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 function fmtFr(d) {
   const x = new Date(d + "T12:00:00");
   return isNaN(x) ? d : x.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });

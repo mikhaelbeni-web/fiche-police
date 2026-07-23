@@ -101,7 +101,11 @@ function Sheet({ r }) {
   );
 }
 
-function isoDay(d) { return d.toISOString().slice(0, 10); }
+function isoDay(d) {
+  // Date locale (pas UTC) : evite le decalage "hier" observe entre minuit
+  // et l'heure UTC en France (ete/hiver), car toISOString() est en UTC.
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";

@@ -12,7 +12,9 @@ import { getCurrentStaff, setCurrentStaff, listStaff, ensureStaff, deleteStaff }
 import StaffBar from "../components/StaffBar";
 
 function todayISO() {
-  return new Date().toISOString().slice(0, 10);
+  // Date locale (pas UTC) : évite le décalage "hier" entre minuit et l'heure UTC.
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 function fmtFr(dateStr) {
   const x = new Date(dateStr + "T12:00:00");
@@ -136,7 +138,7 @@ function Checklist() {
   function shiftDate(deltaDays) {
     const d = new Date(dateStr + "T12:00:00");
     d.setDate(d.getDate() + deltaDays);
-    setDateStr(d.toISOString().slice(0, 10));
+    setDateStr(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`);
   }
 
   if (!configured) {

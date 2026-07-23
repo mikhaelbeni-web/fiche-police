@@ -49,7 +49,9 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: "Account ID et API Key requis." });
   }
 
-  const today = new Date().toISOString().slice(0, 10);
+  // Le serveur Vercel tourne en UTC : il faut convertir explicitement vers l'heure
+  // de Paris, sinon "aujourd'hui" reste sur la veille entre minuit et 1h/2h du matin.
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(new Date());
   const from = req.query.from || "2026-07-10"; // défaut : 10 juillet
   const to = req.query.to || today;
   const debug = req.query.debug === "1";
