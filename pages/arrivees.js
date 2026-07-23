@@ -1,6 +1,8 @@
 // pages/arrivees.js
 import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
+import { getCurrentStaff, setCurrentStaff, listStaff, ensureStaff } from "../lib/staff";
+import StaffBar from "../components/StaffBar";
 
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
@@ -22,11 +24,60 @@ function Arrivees() {
   const [loading, setLoading] = useState(false);
   const [creds, setCreds] = useState({ account: "", key: "" });
 
+  const [fsApi, setFsApi] = useState(null);
+  const [current, setCurrent] = useState("");
+  const [staffList, setStaffList] = useState([]);
+  const [attrib, setAttrib] = useState({}); // { [reservationId]: { by, at } }
+
   useEffect(() => {
     const a = window.localStorage.getItem(ACCOUNT_KEY) || "";
     const k = window.localStorage.getItem(KEY_KEY) || "";
     setCreds({ account: a, key: k });
+    setCurrent(getCurrentStaff());
+    (async () => {
+      const { isFirebaseConfigured } = await import("../lib/firebase");
+      if (!isFirebaseConfigured()) return;
+      const { db } = await import("../lib/firebase");
+      const { collection, doc, getDoc, getDocs, setDoc, query, orderBy } = await import("firebase/firestore");
+      const api = { db, collection, doc, getDoc, getDocs, setDoc, query, orderBy };
+      setFsApi(api);
+      try { setStaffList(await listStaff(api)); } catch { /* pas encore de staff enregistré */ }
+    })();
   }, []);
+
+  // Charge l'attribution "fait par" des check-in visibles sur la période affichée.
+  useEffect(() => {
+    if (!fsApi || !data?.groups) return;
+    (async () => {
+      const ids = [...new Set(data.groups.flatMap(g => g.items.map(it => String(it.reservation))))].filter(Boolean);
+      const next = {};
+      await Promise.all(ids.map(async id => {
+        try {
+          const snap = await fsApi.getDoc(fsApi.doc(fsApi.db, "checkin_attribution", id));
+          if (snap.exists()) next[id] = snap.data();
+        } catch { /* ignore */ }
+      }));
+      setAttrib(next);
+    })();
+  }, [fsApi, data]);
+
+  function pickStaff(name) {
+    setCurrent(name);
+    setCurrentStaff(name);
+  }
+  async function addStaff(name) {
+    if (fsApi) { try { await ensureStaff(fsApi, name); setStaffList(await listStaff(fsApi)); } catch { /* ignore */ } }
+    pickStaff(name);
+  }
+
+  async function markCheckin(reservationId) {
+    if (!fsApi || !current || !reservationId) return;
+    const entry = { by: current, at: new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) };
+    setAttrib(prev => ({ ...prev, [reservationId]: entry })); // optimiste
+    try {
+      await fsApi.setDoc(fsApi.doc(fsApi.db, "checkin_attribution", String(reservationId)), entry, { merge: true });
+    } catch { /* pas bloquant pour l'accueil */ }
+  }
 
   const load = useCallback(async (f, t, acc, key) => {
     if (!acc || !key) { setStatus("Identifiants Hostaway manquants — configure-les sur la page Fiches."); return; }
@@ -90,6 +141,8 @@ function Arrivees() {
   return (
     <>
       <Head><title>Arrivées — Résidences</title></Head>
+
+      <StaffBar current={current} list={staffList} onPick={pickStaff} onAdd={addStaff} compact />
 
       <div className="toolbar">
         <h1>Arrivées</h1>
@@ -158,16 +211,35 @@ function Arrivees() {
                   </tr>
                 </thead>
                 <tbody>
-                  {g.items.map((it, i) => (
-                    <tr key={i}>
-                      <td className="apt">{it.unitNumber || "—"}</td>
-                      <td>{it.appartement}</td>
-                      <td>{fmtFr(it.arrivee)}</td>
-                      <td>{it.client}</td>
-                      <td className="note-col"></td>
-                      <td className="c"><span className="box" /></td>
-                    </tr>
-                  ))}
+                  {g.items.map((it, i) => {
+                    const rid = String(it.reservation || "");
+                    const done = attrib[rid];
+                    return (
+                      <tr key={i}>
+                        <td className="apt">{it.unitNumber || "—"}</td>
+                        <td>{it.appartement}</td>
+                        <td>{fmtFr(it.arrivee)}</td>
+                        <td>{it.client}</td>
+                        <td className="note-col"></td>
+                        <td className="c">
+                          {done ? (
+                            <span className="checkin-done" title={`Check-in fait par ${done.by} à ${done.at}`}>
+                              ✓ {done.by}
+                            </span>
+                          ) : (
+                            <button
+                              className="checkin-btn"
+                              disabled={!rid || !current}
+                              title={!current ? "Choisis ton prénom ci-dessus" : "Marquer le check-in fait"}
+                              onClick={() => markCheckin(rid)}
+                            >
+                              Marquer fait
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

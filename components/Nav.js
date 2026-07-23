@@ -8,6 +8,7 @@ import { useState } from "react";
 
 const MAIN = [
   { href: "/", label: "Fiches de police" },
+  { href: "/checklist", label: "Checklist du jour" },
   { href: "/arrivees", label: "Arrivées" },
   { href: "/menage", label: "Ménages" },
   { href: "/commande-linge", label: "Commande linge" },

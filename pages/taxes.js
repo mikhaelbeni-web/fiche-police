@@ -303,6 +303,7 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
   const [appartement, setAppartement] = useState("");
   const [arrivalDate, setArrivalDate] = useState("");
   const [designation, setDesignation] = useState("");
+  const [fournisseur, setFournisseur] = useState("");
   const [amount, setAmount] = useState("");
   const [showStartForm, setShowStartForm] = useState(false);
 
@@ -337,8 +338,11 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
       if (mode === "client") {
         payload.client = client || ""; payload.appartement = appartement || ""; payload.arrivalDate = arrivalDate || "";
       }
+      if (mode === "expense") {
+        payload.fournisseur = fournisseur || "";
+      }
       await fs.addDoc(fs.collection(fs.db, "cash_entries"), payload);
-      setClient(""); setAppartement(""); setArrivalDate(""); setDesignation(""); setAmount("");
+      setClient(""); setAppartement(""); setArrivalDate(""); setDesignation(""); setFournisseur(""); setAmount("");
       await reload();
       setStatus("Enregistré.");
     } catch (err) { setStatus("Erreur : " + err.message); }
@@ -354,12 +358,12 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
   }
 
   function exportCurrentCSV() {
-    const rows = [["Type", "Date", "Client", "Appartement", "Date arrivée", "Désignation", "Montant"]];
+    const rows = [["Type", "Date", "Client", "Appartement", "Date arrivée", "Fournisseur", "Désignation", "Montant"]];
     for (const e of unrecovered) {
       rows.push([
         e.type === "client" ? "Paiement client" : "Dépense",
         fmtFrShort(e.date), e.client || "", e.appartement || "",
-        e.arrivalDate ? fmtFrShort(e.arrivalDate) : "", e.designation || "", e.amount,
+        e.arrivalDate ? fmtFrShort(e.arrivalDate) : "", e.fournisseur || "", e.designation || "", e.amount,
       ]);
     }
     downloadEntriesCSV(`especes_en_cours_${today}.csv`, rows);
@@ -408,7 +412,8 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
           </div>
         ) : (
           <div className="linen-form-row">
-            <label>Type de dépense <input type="text" value={designation} onChange={e => setDesignation(e.target.value)} placeholder="ex. fournitures, réparation…" style={{ width: 220 }} /></label>
+            <label>Fournisseur (magasin) <input type="text" value={fournisseur} onChange={e => setFournisseur(e.target.value)} placeholder="ex. Leroy Merlin, Monoprix…" style={{ width: 200 }} /></label>
+            <label>Raison de la dépense <input type="text" value={designation} onChange={e => setDesignation(e.target.value)} placeholder="ex. fournitures ménage, réparation serrure…" style={{ width: 240 }} /></label>
             <label>Montant € <input type="number" min="0" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} style={{ width: 100 }} /></label>
           </div>
         )}
@@ -431,7 +436,7 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
         <thead>
           <tr>
             <th>Date</th><th>Type</th><th>Client</th><th>Appartement</th>
-            <th>Désignation</th><th className="c">Montant</th><th></th>
+            <th>Fournisseur</th><th>Désignation</th><th className="c">Montant</th><th></th>
           </tr>
         </thead>
         <tbody>
@@ -441,6 +446,7 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
               <td>{e.type === "client" ? "Client" : <span style={{ color: "#e74c3c" }}>Dépense</span>}</td>
               <td>{e.client || "—"}</td>
               <td>{e.appartement || "—"}</td>
+              <td>{e.fournisseur || "—"}</td>
               <td>{e.designation || "—"}</td>
               <td className="c" style={{ color: e.type === "expense" ? "#e74c3c" : "#1f7a3f", fontWeight: 600 }}>
                 {e.type === "expense" ? "−" : "+"}{euros2(e.amount)}
@@ -448,7 +454,7 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
               <td><button onClick={() => delEntry(e)} className="ghost" style={{ color: "#e74c3c" }}>✕</button></td>
             </tr>
           ))}
-          {unrecovered.length === 0 && <tr><td colSpan={7} className="empty-state">Rien depuis la dernière récupération.</td></tr>}
+          {unrecovered.length === 0 && <tr><td colSpan={8} className="empty-state">Rien depuis la dernière récupération.</td></tr>}
         </tbody>
       </table>
       <p style={{ fontSize: 12, color: "#666", marginTop: 10 }}>
@@ -545,17 +551,17 @@ function RecoverForm({ fs, unrecovered, totalEnCaisse, onDone, setStatus }) {
 function CashHistory({ recoveries, entries, fs, reload, setStatus }) {
   function exportRecoveryCSV(rec) {
     const linked = entries.filter(e => e.recoveryId === rec.id);
-    const rows = [["Type", "Date", "Client", "Appartement", "Date arrivée", "Désignation", "Montant"]];
+    const rows = [["Type", "Date", "Client", "Appartement", "Date arrivée", "Fournisseur", "Désignation", "Montant"]];
     for (const e of linked) {
       rows.push([
         e.type === "client" ? "Paiement client" : "Dépense",
         fmtFrShort(e.date), e.client || "", e.appartement || "",
-        e.arrivalDate ? fmtFrShort(e.arrivalDate) : "", e.designation || "", e.amount,
+        e.arrivalDate ? fmtFrShort(e.arrivalDate) : "", e.fournisseur || "", e.designation || "", e.amount,
       ]);
     }
     rows.push([]);
-    rows.push(["Récupéré", "", "", "", "", "", rec.amountRecovered]);
-    rows.push(["Laissé en caisse", "", "", "", "", "", rec.amountLeftInBox]);
+    rows.push(["Récupéré", "", "", "", "", "", "", rec.amountRecovered]);
+    rows.push(["Laissé en caisse", "", "", "", "", "", "", rec.amountLeftInBox]);
     downloadEntriesCSV(`recuperation_especes_${rec.date}.csv`, rows);
   }
 
