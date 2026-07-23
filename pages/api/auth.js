@@ -44,13 +44,25 @@ function parseCookies(req) {
   return out;
 }
 
+// Le gate (code d'accès) ne doit JAMAIS dépendre de la réussite du jeton Firebase :
+// si le compte de service est mal configuré, on continue sans jeton plutôt que de
+// bloquer tout le monde à la porte.
+async function safeMintAccessToken() {
+  try {
+    return await mintAccessToken();
+  } catch (e) {
+    console.error("[api/auth] mintAccessToken a échoué:", e?.message || e);
+    return null;
+  }
+}
+
 export default async function handler(req, res) {
   const expectedCode = process.env.ACCESS_CODE || "188";
 
   if (req.method === "GET") {
     const cookies = parseCookies(req);
     const ok = verifyToken(cookies[COOKIE_NAME]);
-    const firebaseToken = ok ? await mintAccessToken() : null;
+    const firebaseToken = ok ? await safeMintAccessToken() : null;
     return res.status(200).json({ authenticated: ok, firebaseToken });
   }
 
@@ -73,7 +85,7 @@ export default async function handler(req, res) {
     res.setHeader("Set-Cookie",
       `${COOKIE_NAME}=${encodeURIComponent(token)}; Path=/; Max-Age=31536000; HttpOnly; Secure; SameSite=Lax`
     );
-    const firebaseToken = await mintAccessToken();
+    const firebaseToken = await safeMintAccessToken();
     return res.status(200).json({ authenticated: true, firebaseToken });
   }
 
