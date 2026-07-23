@@ -479,3 +479,10 @@ body {
   .progress { width: 100px; }
   .full-week { grid-template-columns: 1fr; }
 }
+
+.staff-chip-wrap { display: inline-flex; align-items: center; gap: 2px; }
+.staff-chip-del {
+  width: 18px; height: 18px; border-radius: 50%; border: none; background: #eee;
+  color: #999; font-size: 12px; line-height: 1; cursor: pointer; padding: 0;
+}
+.staff-chip-del:hover { background: #e74c3c; color: #fff; }

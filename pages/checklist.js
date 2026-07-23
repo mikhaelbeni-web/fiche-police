@@ -8,7 +8,7 @@ import Head from "next/head";
 import {
   MORNING, AFTERNOON, WEEKLY, WEEKDAY_LABELS, isoWeekday,
 } from "../lib/checklistTemplate";
-import { getCurrentStaff, setCurrentStaff, listStaff, ensureStaff } from "../lib/staff";
+import { getCurrentStaff, setCurrentStaff, listStaff, ensureStaff, deleteStaff } from "../lib/staff";
 import StaffBar from "../components/StaffBar";
 
 function todayISO() {
@@ -98,6 +98,10 @@ function Checklist() {
     if (api) { try { await ensureStaff(api, name); setStaffList(await listStaff(api)); } catch { /* ignore */ } }
     pick(name);
   }
+  async function removeStaff(name) {
+    if (!api) return;
+    try { await deleteStaff(api, name); setStaffList(await listStaff(api)); } catch { /* ignore */ }
+  }
 
   async function toggle(taskId, newDone) {
     if (!api || !isToday) return;
@@ -164,7 +168,7 @@ function Checklist() {
         <span className="status">{status}</span>
       </div>
 
-      <StaffBar current={current} list={staffList} onPick={pick} onAdd={addStaff} />
+      <StaffBar current={current} list={staffList} onPick={pick} onAdd={addStaff} onDelete={removeStaff} />
 
       {presentToday.length > 0 && (
         <div className="present-bar">

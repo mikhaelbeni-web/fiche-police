@@ -1,7 +1,7 @@
 // pages/arrivees.js
 import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
-import { getCurrentStaff, setCurrentStaff, listStaff, ensureStaff } from "../lib/staff";
+import { getCurrentStaff, setCurrentStaff, listStaff, ensureStaff, deleteStaff } from "../lib/staff";
 import StaffBar from "../components/StaffBar";
 
 const KEY_KEY = "hostaway_api_key";
@@ -38,8 +38,8 @@ function Arrivees() {
       const { isFirebaseConfigured } = await import("../lib/firebase");
       if (!isFirebaseConfigured()) return;
       const { db } = await import("../lib/firebase");
-      const { collection, doc, getDoc, getDocs, setDoc, query, orderBy } = await import("firebase/firestore");
-      const api = { db, collection, doc, getDoc, getDocs, setDoc, query, orderBy };
+      const { collection, doc, getDoc, getDocs, setDoc, deleteDoc, query, orderBy } = await import("firebase/firestore");
+      const api = { db, collection, doc, getDoc, getDocs, setDoc, deleteDoc, query, orderBy };
       setFsApi(api);
       try { setStaffList(await listStaff(api)); } catch { /* pas encore de staff enregistré */ }
     })();
@@ -68,6 +68,10 @@ function Arrivees() {
   async function addStaff(name) {
     if (fsApi) { try { await ensureStaff(fsApi, name); setStaffList(await listStaff(fsApi)); } catch { /* ignore */ } }
     pickStaff(name);
+  }
+  async function removeStaff(name) {
+    if (!fsApi) return;
+    try { await deleteStaff(fsApi, name); setStaffList(await listStaff(fsApi)); } catch { /* ignore */ }
   }
 
   async function markCheckin(reservationId) {
@@ -142,7 +146,7 @@ function Arrivees() {
     <>
       <Head><title>Arrivées — Résidences</title></Head>
 
-      <StaffBar current={current} list={staffList} onPick={pickStaff} onAdd={addStaff} compact />
+      <StaffBar current={current} list={staffList} onPick={pickStaff} onAdd={addStaff} onDelete={removeStaff} compact />
 
       <div className="toolbar">
         <h1>Arrivées</h1>

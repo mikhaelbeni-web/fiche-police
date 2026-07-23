@@ -3,7 +3,7 @@
 // besoin de savoir qui fait l'action (checklist, arrivées…). Voir lib/staff.js.
 import { useState } from "react";
 
-export default function StaffBar({ current, list, onPick, onAdd, compact }) {
+export default function StaffBar({ current, list, onPick, onAdd, onDelete, compact }) {
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState("");
 
@@ -12,7 +12,16 @@ export default function StaffBar({ current, list, onPick, onAdd, compact }) {
       <div className={`staffbar staffbar-pick${compact ? " compact" : ""}`}>
         <span className="staffbar-label">Qui es-tu ?</span>
         {list.map(n => (
-          <button key={n} className="staff-chip" onClick={() => onPick(n)}>{n}</button>
+          <span key={n} className="staff-chip-wrap">
+            <button className="staff-chip" onClick={() => onPick(n)}>{n}</button>
+            {onDelete && (
+              <button
+                className="staff-chip-del"
+                title={`Retirer "${n}" de la liste`}
+                onClick={() => { if (window.confirm(`Retirer "${n}" de la liste des prénoms ?`)) onDelete(n); }}
+              >×</button>
+            )}
+          </span>
         ))}
         {!adding && <button className="staff-chip ghost" onClick={() => setAdding(true)}>+ Ajouter mon prénom</button>}
         {adding && (

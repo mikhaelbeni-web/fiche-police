@@ -6,6 +6,7 @@
 //   GET            -> indique si le cookie de session est valide
 
 import crypto from "crypto";
+import { mintAccessToken } from "../../lib/firebaseAdmin";
 
 const COOKIE_NAME = "fp_session";
 // Secret de signature du cookie. À définir dans Vercel (SESSION_SECRET).
@@ -43,13 +44,14 @@ function parseCookies(req) {
   return out;
 }
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
   const expectedCode = process.env.ACCESS_CODE || "188";
 
   if (req.method === "GET") {
     const cookies = parseCookies(req);
     const ok = verifyToken(cookies[COOKIE_NAME]);
-    return res.status(200).json({ authenticated: ok });
+    const firebaseToken = ok ? await mintAccessToken() : null;
+    return res.status(200).json({ authenticated: ok, firebaseToken });
   }
 
   if (req.method === "POST") {
@@ -71,7 +73,8 @@ export default function handler(req, res) {
     res.setHeader("Set-Cookie",
       `${COOKIE_NAME}=${encodeURIComponent(token)}; Path=/; Max-Age=31536000; HttpOnly; Secure; SameSite=Lax`
     );
-    return res.status(200).json({ authenticated: true });
+    const firebaseToken = await mintAccessToken();
+    return res.status(200).json({ authenticated: true, firebaseToken });
   }
 
   res.setHeader("Allow", "GET, POST");
