@@ -8,16 +8,18 @@
 import { useState, useEffect } from "react";
 
 async function signInToFirebase(firebaseToken) {
-  if (!firebaseToken) return;
+  if (!firebaseToken) { console.warn("[Gate] Pas de firebaseToken reçu depuis /api/auth (compte de service absent/mal configuré côté serveur)."); return; }
   try {
     const { isFirebaseConfigured, getAppAuth } = await import("../lib/firebase");
     if (!isFirebaseConfigured()) return;
     const { signInWithCustomToken } = await import("firebase/auth");
     await signInWithCustomToken(getAppAuth(), firebaseToken);
-  } catch {
+    console.info("[Gate] Connexion Firebase OK.");
+  } catch (e) {
     // Pas bloquant : si le compte de service n'est pas encore configuré côté
     // Vercel, l'app reste utilisable, seules les règles Firestore doivent alors
     // rester provisoirement ouvertes (voir README-FIREBASE.md).
+    console.error("[Gate] Échec de connexion Firebase :", e?.code || e?.message || e);
   }
 }
 
