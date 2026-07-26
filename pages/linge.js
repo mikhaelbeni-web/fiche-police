@@ -31,11 +31,7 @@ const LINEN_ROWS = [
   "Drap",
 ];
 
-function isoDay(d) {
-  // Date locale (pas UTC) : evite le decalage "hier" observe entre minuit
-  // et l'heure UTC en France (ete/hiver), car toISOString() est en UTC.
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
+function isoDay(d) { return d.toISOString().slice(0, 10); }
 function fmtFr(d) {
   const x = new Date(d + "T12:00:00");
   return isNaN(x) ? d : x.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
@@ -60,6 +56,8 @@ function Linge() {
   const [extraApt, setExtraApt] = useState("");
   const [extraDate, setExtraDate] = useState(isoDay(new Date()));
   const [extraMotif, setExtraMotif] = useState("");
+  const [extraType, setExtraType] = useState("supplement"); // supplement | decale
+  const [extraDatePrevue, setExtraDatePrevue] = useState(isoDay(new Date(Date.now() - 86400000)));
   const apartments = listApartments();
 
   useEffect(() => {
@@ -83,16 +81,25 @@ function Linge() {
     if (!extraApt) { setExtraStatus("Choisis un appartement."); return; }
     if (!extraMotif.trim()) { setExtraStatus("Le motif est obligatoire."); return; }
     const info = apartments.find(a => a.id === extraApt);
+    // Un ménage décalé (fait le lendemain car non réalisé la veille par manque
+    // de temps) n'est jamais facturé en plus — c'est le même ménage que celui
+    // déjà dû, juste reporté d'un jour. Coût forcé à zéro, mais la date prévue
+    // et le motif restent visibles comme justificatif dans les coûts.
+    const isDecale = extraType === "decale";
     try {
       setExtraStatus("Enregistrement…");
       await fs.addDoc(fs.collection(fs.db, "extra_menages"), {
         listingId: extraApt, residence: info.residence, appartement: info.appartement,
-        unitNumber: info.unitNumber, menageHT: info.menageHT, amenitiesHT: info.amenitiesHT,
-        date: extraDate, motif: extraMotif.trim(), createdAt: new Date().toISOString(),
+        unitNumber: info.unitNumber,
+        menageHT: isDecale ? 0 : info.menageHT,
+        amenitiesHT: isDecale ? 0 : info.amenitiesHT,
+        date: extraDate, motif: extraMotif.trim(),
+        type: extraType, datePrevue: isDecale ? extraDatePrevue : null,
+        createdAt: new Date().toISOString(),
       });
       setExtraMotif("");
       await loadExtras(fs);
-      setExtraStatus("Ménage supplémentaire ajouté.");
+      setExtraStatus(isDecale ? "Ménage décalé ajouté (non facturé)." : "Ménage supplémentaire ajouté.");
     } catch (err) { setExtraStatus("Erreur : " + err.message); }
   }
 
@@ -153,7 +160,7 @@ function Linge() {
     ...items,
     ...extraToday.map(e => ({
       unitNumber: e.unitNumber, appartement: e.appartement, attendu: null,
-      extra: true, motif: e.motif,
+      extra: true, motif: e.motif, extraType: e.type, datePrevue: e.datePrevue,
     })),
   ];
 
@@ -179,6 +186,12 @@ function Linge() {
           <div className="linen-form" style={{ marginBottom: 18 }}>
             <div className="recap-title" style={{ fontSize: 15, marginBottom: 10 }}>Ajouter un ménage supplémentaire</div>
             <div className="linen-form-row">
+              <label>Type
+                <select value={extraType} onChange={e => setExtraType(e.target.value)}>
+                  <option value="supplement">Supplément payant</option>
+                  <option value="decale">Ménage décalé (non facturé)</option>
+                </select>
+              </label>
               <label>Appartement
                 <select value={extraApt} onChange={e => setExtraApt(e.target.value)} style={{ minWidth: 220 }}>
                   <option value="">— Choisir —</option>
@@ -191,19 +204,29 @@ function Linge() {
                   ))}
                 </select>
               </label>
-              <label>Date <input type="date" value={extraDate} onChange={e => setExtraDate(e.target.value)} /></label>
+              <label>{extraType === "decale" ? "Date réelle (aujourd'hui)" : "Date"} <input type="date" value={extraDate} onChange={e => setExtraDate(e.target.value)} /></label>
+              {extraType === "decale" && (
+                <label>Date prévue (veille) <input type="date" value={extraDatePrevue} onChange={e => setExtraDatePrevue(e.target.value)} /></label>
+              )}
+            </div>
+            <div className="linen-form-row">
               <label style={{ flex: 1 }}>Motif (obligatoire)
                 <input type="text" value={extraMotif} onChange={e => setExtraMotif(e.target.value)}
-                  placeholder="ex. technicien est intervenu et a fait du désordre" style={{ width: "100%" }} />
+                  placeholder={extraType === "decale" ? "ex. non fait la veille, trop de travail" : "ex. technicien est intervenu et a fait du désordre"} style={{ width: "100%" }} />
               </label>
             </div>
+            {extraType === "decale" && (
+              <p style={{ fontSize: 12, color: "#2980b9", marginTop: -6, marginBottom: 10 }}>
+                Ce ménage n&apos;est pas facturé en plus (coût 0 €) — il apparaîtra dans les coûts comme justificatif, avec la date prévue et la date réelle.
+              </p>
+            )}
             <button className="primary" onClick={addExtraMenage}>Ajouter</button>
             {extraStatus && <span style={{ marginLeft: 10, fontSize: 12, color: "#666" }}>{extraStatus}</span>}
 
             {extraMenages.length > 0 && (
               <table className="tbl" style={{ marginTop: 14 }}>
                 <thead>
-                  <tr><th>Date</th><th>Résidence</th><th>Appartement</th><th>Motif</th><th className="c">Coût</th><th></th></tr>
+                  <tr><th>Date</th><th>Résidence</th><th>Appartement</th><th>Motif</th><th>Type</th><th className="c">Coût</th><th></th></tr>
                 </thead>
                 <tbody>
                   {extraMenages.map(e => (
@@ -211,7 +234,13 @@ function Linge() {
                       <td>{fmtFr(e.date)}</td>
                       <td>{e.residence}</td>
                       <td>{e.appartement}</td>
-                      <td>{e.motif}</td>
+                      <td>
+                        {e.motif}
+                        {e.type === "decale" && e.datePrevue && (
+                          <div style={{ fontSize: 11, color: "#2980b9" }}>Prévu le {fmtFr(e.datePrevue)}</div>
+                        )}
+                      </td>
+                      <td>{e.type === "decale" ? <span style={{ color: "#2980b9" }}>Décalé</span> : "Supplément"}</td>
                       <td className="c">{euros((e.menageHT || 0) + (e.amenitiesHT || 0))}</td>
                       <td><button onClick={() => delExtraMenage(e.id)} className="ghost" style={{ color: "#e74c3c" }}>✕</button></td>
                     </tr>
@@ -242,7 +271,9 @@ function Linge() {
                     const affiche = (n != null && n > 0) ? (n % 2 === 0 ? n : n + 1) : null;
                     return (
                       <th key={i} className="pax">
-                        {it.extra ? <span style={{ color: "#b8860b" }}>SUPPL.</span> : (affiche != null ? `${affiche}P` : "—")}
+                        {it.extra
+                          ? <span style={{ color: it.extraType === "decale" ? "#2980b9" : "#b8860b" }}>{it.extraType === "decale" ? "DÉCALÉ" : "SUPPL."}</span>
+                          : (affiche != null ? `${affiche}P` : "—")}
                       </th>
                     );
                   })}
@@ -250,7 +281,7 @@ function Linge() {
                 <tr>
                   <th className="rowlabel">N° Appartement</th>
                   {sheetItems.map((it, i) => (
-                    <th key={i} className="aptnum" title={it.extra ? it.motif : undefined}>{it.unitNumber}</th>
+                    <th key={i} className="aptnum" title={it.extra ? (it.extraType === "decale" ? `${it.motif} (prévu le ${fmtFr(it.datePrevue)})` : it.motif) : undefined}>{it.unitNumber}</th>
                   ))}
                 </tr>
               </thead>

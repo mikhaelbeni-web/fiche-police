@@ -5,11 +5,7 @@ import Head from "next/head";
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
 
-function isoDay(d) {
-  // Date locale (pas UTC) : evite le decalage "hier" observe entre minuit
-  // et l'heure UTC en France (ete/hiver), car toISOString() est en UTC.
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
+function isoDay(d) { return d.toISOString().slice(0, 10); }
 function fmtFr(d) {
   if (!d) return "";
   const x = new Date(d + "T12:00:00");
@@ -99,7 +95,7 @@ function Menage() {
     if (!byResidence[e.residence]) byResidence[e.residence] = { residence: e.residence, items: [], count: 0 };
     byResidence[e.residence].items.push({
       unitNumber: e.unitNumber, appartement: e.appartement, depart: e.date,
-      client: null, extra: true, motif: e.motif,
+      client: null, extra: true, motif: e.motif, extraType: e.type, datePrevue: e.datePrevue,
     });
     byResidence[e.residence].count += 1;
   }
@@ -110,7 +106,11 @@ function Menage() {
     const rows = [["Résidence", "N°", "Appartement", "Date de départ", "Client", "Note", "Réservation"]];
     for (const g of mergedGroups) {
       for (const it of g.items) {
-        const note = it.extra ? `Ménage supplémentaire : ${it.motif}` : "";
+        const note = it.extra
+          ? (it.extraType === "decale"
+              ? `Ménage décalé (prévu le ${fmtFr(it.datePrevue)}) : ${it.motif}`
+              : `Ménage supplémentaire : ${it.motif}`)
+          : "";
         rows.push([g.residence, it.unitNumber, it.appartement, fmtFr(it.depart), it.client || "", note, it.reservation || ""]);
       }
     }
@@ -200,16 +200,25 @@ function Menage() {
                 </thead>
                 <tbody>
                   {g.items.map((it, i) => (
-                    <tr key={i} style={it.extra ? { background: "#fff8ec" } : undefined}>
+                    <tr key={i} style={it.extra ? { background: it.extraType === "decale" ? "#eaf3fb" : "#fff8ec" } : undefined}>
                       <td className="apt">{it.unitNumber || "—"}</td>
                       <td>{it.appartement}</td>
                       <td>{fmtFr(it.depart)}</td>
                       <td>
                         {it.extra
-                          ? <span style={{ color: "#b8860b", fontWeight: 700, fontSize: 12 }}>SUPPLÉMENTAIRE</span>
+                          ? (it.extraType === "decale"
+                              ? <span style={{ color: "#2980b9", fontWeight: 700, fontSize: 12 }}>DÉCALÉ</span>
+                              : <span style={{ color: "#b8860b", fontWeight: 700, fontSize: 12 }}>SUPPLÉMENTAIRE</span>)
                           : it.client}
                       </td>
-                      <td className="note-col">{it.extra ? <span style={{ fontStyle: "italic", color: "var(--muted)" }}>{it.motif}</span> : null}</td>
+                      <td className="note-col">
+                        {it.extra ? (
+                          <span style={{ fontStyle: "italic", color: "var(--muted)" }}>
+                            {it.motif}
+                            {it.extraType === "decale" && it.datePrevue && ` (prévu le ${fmtFr(it.datePrevue)})`}
+                          </span>
+                        ) : null}
+                      </td>
                       <td className="c"><span className="box" /></td>
                     </tr>
                   ))}

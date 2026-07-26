@@ -8,11 +8,7 @@ import Head from "next/head";
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
 
-function isoDay(d) {
-  // Date locale (pas UTC) : evite le decalage "hier" observe entre minuit
-  // et l'heure UTC en France (ete/hiver), car toISOString() est en UTC.
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
+function isoDay(d) { return d.toISOString().slice(0, 10); }
 function fmtFr(d) {
   const x = new Date(d + "T12:00:00");
   return isNaN(x) ? d : x.toLocaleDateString("fr-FR");
@@ -230,7 +226,14 @@ function Couts() {
                     <div key={e.id} className="extra-menages-row">
                       <span className="apt">{e.appartement}</span>
                       <span>{fmtFr(e.date)}</span>
-                      <span className="motif">{e.motif}</span>
+                      <span className="motif">
+                        {e.type === "decale" ? (
+                          <>
+                            <span style={{ color: "#2980b9", fontWeight: 600 }}>Ménage décalé</span> — {e.motif}
+                            {e.datePrevue && <> · prévu le {fmtFr(e.datePrevue)}, fait le {fmtFr(e.date)}</>}
+                          </>
+                        ) : e.motif}
+                      </span>
                       <span className="c">{euros((e.menageHT || 0) + (e.amenitiesHT || 0))}</span>
                     </div>
                   ))}

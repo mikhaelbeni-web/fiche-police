@@ -1,27 +1,7 @@
 // components/Gate.js
 // Verrou d'accès partagé. Vérification du code CÔTÉ SERVEUR (/api/auth).
 // Le code n'est jamais présent dans le bundle navigateur.
-// Une fois le code validé, le serveur délivre aussi un jeton Firebase (compte de
-// service) : on s'y connecte avant d'afficher l'app, pour que les règles Firestore
-// puissent exiger request.auth != null (accès direct à la base impossible sans
-// être passé par ce gate, même en connaissant les clés Firebase publiques).
 import { useState, useEffect } from "react";
-
-async function signInToFirebase(firebaseToken) {
-  if (!firebaseToken) { console.warn("[Gate] Pas de firebaseToken reçu depuis /api/auth (compte de service absent/mal configuré côté serveur)."); return; }
-  try {
-    const { isFirebaseConfigured, getAppAuth } = await import("../lib/firebase");
-    if (!isFirebaseConfigured()) return;
-    const { signInWithCustomToken } = await import("firebase/auth");
-    await signInWithCustomToken(getAppAuth(), firebaseToken);
-    console.info("[Gate] Connexion Firebase OK.");
-  } catch (e) {
-    // Pas bloquant : si le compte de service n'est pas encore configuré côté
-    // Vercel, l'app reste utilisable, seules les règles Firestore doivent alors
-    // rester provisoirement ouvertes (voir README-FIREBASE.md).
-    console.error("[Gate] Échec de connexion Firebase :", e?.code || e?.message || e);
-  }
-}
 
 export default function Gate({ children }) {
   const [state, setState] = useState("checking"); // checking | locked | unlocked
@@ -33,15 +13,7 @@ export default function Gate({ children }) {
     let alive = true;
     fetch("/api/auth", { method: "GET" })
       .then(r => r.json())
-      .then(async d => {
-        if (!alive) return;
-        if (d.authenticated) {
-          await signInToFirebase(d.firebaseToken);
-          if (alive) setState("unlocked");
-        } else {
-          setState("locked");
-        }
-      })
+      .then(d => { if (alive) setState(d.authenticated ? "unlocked" : "locked"); })
       .catch(() => { if (alive) setState("locked"); });
     return () => { alive = false; };
   }, []);
@@ -57,12 +29,8 @@ export default function Gate({ children }) {
         body: JSON.stringify({ code }),
       });
       const d = await r.json();
-      if (d.authenticated) {
-        await signInToFirebase(d.firebaseToken);
-        setState("unlocked");
-      } else {
-        setErr(d.error || "Code incorrect"); setCode("");
-      }
+      if (d.authenticated) setState("unlocked");
+      else { setErr(d.error || "Code incorrect"); setCode(""); }
     } catch {
       setErr("Erreur réseau");
     } finally {
