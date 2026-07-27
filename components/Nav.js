@@ -10,6 +10,7 @@ const MAIN = [
   { href: "/", label: "Fiches de police" },
   { href: "/arrivees", label: "Arrivées" },
   { href: "/menage", label: "Ménages" },
+  { href: "/checklist", label: "Check-list" },
   { href: "/commande-linge", label: "Commande linge" },
   { href: "/linge", label: "Linge Belleville" },
   { href: "/transition", label: "Rapport transition" },
