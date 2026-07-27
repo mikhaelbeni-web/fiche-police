@@ -15,7 +15,7 @@ import StaffBar from "../components/StaffBar";
 // Code admin pour ajouter/modifier/supprimer une ligne de tâche du planning.
 // Distinct du code de suppression 2305 utilisé ailleurs — celui-ci ouvre un vrai
 // mode édition du référentiel de tâches, pas juste une confirmation ponctuelle.
-const ADMIN_CODE = process.env.NEXT_PUBLIC_CHECKLIST_ADMIN_CODE || "2503";
+const ADMIN_CODE = process.env.NEXT_PUBLIC_CHECKLIST_ADMIN_CODE || "2305";
 function checkAdminCode() {
   const entered = prompt("Code admin requis :");
   if (entered === null) return false;
