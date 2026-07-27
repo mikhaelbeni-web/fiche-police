@@ -419,3 +419,48 @@ body {
 @media screen and (max-width: 768px) {
   .extra-menages-row { grid-template-columns: 1fr; gap: 2px; }
 }
+
+/* --- StaffBar (checklist, "qui es-tu ?") --- */
+.staffbar, .present-bar {
+  background: #16304f; color: #fff; padding: 10px 20px;
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  font-size: 13px;
+}
+.present-bar { background: #eef3f8; color: var(--ink); font-size: 12px; padding: 8px 20px; }
+.staffbar.compact { padding: 6px 14px; font-size: 12px; }
+.staffbar-label { font-weight: 600; opacity: .85; margin-right: 2px; white-space: nowrap; }
+.staff-chip-wrap { display: inline-flex; align-items: center; }
+.staff-chip {
+  background: rgba(255,255,255,.14); color: #fff; border: none; border-radius: 999px;
+  padding: 6px 12px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.staffbar button.staff-chip:hover { background: rgba(255,255,255,.26); }
+.staff-chip.ghost { background: transparent; border: 1px dashed rgba(255,255,255,.5); font-weight: 500; }
+.staff-chip.current { background: #2ecc71; color: #073; }
+.present-bar .staff-chip.present {
+  background: var(--accent); color: #fff; padding: 4px 10px; font-size: 12px; border: none; cursor: default;
+}
+.staff-chip-del {
+  background: transparent; border: none; color: rgba(255,255,255,.6); cursor: pointer;
+  font-size: 14px; line-height: 1; padding: 0 2px 0 4px; margin-left: -6px;
+}
+.staff-chip-del:hover { color: #fff; }
+.staff-add { display: inline-flex; align-items: center; gap: 6px; }
+.staff-add input {
+  padding: 6px 9px; border: none; border-radius: 5px; font-size: 13px; width: 120px;
+}
+.staff-add button {
+  background: #2ecc71; color: #073; border: none; border-radius: 5px;
+  padding: 6px 12px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.staffbar-switch {
+  background: transparent; border: 1px solid rgba(255,255,255,.4); color: #fff;
+  border-radius: 5px; padding: 5px 10px; font-size: 12px; cursor: pointer; margin-left: 4px;
+}
+.staffbar-switch:hover { background: rgba(255,255,255,.15); }
+
+.checklist-recap { margin-top: 18px; }
+
+@media screen and (max-width: 768px) {
+  .staffbar, .present-bar { padding: 8px 12px; font-size: 12px; }
+}
