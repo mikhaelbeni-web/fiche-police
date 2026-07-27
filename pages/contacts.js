@@ -143,7 +143,7 @@ function Contacts() {
               <div style={{ marginBottom: 12 }}>
                 <div style={{ fontSize: 12, color: "var(--muted)", fontWeight: 600, marginBottom: 6 }}>Numéros de téléphone</div>
                 {form.telephones.map((t, i) => (
-                  <div key={i} style={{ display: "flex", gap: 6, marginBottom: 6 }}>
+                  <div key={i} className="phone-row" style={{ display: "flex", gap: 6, marginBottom: 6 }}>
                     <input type="text" value={t} onChange={e => updatePhone(i, e.target.value)} placeholder="06 12 34 56 78" style={{ width: 180, padding: "7px 9px", border: "1px solid #ccc", borderRadius: 5 }} />
                     <button onClick={() => removePhoneField(i)} className="ghost" style={{ color: "#e74c3c" }}>✕</button>
                   </div>

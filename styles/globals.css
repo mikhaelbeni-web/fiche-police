@@ -528,3 +528,9 @@ body {
 .task-admin-btn.del { color: #e74c3c; }
 .task-admin-btn.del:hover { background: #fbdede; }
 .admin-add { display: block; margin-top: 8px; color: #1f7a3f; border-style: dashed; }
+
+/* --- Ligne téléphone (Contacts) : empile sur mobile --- */
+@media screen and (max-width: 768px) {
+  .phone-row { flex-wrap: wrap; }
+  .phone-row input { flex: 1; min-width: 0; width: auto !important; }
+}
