@@ -805,7 +805,10 @@ function DefectsTab({ fs, defects, reload, setStatus }) {
 
 // ---------- POSITION (compte courant cumulé) ----------
 // Deux blocs distincts de manquant, tous deux déduits du stock réel :
-//  1) Manquant commande = somme, par commande, de (commandé - reçu affecté) non livré.
+//  1) Manquant commande = (commandé sur commandes reçues - reçu sur ces commandes),
+//     que les réceptions de rattrapage (même "libres") viennent éponger. Se solde
+//     donc automatiquement dès que le linge manquant est renvoyé, peu importe où
+//     il est saisi.
 //  2) Défectueux jamais rendu = restant des défectueux renvoyés non encore revenus.
 // Stock réel = base + reçu - utilisé - manquant commande - défectueux dehors.
 function PositionTab({ fs, stock, orders, receptions, usage, defects, thresholds, setThresholds, setStatus }) {
@@ -831,20 +834,41 @@ function PositionTab({ fs, stock, orders, receptions, usage, defects, thresholds
     }
   }
 
-  // Manquant commande : par commande marquée "recue", ce qui n'a pas été livré.
-  // Pour chaque commande reçue, on prend l'écart négatif enregistré sur sa réception liée.
-  // Une commande sans écart négatif ne contribue pas.
+  // EN ATTENTE DE LIVRAISON — commandes passées mais pas encore reçues (statut
+  // != "recue"). Ce n'est PAS un manquant : c'est du linge en route, normal.
+  // Jamais déduit du stock réel, affiché dans sa propre colonne à titre indicatif.
+  const enAttente = {};
+  for (const a of LINEN_ARTICLES) enAttente[a.key] = 0;
+  for (const o of orders) {
+    if (o.status === "recue") continue;
+    for (const a of LINEN_ARTICLES) enAttente[a.key] += Number(o.quantities?.[a.key]) || 0;
+  }
+
+  // Manquant commande — logique GLOBALE qui se solde automatiquement :
+  // Sur les seules commandes déjà marquées "reçue" (donc dont la livraison est
+  // censée être terminée), on cumule ce qui était commandé et ce qui a été reçu
+  // AU TITRE de ces commandes. Puis le manquant = commandé - reçu affecté, MAIS
+  // les réceptions de rattrapage (y compris "libres", non liées à une commande)
+  // viennent éponger ce manquant. Résultat : dès que le rattrapage arrive, le
+  // manquant retombe à zéro, quelle que soit la réception où il a été saisi.
+  const cmdRecue = {}, recuSurCmd = {}, recuLibre = {};
+  for (const a of LINEN_ARTICLES) { cmdRecue[a.key] = 0; recuSurCmd[a.key] = 0; recuLibre[a.key] = 0; }
   for (const r of receptions) {
-    if (!r.commande) continue; // réceptions liées à une commande seulement
     for (const a of LINEN_ARTICLES) {
-      const cmd = Number(r.commande[a.key]) || 0;
       const recu = Number(r.quantities?.[a.key]) || 0;
-      const defAtt = Number(r.defectAttendu?.[a.key]) || 0;
-      // Manquant sur la partie COMMANDE uniquement : ce qui manque au-delà de ce que
-      // les défectueux attendus expliquent. reçu couvre d'abord la commande.
-      const manqueCommande = Math.max(0, cmd - recu);
-      manquantCmd[a.key] += manqueCommande;
+      if (r.commande) {
+        cmdRecue[a.key] += Number(r.commande[a.key]) || 0;
+        recuSurCmd[a.key] += recu;
+      } else {
+        // Réception libre = rattrapage / livraison hors commande : sert à combler
+        recuLibre[a.key] += recu;
+      }
     }
+  }
+  for (const a of LINEN_ARTICLES) {
+    const manqueBrut = Math.max(0, cmdRecue[a.key] - recuSurCmd[a.key]);
+    // Le linge reçu en réception libre éponge le manquant en priorité
+    manquantCmd[a.key] = Math.max(0, manqueBrut - recuLibre[a.key]);
   }
 
   async function saveThresholds() {
@@ -899,6 +923,7 @@ function PositionTab({ fs, stock, orders, receptions, usage, defects, thresholds
             <th className="c">Commandé</th>
             <th className="c">Reçu</th>
             <th className="c">Utilisé</th>
+            <th className="c" style={{ background: "#eef4fb" }}>En attente livraison</th>
             <th className="c" style={{ background: "#fdf3e6" }}>Manquant commande</th>
             <th className="c" style={{ background: "#fdf3e6" }}>Défectueux non rendu</th>
             <th className="c">Stock réel</th>
@@ -919,6 +944,7 @@ function PositionTab({ fs, stock, orders, receptions, usage, defects, thresholds
                 <td className="c">{totOrdered[a.key]}</td>
                 <td className="c">{totReceived[a.key]}</td>
                 <td className="c">{totUsed[a.key]}</td>
+                <td className="c" style={{ fontWeight: enAttente[a.key] > 0 ? 600 : 400, color: enAttente[a.key] > 0 ? "#2980b9" : "#999", background: "#f5f9fd" }}>{enAttente[a.key] || "—"}</td>
                 <td className="c" style={{ fontWeight: mc > 0 ? 700 : 400, color: mc > 0 ? "#e74c3c" : "#999", background: "#fdf9f3" }}>{mc || "—"}</td>
                 <td className="c" style={{ fontWeight: df > 0 ? 700 : 400, color: df > 0 ? "#e67e22" : "#999", background: "#fdf9f3" }}>{df || "—"}</td>
                 <td className="c" style={{ fontWeight: 700, color: bas ? "#e74c3c" : "inherit" }}>{estime}{bas ? " ⚠" : ""}</td>
@@ -933,9 +959,10 @@ function PositionTab({ fs, stock, orders, receptions, usage, defects, thresholds
         </tbody>
       </table>
       <p style={{ fontSize: 12, color: "#666", marginTop: 10 }}>
-        <strong style={{ color: "#e74c3c" }}>Manquant commande</strong> = commandé mais jamais livré.
+        <strong style={{ color: "#2980b9" }}>En attente livraison</strong> = commande passée, pas encore reçue (normal, en route) — <em>pas</em> déduit du stock.
+        <strong style={{ color: "#e74c3c" }}> Manquant commande</strong> = commande <em>déjà reçue</em> mais dont il manquait des pièces jamais livrées (vraie anomalie).
         <strong style={{ color: "#e67e22" }}> Défectueux non rendu</strong> = renvoyé à Pantin, pas encore revenu.
-        Les deux sont déduits du <strong>stock réel</strong>. Le tableau roule en continu et ne se remet jamais à zéro.
+        Manquant et défectueux sont déduits du <strong>stock réel</strong>. Un manquant se solde automatiquement dès que le linge est renvoyé par Elis.
       </p>
     </>
   );
