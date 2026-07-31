@@ -599,6 +599,7 @@ function RecoverForm({ fs, unrecovered, totalEnCaisse, onDone, setStatus }) {
     if (!totalPositif) { setStatus("La caisse est vide ou négative, rien à récupérer."); return; }
     if (!montantsValides) { setStatus("Les montants ne peuvent pas être négatifs."); return; }
     if (!coherent) { setStatus("Récupéré + laissé doit être égal au total en caisse."); return; }
+    if (!checkDeletePassword()) return;
     try {
       setStatus("Enregistrement de la récupération…");
       const date = isoDay(new Date());
