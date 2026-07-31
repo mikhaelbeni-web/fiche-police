@@ -306,28 +306,32 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
   const [fournisseur, setFournisseur] = useState("");
   const [amount, setAmount] = useState("");
   const [saisiPar, setSaisiPar] = useState("");
-  const [clientMode, setClientMode] = useState("arrivee"); // arrivee | autre
-  const [bellevilleArrivals, setBellevilleArrivals] = useState([]);
+  const [clientMode, setClientMode] = useState("taxe"); // taxe | autre
+  const [taxeClients, setTaxeClients] = useState([]);
   const [showStartForm, setShowStartForm] = useState(false);
 
-  // Charge les arrivées Belleville du jour depuis Hostaway : un paiement espèces
-  // concerne presque toujours un client qui arrive à Belleville aujourd'hui, donc
-  // on pré-remplit la liste. L'option "Autre client" reste dispo pour les cas hors
-  // arrivée du jour (client rentré un autre jour, etc.), en saisie manuelle.
+  // Charge les clients Belleville avec taxe de séjour à régler depuis Hostaway :
+  // un paiement espèces sert le plus souvent à encaisser une taxe impayée, donc
+  // on pré-remplit la liste avec ces clients (et leur montant dû). L'option
+  // "Autre client" reste dispo pour tout encaissement hors taxe / hors liste.
   useEffect(() => {
     (async () => {
       try {
         const acc = window.localStorage.getItem("hostaway_account") || "";
         const key = window.localStorage.getItem("hostaway_api_key") || "";
         if (!acc || !key) return;
-        const res = await fetch(`/api/arrivals?from=${today}&to=${today}`, {
+        // Période large : du 10 juillet (départ fixe de l'onglet Taxes) à aujourd'hui
+        const res = await fetch(`/api/tourist-tax?from=2026-07-10&to=${today}`, {
           headers: { "x-hostaway-account": acc, "x-hostaway-key": key },
         });
         const d = await res.json();
         if (!res.ok) return;
-        const bell = (d.groups || []).find(g => g.residence === "Belleville");
-        setBellevilleArrivals(bell ? bell.items : []);
-      } catch { /* pas bloquant : on garde la saisie manuelle */ }
+        // On ne garde que Belleville avec une taxe due > 0 non entièrement réglée
+        const bell = (d.items || []).filter(it =>
+          it.residence === "Belleville" && Number(it.taxeSejour) > 0
+        );
+        setTaxeClients(bell);
+      } catch { /* pas bloquant : saisie manuelle possible via "Autre client" */ }
     })();
   }, [today]);
 
@@ -445,33 +449,37 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
               <label>Client
                 <select value={clientMode} onChange={e => {
                   setClientMode(e.target.value);
-                  // en repassant sur "arrivée", on vide la saisie manuelle
-                  if (e.target.value === "arrivee") { setClient(""); setAppartement(""); setArrivalDate(""); }
+                  if (e.target.value === "taxe") { setClient(""); setAppartement(""); setArrivalDate(""); }
                 }}>
-                  <option value="arrivee">Client arrivée Belleville du jour</option>
+                  <option value="taxe">Client taxe de séjour (Belleville)</option>
                   <option value="autre">Autre client (saisie manuelle)</option>
                 </select>
               </label>
 
-              {clientMode === "arrivee" ? (
-                <label style={{ minWidth: 260 }}>Arrivée Belleville aujourd&apos;hui
+              {clientMode === "taxe" ? (
+                <label style={{ minWidth: 300 }}>Client avec taxe à régler
                   <select
                     value={client}
                     onChange={e => {
-                      const it = bellevilleArrivals.find(x => x.client === e.target.value);
+                      const it = taxeClients.find(x => x.client === e.target.value);
                       setClient(e.target.value);
-                      if (it) { setAppartement(it.unitNumber || it.appartement || ""); setArrivalDate(it.arrivee || today); }
+                      if (it) {
+                        setAppartement(it.unitNumber || it.appartement || "");
+                        setArrivalDate(it.arrivee || "");
+                        setDesignation("Taxe de séjour");
+                        if (it.taxeSejour) setAmount(String(it.taxeSejour));
+                      }
                     }}
                   >
                     <option value="">— Choisir le client —</option>
-                    {bellevilleArrivals.map((it, i) => (
+                    {taxeClients.map((it, i) => (
                       <option key={i} value={it.client}>
-                        {it.client} — {it.unitNumber || it.appartement}
+                        {it.client} — {it.unitNumber || it.appartement} — {euros2(it.taxeSejour)}
                       </option>
                     ))}
                   </select>
-                  {bellevilleArrivals.length === 0 && (
-                    <span style={{ fontSize: 11, color: "#e67e22" }}>Aucune arrivée Belleville chargée (vérifie les identifiants Hostaway sur Fiches, ou utilise « Autre client »).</span>
+                  {taxeClients.length === 0 && (
+                    <span style={{ fontSize: 11, color: "#e67e22" }}>Aucun client taxe Belleville chargé (vérifie les identifiants Hostaway sur Fiches, ou utilise « Autre client »).</span>
                   )}
                 </label>
               ) : (
