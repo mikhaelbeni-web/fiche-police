@@ -305,7 +305,31 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
   const [designation, setDesignation] = useState("");
   const [fournisseur, setFournisseur] = useState("");
   const [amount, setAmount] = useState("");
+  const [saisiPar, setSaisiPar] = useState("");
+  const [clientMode, setClientMode] = useState("arrivee"); // arrivee | autre
+  const [bellevilleArrivals, setBellevilleArrivals] = useState([]);
   const [showStartForm, setShowStartForm] = useState(false);
+
+  // Charge les arrivées Belleville du jour depuis Hostaway : un paiement espèces
+  // concerne presque toujours un client qui arrive à Belleville aujourd'hui, donc
+  // on pré-remplit la liste. L'option "Autre client" reste dispo pour les cas hors
+  // arrivée du jour (client rentré un autre jour, etc.), en saisie manuelle.
+  useEffect(() => {
+    (async () => {
+      try {
+        const acc = window.localStorage.getItem("hostaway_account") || "";
+        const key = window.localStorage.getItem("hostaway_api_key") || "";
+        if (!acc || !key) return;
+        const res = await fetch(`/api/arrivals?from=${today}&to=${today}`, {
+          headers: { "x-hostaway-account": acc, "x-hostaway-key": key },
+        });
+        const d = await res.json();
+        if (!res.ok) return;
+        const bell = (d.groups || []).find(g => g.residence === "Belleville");
+        setBellevilleArrivals(bell ? bell.items : []);
+      } catch { /* pas bloquant : on garde la saisie manuelle */ }
+    })();
+  }, [today]);
 
   // Solde de départ : techniquement une "récupération" à 0 récupéré, dont le
   // reliquat laissé en caisse sert de base à tous les calculs suivants —
@@ -327,12 +351,14 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
   }
 
   async function addEntry() {
+    if (!saisiPar) { setStatus("Choisis d'abord qui saisit (le réceptionniste)."); return; }
     const amt = Number(amount);
     if (!amt || amt <= 0) { setStatus("Montant invalide."); return; }
     try {
       setStatus("Enregistrement…");
       const payload = {
         type: mode, date, amount: amt, designation: designation || "",
+        saisiPar,
         recoveryId: null, createdAt: new Date().toISOString(),
       };
       if (mode === "client") {
@@ -358,11 +384,11 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
   }
 
   function exportCurrentCSV() {
-    const rows = [["Type", "Date", "Client", "Appartement", "Date arrivée", "Fournisseur", "Désignation", "Montant"]];
+    const rows = [["Type", "Date", "Saisi par", "Client", "Appartement", "Date arrivée", "Fournisseur", "Désignation", "Montant"]];
     for (const e of unrecovered) {
       rows.push([
         e.type === "client" ? "Paiement client" : "Dépense",
-        fmtFrShort(e.date), e.client || "", e.appartement || "",
+        fmtFrShort(e.date), e.saisiPar || "", e.client || "", e.appartement || "",
         e.arrivalDate ? fmtFrShort(e.arrivalDate) : "", e.fournisseur || "", e.designation || "", e.amount,
       ]);
     }
@@ -393,6 +419,17 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
       )}
 
       <div className="linen-form">
+        <div className="linen-form-row" style={{ background: saisiPar ? "transparent" : "#fdf3e6", padding: saisiPar ? 0 : "8px", borderRadius: 6, marginBottom: 10 }}>
+          <label style={{ fontWeight: 700 }}>Réceptionniste (obligatoire)
+            <select value={saisiPar} onChange={e => setSaisiPar(e.target.value)}>
+              <option value="">— Qui saisit ? —</option>
+              <option value="Zack">Zack</option>
+              <option value="Kurtis">Kurtis</option>
+              <option value="Esteban">Esteban</option>
+            </select>
+          </label>
+          {!saisiPar && <span style={{ fontSize: 12, color: "#e67e22", alignSelf: "center" }}>À renseigner avant toute saisie</span>}
+        </div>
         <div className="linen-form-row">
           <label>Type
             <select value={mode} onChange={e => setMode(e.target.value)}>
@@ -403,13 +440,53 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
           <label>Date <input type="date" value={date} onChange={e => setDate(e.target.value)} /></label>
         </div>
         {mode === "client" ? (
-          <div className="linen-form-row">
-            <label>Nom du client <input type="text" value={client} onChange={e => setClient(e.target.value)} style={{ width: 180 }} /></label>
-            <label>Appartement <input type="text" value={appartement} onChange={e => setAppartement(e.target.value)} style={{ width: 130 }} /></label>
-            <label>Date arrivée <input type="date" value={arrivalDate} onChange={e => setArrivalDate(e.target.value)} /></label>
-            <label>Désignation <input type="text" value={designation} onChange={e => setDesignation(e.target.value)} placeholder="taxe de séjour, autre vente…" style={{ width: 180 }} /></label>
-            <label>Montant € <input type="number" min="0" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} style={{ width: 100 }} /></label>
-          </div>
+          <>
+            <div className="linen-form-row">
+              <label>Client
+                <select value={clientMode} onChange={e => {
+                  setClientMode(e.target.value);
+                  // en repassant sur "arrivée", on vide la saisie manuelle
+                  if (e.target.value === "arrivee") { setClient(""); setAppartement(""); setArrivalDate(""); }
+                }}>
+                  <option value="arrivee">Client arrivée Belleville du jour</option>
+                  <option value="autre">Autre client (saisie manuelle)</option>
+                </select>
+              </label>
+
+              {clientMode === "arrivee" ? (
+                <label style={{ minWidth: 260 }}>Arrivée Belleville aujourd&apos;hui
+                  <select
+                    value={client}
+                    onChange={e => {
+                      const it = bellevilleArrivals.find(x => x.client === e.target.value);
+                      setClient(e.target.value);
+                      if (it) { setAppartement(it.unitNumber || it.appartement || ""); setArrivalDate(it.arrivee || today); }
+                    }}
+                  >
+                    <option value="">— Choisir le client —</option>
+                    {bellevilleArrivals.map((it, i) => (
+                      <option key={i} value={it.client}>
+                        {it.client} — {it.unitNumber || it.appartement}
+                      </option>
+                    ))}
+                  </select>
+                  {bellevilleArrivals.length === 0 && (
+                    <span style={{ fontSize: 11, color: "#e67e22" }}>Aucune arrivée Belleville chargée (vérifie les identifiants Hostaway sur Fiches, ou utilise « Autre client »).</span>
+                  )}
+                </label>
+              ) : (
+                <>
+                  <label>Nom du client <input type="text" value={client} onChange={e => setClient(e.target.value)} style={{ width: 180 }} /></label>
+                  <label>Appartement <input type="text" value={appartement} onChange={e => setAppartement(e.target.value)} style={{ width: 130 }} /></label>
+                  <label>Date arrivée <input type="date" value={arrivalDate} onChange={e => setArrivalDate(e.target.value)} /></label>
+                </>
+              )}
+            </div>
+            <div className="linen-form-row">
+              <label>Désignation <input type="text" value={designation} onChange={e => setDesignation(e.target.value)} placeholder="taxe de séjour, autre vente…" style={{ width: 180 }} /></label>
+              <label>Montant € <input type="number" min="0" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} style={{ width: 100 }} /></label>
+            </div>
+          </>
         ) : (
           <div className="linen-form-row">
             <label>Fournisseur (magasin) <input type="text" value={fournisseur} onChange={e => setFournisseur(e.target.value)} placeholder="ex. Leroy Merlin, Monoprix…" style={{ width: 200 }} /></label>
@@ -417,7 +494,7 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
             <label>Montant € <input type="number" min="0" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} style={{ width: 100 }} /></label>
           </div>
         )}
-        <button className="primary" onClick={addEntry}>Ajouter</button>
+        <button className="primary" onClick={addEntry} disabled={!saisiPar}>Ajouter</button>
       </div>
 
       <div style={{ display: "flex", gap: 8, margin: "14px 0" }}>
@@ -435,7 +512,7 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
       <table className="tbl" style={{ marginTop: 10 }}>
         <thead>
           <tr>
-            <th>Date</th><th>Type</th><th>Client</th><th>Appartement</th>
+            <th>Date</th><th>Type</th><th>Saisi par</th><th>Client</th><th>Appartement</th>
             <th>Fournisseur</th><th>Désignation</th><th className="c">Montant</th><th></th>
           </tr>
         </thead>
@@ -444,6 +521,7 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
             <tr key={e.id}>
               <td>{fmtFrShort(e.date)}</td>
               <td>{e.type === "client" ? "Client" : <span style={{ color: "#e74c3c" }}>Dépense</span>}</td>
+              <td>{e.saisiPar || "—"}</td>
               <td>{e.client || "—"}</td>
               <td>{e.appartement || "—"}</td>
               <td>{e.fournisseur || "—"}</td>
@@ -454,7 +532,7 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
               <td><button onClick={() => delEntry(e)} className="ghost" style={{ color: "#e74c3c" }}>✕</button></td>
             </tr>
           ))}
-          {unrecovered.length === 0 && <tr><td colSpan={8} className="empty-state">Rien depuis la dernière récupération.</td></tr>}
+          {unrecovered.length === 0 && <tr><td colSpan={9} className="empty-state">Rien depuis la dernière récupération.</td></tr>}
         </tbody>
       </table>
       <p style={{ fontSize: 12, color: "#666", marginTop: 10 }}>
@@ -551,17 +629,17 @@ function RecoverForm({ fs, unrecovered, totalEnCaisse, onDone, setStatus }) {
 function CashHistory({ recoveries, entries, fs, reload, setStatus }) {
   function exportRecoveryCSV(rec) {
     const linked = entries.filter(e => e.recoveryId === rec.id);
-    const rows = [["Type", "Date", "Client", "Appartement", "Date arrivée", "Fournisseur", "Désignation", "Montant"]];
+    const rows = [["Type", "Date", "Saisi par", "Client", "Appartement", "Date arrivée", "Fournisseur", "Désignation", "Montant"]];
     for (const e of linked) {
       rows.push([
         e.type === "client" ? "Paiement client" : "Dépense",
-        fmtFrShort(e.date), e.client || "", e.appartement || "",
+        fmtFrShort(e.date), e.saisiPar || "", e.client || "", e.appartement || "",
         e.arrivalDate ? fmtFrShort(e.arrivalDate) : "", e.fournisseur || "", e.designation || "", e.amount,
       ]);
     }
     rows.push([]);
-    rows.push(["Récupéré", "", "", "", "", "", "", rec.amountRecovered]);
-    rows.push(["Laissé en caisse", "", "", "", "", "", "", rec.amountLeftInBox]);
+    rows.push(["Récupéré", "", "", "", "", "", "", "", rec.amountRecovered]);
+    rows.push(["Laissé en caisse", "", "", "", "", "", "", "", rec.amountLeftInBox]);
     downloadEntriesCSV(`recuperation_especes_${rec.date}.csv`, rows);
   }
 
