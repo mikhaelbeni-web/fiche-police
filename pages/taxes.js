@@ -579,26 +579,25 @@ function StartingBalanceForm({ hasRecoveries, onConfirm, onCancel }) {
 
 function RecoverForm({ fs, unrecovered, totalEnCaisse, onDone, setStatus }) {
   const [amountRecovered, setAmountRecovered] = useState("");
-  const [amountLeftInBox, setAmountLeftInBox] = useState("");
   const [note, setNote] = useState("");
 
   useEffect(() => {
     setAmountRecovered(totalEnCaisse.toFixed(2));
-    setAmountLeftInBox("0");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const rec = Number(amountRecovered) || 0;
-  const left = Number(amountLeftInBox) || 0;
-  const coherent = Math.abs(rec + left - totalEnCaisse) < 0.01;
-  const montantsValides = rec >= 0 && left >= 0;
+  // Laissé en caisse = automatique, jamais saisi à la main : ce qui reste une fois
+  // le montant récupéré soustrait du total (le total intègre déjà les dépenses,
+  // puisque totalEnCaisse = reliquat + paiements clients - dépenses).
+  const left = Math.max(0, Math.round((totalEnCaisse - rec) * 100) / 100);
+  const montantValide = rec >= 0 && rec <= totalEnCaisse + 0.001;
   const totalPositif = totalEnCaisse > 0;
-  const peutValider = coherent && montantsValides && totalPositif;
+  const peutValider = montantValide && totalPositif;
 
   async function confirmRecovery() {
     if (!totalPositif) { setStatus("La caisse est vide ou négative, rien à récupérer."); return; }
-    if (!montantsValides) { setStatus("Les montants ne peuvent pas être négatifs."); return; }
-    if (!coherent) { setStatus("Récupéré + laissé doit être égal au total en caisse."); return; }
+    if (!montantValide) { setStatus("Le montant récupéré ne peut pas dépasser le total en caisse."); return; }
     if (!checkDeletePassword()) return;
     try {
       setStatus("Enregistrement de la récupération…");
@@ -624,11 +623,13 @@ function RecoverForm({ fs, unrecovered, totalEnCaisse, onDone, setStatus }) {
         <div style={{ fontSize: 13 }}><strong>Total en caisse à répartir : {euros2(totalEnCaisse)}</strong></div>
       </div>
       <div className="linen-form-row">
-        <label>Montant récupéré € <input type="number" step="0.01" value={amountRecovered} onChange={e => setAmountRecovered(e.target.value)} style={{ width: 110 }} /></label>
-        <label>Laissé en caisse € <input type="number" step="0.01" value={amountLeftInBox} onChange={e => setAmountLeftInBox(e.target.value)} style={{ width: 110 }} /></label>
+        <label>Montant récupéré € <input type="number" step="0.01" min="0" max={totalEnCaisse} value={amountRecovered} onChange={e => setAmountRecovered(e.target.value)} style={{ width: 110 }} /></label>
+        <label>Laissé en caisse €
+          <input type="text" value={euros2(left)} disabled style={{ width: 110, background: "#f2f2f2", color: "#555" }} />
+        </label>
         <label style={{ flex: 1 }}>Note <input type="text" value={note} onChange={e => setNote(e.target.value)} style={{ width: "100%" }} /></label>
       </div>
-      {!coherent && <div style={{ color: "#e74c3c", fontSize: 12, marginBottom: 8 }}>Récupéré + laissé ({euros2(rec + left)}) doit être égal au total en caisse ({euros2(totalEnCaisse)}).</div>}
+      {!montantValide && <div style={{ color: "#e74c3c", fontSize: 12, marginBottom: 8 }}>Le montant récupéré ne peut pas dépasser le total en caisse ({euros2(totalEnCaisse)}).</div>}
       <button className="primary" onClick={confirmRecovery} disabled={!peutValider}>Confirmer la récupération</button>
     </div>
   );
