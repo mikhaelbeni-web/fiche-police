@@ -29,6 +29,59 @@ function checkDeletePassword() {
   return true;
 }
 
+function ControleExclusions({ data }) {
+  const [ouvert, setOuvert] = useState(false);
+  const ex = data.exclus || {};
+  const detail = data.exclusDetail || [];
+  const totalExclus = Object.values(ex).reduce((s, n) => s + (n || 0), 0);
+  if (!data.scanned) return null;
+
+  return (
+    <div style={{ background: "#f7f9fc", border: "1px solid #dbe4ee", borderRadius: 8, padding: "10px 14px", marginBottom: 14, fontSize: 12 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
+        <strong>Contrôle :</strong>
+        <span>{data.scanned} réservation(s) analysée(s) sur la période</span>
+        <span>→ <strong style={{ color: "#1f7a3f" }}>{data.total} retenue(s)</strong></span>
+        <span>· {totalExclus} écartée(s)</span>
+        {detail.length > 0 && (
+          <button onClick={() => setOuvert(o => !o)} className="ghost" style={{ fontSize: 11, color: "#2980b9" }}>
+            {ouvert ? "Masquer" : `Voir les ${detail.length} cas à vérifier`}
+          </button>
+        )}
+      </div>
+
+      <div style={{ marginTop: 6, color: "#666" }}>
+        Motifs d&apos;exclusion : {ex.horsBooking || 0} hors Booking.com · {ex.dejaPaye || 0} déjà payées · {ex.sansLigneTaxe || 0} sans ligne de taxe · {ex.pasEncoreArrive || 0} pas encore arrivées · {ex.horsPeriode || 0} hors période.
+      </div>
+
+      {ouvert && detail.length > 0 && (
+        <table className="tbl" style={{ marginTop: 10 }}>
+          <thead>
+            <tr><th>Client</th><th>Arrivée</th><th>Appartement</th><th>Canal</th><th>Statut paiement</th><th>Motif</th></tr>
+          </thead>
+          <tbody>
+            {detail.map((d, i) => (
+              <tr key={i}>
+                <td>{d.client}</td>
+                <td>{fmtFr(d.arrivee)}</td>
+                <td>{d.listing}</td>
+                <td>{d.canal || "—"}</td>
+                <td>{d.statutPaiement || "—"}</td>
+                <td>
+                  {d.motif === "horsBooking" ? "Canal ≠ Booking.com"
+                    : d.motif === "dejaPaye" ? "Paiement non partiel"
+                    : d.motif === "sansLigneTaxe" ? "Aucune ligne taxe de séjour"
+                    : d.motif}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
+
 function TaxesImpayees() {
   const today = isoDay(new Date());
   const [from, setFrom] = useState("2026-07-10"); // départ fixe : 10 juillet
@@ -145,6 +198,10 @@ function TaxesImpayees() {
               <div className="l">taxe due</div>
             </div>
           </div>
+
+          {data && (
+            <ControleExclusions data={data} />
+          )}
 
           {groups.map(g => (
             <div className="resid" key={g.residence}>

@@ -5,7 +5,7 @@
 // du même jour sur le même logement, sinon case vide.
 
 import { verifySession, getAccessToken, getListingMap, isActive, fetchReservations } from "../../lib/hostaway";
-import { resolveApartment } from "../../lib/apartments";
+import { resolveApartments } from "../../lib/apartments";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -49,37 +49,39 @@ export default async function handler(req, res) {
     const unresolved = [];
     for (const rv of departures) {
       const lid = String(rv.listingMapId ?? rv.listingId ?? "");
-      let info = resolveApartment(rv, lid);
+      let infos = resolveApartments(rv, lid);
 
-      // Filet de sécurité : si resolveApartment échoue, vérifier via les tags/nom
+      // Filet de sécurité : si resolveApartments échoue, vérifier via les tags/nom
       // dynamiques Hostaway avant de conclure que ce n'est pas Belleville.
       // Objectif : ne JAMAIS faire disparaître silencieusement un ménage réel.
-      if (!info) {
+      if (infos.length === 0) {
         const fb = listingMap[lid];
         const looksLikeBelleville =
           fb?.residence?.toLowerCase().includes("belleville") ||
           (rv.listingName || "").toLowerCase().includes("belleville");
         if (looksLikeBelleville) {
-          info = { residence: "Belleville", appartement: fb?.appartement || rv.listingName || "—", unitNumber: "?" };
+          infos = [{ residence: "Belleville", appartement: fb?.appartement || rv.listingName || "—", unitNumber: "?" }];
         } else if (fb) {
-          info = { residence: fb.residence, appartement: fb.appartement, unitNumber: fb.unitNumber };
+          infos = [{ residence: fb.residence, appartement: fb.appartement, unitNumber: fb.unitNumber }];
         }
       }
 
-      if (!info) {
+      if (infos.length === 0) {
         // Vraiment aucune piste : on le garde en trace de debug plutôt que de le perdre
         unresolved.push({ listingId: lid, listingName: rv.listingName || null });
         continue;
       }
-      if (info.residence !== "Belleville") continue; // autre résidence, exclusion légitime
 
-      const attendu = Object.prototype.hasOwnProperty.call(arrivalByListing, lid) ? arrivalByListing[lid] : null;
-      items.push({
-        listingId: lid,
-        appartement: info.appartement,
-        unitNumber: info.unitNumber,
-        attendu,
-      });
+      for (const info of infos) {
+        if (info.residence !== "Belleville") continue; // autre résidence, exclusion légitime
+        const attendu = Object.prototype.hasOwnProperty.call(arrivalByListing, lid) ? arrivalByListing[lid] : null;
+        items.push({
+          listingId: lid,
+          appartement: info.appartement,
+          unitNumber: info.unitNumber,
+          attendu,
+        });
+      }
     }
 
     items.sort((a, b) => a.unitNumber.localeCompare(b.unitNumber, undefined, { numeric: true }));

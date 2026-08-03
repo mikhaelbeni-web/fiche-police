@@ -4,7 +4,7 @@
 // résolution multi-unit via reservationUnit), avec repli sur les tags Hostaway.
 
 import { verifySession, getAccessToken, getListingMap, isActive, fetchReservations } from "../../lib/hostaway";
-import { resolveApartment } from "../../lib/apartments";
+import { resolveApartments } from "../../lib/apartments";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -45,28 +45,30 @@ export default async function handler(req, res) {
     const byResidence = {};
     for (const rv of inRange) {
       const lid = String(rv.listingMapId ?? rv.listingId ?? "");
-      let info = resolveApartment(rv, lid);
-      if (!info) {
+      let infos = resolveApartments(rv, lid);
+      if (infos.length === 0) {
         const fb = listingMap[lid];
-        info = fb
+        infos = [fb
           ? { residence: fb.residence, appartement: fb.appartement, unitNumber: fb.unitNumber, menageHT: null, amenitiesHT: null }
-          : { residence: "Sans résidence", appartement: rv.listingName || "—", unitNumber: "", menageHT: null, amenitiesHT: null };
+          : { residence: "Sans résidence", appartement: rv.listingName || "—", unitNumber: "", menageHT: null, amenitiesHT: null }];
       }
-      const key = info.residence;
-      if (!byResidence[key]) byResidence[key] = { residence: key, count: 0, items: [] };
-      byResidence[key].count += 1;
-      byResidence[key].items.push({
-        listingId: lid,
-        appartement: info.appartement,
-        unitNumber: info.unitNumber || "",
-        depart: (rv.departureDate || rv.checkOutDate || "").slice(0, 10),
-        arrivee: (rv.arrivalDate || rv.checkInDate || "").slice(0, 10),
-        client: rv.guestName || [rv.guestFirstName, rv.guestLastName].filter(Boolean).join(" ") || "—",
-        reservation: rv.hostawayReservationId || rv.channelReservationId || rv.id || "",
-        voyageurs: rv.numberOfGuests ?? rv.adults ?? "",
-        menageHT: info.menageHT,
-        amenitiesHT: info.amenitiesHT,
-      });
+      for (const info of infos) {
+        const key = info.residence;
+        if (!byResidence[key]) byResidence[key] = { residence: key, count: 0, items: [] };
+        byResidence[key].count += 1;
+        byResidence[key].items.push({
+          listingId: lid,
+          appartement: info.appartement,
+          unitNumber: info.unitNumber || "",
+          depart: (rv.departureDate || rv.checkOutDate || "").slice(0, 10),
+          arrivee: (rv.arrivalDate || rv.checkInDate || "").slice(0, 10),
+          client: rv.guestName || [rv.guestFirstName, rv.guestLastName].filter(Boolean).join(" ") || "—",
+          reservation: rv.hostawayReservationId || rv.channelReservationId || rv.id || "",
+          voyageurs: rv.numberOfGuests ?? rv.adults ?? "",
+          menageHT: info.menageHT,
+          amenitiesHT: info.amenitiesHT,
+        });
+      }
     }
 
     const groups = Object.values(byResidence).sort((a, b) => a.residence.localeCompare(b.residence));
@@ -79,7 +81,11 @@ export default async function handler(req, res) {
 
     const residences = Array.from(new Set(groups.map(g => g.residence))).sort((a, b) => a.localeCompare(b));
 
-    return res.status(200).json({ from, to, total: inRange.length, residences, groups });
+    // total = nombre de logements à traiter (une réservation multi-unité compte
+    // pour autant d'appartements qu'elle en couvre), cohérent avec les lignes
+    // réellement affichées. reservations = nombre de réservations sous-jacentes.
+    const total = groups.reduce((s, g) => s + g.items.length, 0);
+    return res.status(200).json({ from, to, total, reservations: inRange.length, residences, groups });
   } catch (err) {
     return res.status(err.status || 500).json({ error: err.message });
   }

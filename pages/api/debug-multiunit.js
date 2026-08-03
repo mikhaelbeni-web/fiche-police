@@ -5,7 +5,7 @@
 // les cas où un listing (ex. Villiers V6) est en réalité multi-unit sans qu'on le sache.
 
 import { verifySession, getAccessToken, isActive, fetchReservations } from "../../lib/hostaway";
-import { resolveApartment } from "../../lib/apartments";
+import { resolveApartments } from "../../lib/apartments";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -33,17 +33,17 @@ export default async function handler(req, res) {
 
     const rows = all.map(rv => {
       const lid = String(rv.listingMapId ?? rv.listingId ?? "");
-      const ru = Array.isArray(rv.reservationUnit) ? rv.reservationUnit[0] : null;
-      const resolved = resolveApartment(rv, lid);
+      const ru = Array.isArray(rv.reservationUnit) ? rv.reservationUnit : [];
+      const resolved = resolveApartments(rv, lid);
       return {
         guest: rv.guestName || [rv.guestFirstName, rv.guestLastName].filter(Boolean).join(" "),
         depart: (rv.departureDate || rv.checkOutDate || "").slice(0, 10),
         listingName: rv.listingName,
         listingMapId: lid,
-        reservationUnitListingUnitId: ru?.listingUnitId ?? null,
-        resoluResidence: resolved?.residence ?? null,
-        resoluAppartement: resolved?.appartement ?? null,
-        resoluNumero: resolved?.unitNumber ?? null,
+        reservationUnitListingUnitIds: ru.map(u => u.listingUnitId),
+        nbSousUnitesReservation: ru.length,
+        resolu: resolved.map(r => `${r.residence} ${r.appartement} (${r.unitNumber})`),
+        nbSousUnitesResolues: resolved.length,
       };
     }).sort((a, b) => (a.listingName || "").localeCompare(b.listingName || ""));
 

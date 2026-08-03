@@ -13,7 +13,7 @@
 // => taxe de séjour non encaissée (Booking prélève le séjour mais pas la taxe).
 
 import { verifySession, getAccessToken, getListingMap, isActive, fetchReservations } from "../../lib/hostaway";
-import { resolveApartment } from "../../lib/apartments";
+import { resolveApartments } from "../../lib/apartments";
 
 function isPartiallyPaid(rv) {
   const p = (rv.paymentStatus || "").toString().toLowerCase();
@@ -68,6 +68,12 @@ export default async function handler(req, res) {
 
     const items = [];
     let debugSample = [];
+    // Filet de sécurité : on compte pourquoi chaque réservation est écartée, au
+    // lieu de la laisser disparaître en silence. Objectif : pouvoir vérifier
+    // qu'aucune taxe n'est perdue à cause d'un filtre trop strict ou d'un cas
+    // non prévu (canal inhabituel, statut de paiement exotique, etc.).
+    const exclus = { horsBooking: 0, dejaPaye: 0, sansLigneTaxe: 0, pasEncoreArrive: 0, horsPeriode: 0 };
+    const exclusDetail = [];
     for (const rv of all) {
       const arr = (rv.arrivalDate || rv.checkInDate || "").slice(0, 10);
       const checkedIn = arr <= today;         // check-in déjà passé
@@ -83,20 +89,48 @@ export default async function handler(req, res) {
         });
       }
 
-      // Conditions cumulatives
-      if (!booking) continue;
-      if (!partial) continue;
-      if (!hasTax) continue;
-      if (!checkedIn) continue;
-      if (!inRange) continue;
+      // Conditions cumulatives — chaque exclusion est tracée
+      let motif = null;
+      if (!booking) motif = "horsBooking";
+      else if (!partial) motif = "dejaPaye";
+      else if (!hasTax) motif = "sansLigneTaxe";
+      else if (!checkedIn) motif = "pasEncoreArrive";
+      else if (!inRange) motif = "horsPeriode";
+
+      if (motif) {
+        exclus[motif] += 1;
+        // On garde le détail des cas les plus suspects (arrivé, canal Booking,
+        // mais écarté quand même) pour pouvoir les vérifier à la main.
+        if (exclusDetail.length < 50 && checkedIn && inRange && motif !== "pasEncoreArrive" && motif !== "horsPeriode") {
+          exclusDetail.push({
+            client: rv.guestName || [rv.guestFirstName, rv.guestLastName].filter(Boolean).join(" ") || "—",
+            arrivee: arr,
+            canal: rv.channelName || "",
+            statutPaiement: rv.paymentStatus || "",
+            motif,
+            listing: rv.listingName || "",
+          });
+        }
+        continue;
+      }
 
       const lid = String(rv.listingMapId ?? rv.listingId ?? "");
-      let info = resolveApartment(rv, lid) || listingMap[lid] || { residence: "?", appartement: rv.listingName || "—", unitNumber: "" };
+      // Une réservation peut couvrir plusieurs appartements (chambres communicantes) :
+      // on les affiche tous ensemble sur UNE seule ligne, sans dupliquer le montant
+      // de taxe (qui est un montant unique pour toute la réservation, pas par unité).
+      const infos = resolveApartments(rv, lid);
+      const info = infos[0] || listingMap[lid] || { residence: "?", appartement: rv.listingName || "—", unitNumber: "" };
+      const appartementLabel = infos.length > 1
+        ? infos.map(i => i.appartement).join(" + ")
+        : info.appartement;
+      const unitNumberLabel = infos.length > 1
+        ? infos.map(i => i.unitNumber).filter(Boolean).join("+")
+        : (info.unitNumber || "");
 
       items.push({
         residence: info.residence,
-        appartement: info.appartement,
-        unitNumber: info.unitNumber || "",
+        appartement: appartementLabel,
+        unitNumber: unitNumberLabel,
         arrivee: arr,
         depart: (rv.departureDate || rv.checkOutDate || "").slice(0, 10),
         client: rv.guestName || [rv.guestFirstName, rv.guestLastName].filter(Boolean).join(" ") || "—",
@@ -115,7 +149,10 @@ export default async function handler(req, res) {
 
     const totalTax = items.reduce((s, it) => s + (it.taxeSejour || 0), 0);
 
-    const payload = { from, to, total: items.length, totalTax, items };
+    const payload = {
+      from, to, total: items.length, totalTax, items,
+      scanned: all.length, exclus, exclusDetail,
+    };
     if (debug) payload._debug = { scanned: all.length, sample: debugSample };
     return res.status(200).json(payload);
   } catch (err) {
