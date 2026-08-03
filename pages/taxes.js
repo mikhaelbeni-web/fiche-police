@@ -238,7 +238,14 @@ function TaxesImpayees() {
             </div>
           ))}
 
-          {!loading && items.length === 0 && (
+          {!loading && !data && status.startsWith("Erreur") && (
+            <div className="empty-state" style={{ color: "#e74c3c", fontWeight: 600 }}>
+              ⚠ Impossible de vérifier — la connexion à Hostaway a échoué ({status.replace("Erreur : ", "")}).
+              Ceci n&apos;est PAS un résultat « aucune taxe due », c&apos;est une vérification qui n&apos;a pas pu se faire. Réessaie avec ↻ avant de conclure quoi que ce soit.
+            </div>
+          )}
+
+          {!loading && data && items.length === 0 && (
             <div className="empty-state">Aucune taxe de séjour impayée sur cette période.</div>
           )}
 
