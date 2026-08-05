@@ -224,7 +224,7 @@ function Linge() {
             {extraStatus && <span style={{ marginLeft: 10, fontSize: 12, color: "#666" }}>{extraStatus}</span>}
 
             {extraMenages.length > 0 && (
-              <table className="tbl" style={{ marginTop: 14 }}>
+              <div className="tbl-wrap"><table className="tbl" style={{ marginTop: 14 }}>
                 <thead>
                   <tr><th>Date</th><th>Résidence</th><th>Appartement</th><th>Motif</th><th>Type</th><th className="c">Coût</th><th></th></tr>
                 </thead>
@@ -246,7 +246,7 @@ function Linge() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
             )}
           </div>
         )}
@@ -260,7 +260,7 @@ function Linge() {
             <div className="linge-title">LINGE SALE — Résidence Le Belleville</div>
             <div className="linge-date">Date : <strong>{fmtFr(day)}</strong></div>
 
-            <table className="linge-tbl">
+            <div className="tbl-wrap"><table className="linge-tbl">
               <thead>
                 <tr>
                   <th className="rowlabel">Nombre de personnes</th>
@@ -293,7 +293,7 @@ function Linge() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
 
             <div className="linge-footer">
               <div className="linge-signature">Prénom (personnel de ménage) : ____________________</div>

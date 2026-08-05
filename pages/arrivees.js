@@ -146,7 +146,7 @@ function Arrivees() {
                 <span className="resid-name">{g.residence}</span>
                 <span className="resid-count">{g.count} arrivée{g.count > 1 ? "s" : ""}</span>
               </div>
-              <table className="tbl">
+              <div className="tbl-wrap"><table className="tbl">
                 <thead>
                   <tr>
                     <th>N°</th>
@@ -169,7 +169,7 @@ function Arrivees() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
             </div>
           ))}
 

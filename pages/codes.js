@@ -160,7 +160,7 @@ function Codes() {
           {residences.map(r => (
             <div className="resid" key={r}>
               <div className="resid-head"><span className="resid-name">{r}</span><span className="resid-count">{byResidence[r].length} code(s)</span></div>
-              <table className="tbl">
+              <div className="tbl-wrap"><table className="tbl">
                 <thead><tr><th>Emplacement</th><th>Code</th><th></th></tr></thead>
                 <tbody>
                   {byResidence[r].map(c => (
@@ -174,7 +174,7 @@ function Codes() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
             </div>
           ))}
           {residences.length === 0 && <div className="empty-state">Aucun code enregistré.</div>}

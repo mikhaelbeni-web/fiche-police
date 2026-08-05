@@ -198,7 +198,7 @@ function Couts() {
                   {g.items.length} ménage(s) · {euros(g.menage + g.amenities)}
                 </span>
               </div>
-              <table className="tbl">
+              <div className="tbl-wrap"><table className="tbl">
                 <thead>
                   <tr>
                     <th>N°</th><th>Appartement</th><th>Départ</th>
@@ -217,7 +217,7 @@ function Couts() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
 
               {g.extras.length > 0 && (
                 <div className="extra-menages">

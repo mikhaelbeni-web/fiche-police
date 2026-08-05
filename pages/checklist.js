@@ -322,7 +322,7 @@ function Checklist() {
         <div className="recap checklist-recap">
           <div className="resid">
             <div className="resid-head"><span className="resid-name">Planning journalier — Matin</span></div>
-            <table className="tbl">
+            <div className="tbl-wrap"><table className="tbl">
               <tbody>
                 {morning.map(t => (
                   <TaskRow key={t.id} {...t} entry={tasks[t.id]} editable={isToday && !!current}
@@ -332,7 +332,7 @@ function Checklist() {
                     onDelete={(id) => deleteTask("morning", id)} />
                 ))}
               </tbody>
-            </table>
+            </table></div>
             {adminMode && <button className="ghost small admin-add" onClick={() => addTask("morning")}>+ Ajouter une tâche (matin)</button>}
           </div>
 
@@ -340,7 +340,7 @@ function Checklist() {
 
           <div className="resid">
             <div className="resid-head"><span className="resid-name">Planning journalier — Après-midi</span></div>
-            <table className="tbl">
+            <div className="tbl-wrap"><table className="tbl">
               <tbody>
                 {afternoon.map(t => (
                   <TaskRow key={t.id} {...t} entry={tasks[t.id]} editable={isToday && !!current}
@@ -350,7 +350,7 @@ function Checklist() {
                     onDelete={(id) => deleteTask("afternoon", id)} />
                 ))}
               </tbody>
-            </table>
+            </table></div>
             {adminMode && <button className="ghost small admin-add" onClick={() => addTask("afternoon")}>+ Ajouter une tâche (après-midi)</button>}
           </div>
 
@@ -361,7 +361,7 @@ function Checklist() {
                 {showFullWeek ? "Masquer le reste de la semaine" : "Voir toute la semaine"}
               </button>
             </div>
-            <table className="tbl">
+            <div className="tbl-wrap"><table className="tbl">
               <tbody>
                 {todaysWeekly.map(t => (
                   <TaskRow key={t.id} id={t.id} task={t.task} entry={tasks[t.id]} editable={isToday && !!current}
@@ -373,7 +373,7 @@ function Checklist() {
                   <tr><td className="task-text" colSpan={3}>Aucune tâche hebdomadaire ce jour-là.</td></tr>
                 )}
               </tbody>
-            </table>
+            </table></div>
             {adminMode && (
               <button className="ghost small admin-add" onClick={() => addTask("weekly")}>
                 + Ajouter une tâche ({WEEKDAY_LABELS[weekday]})

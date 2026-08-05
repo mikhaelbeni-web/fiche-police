@@ -196,7 +196,7 @@ function StockTab({ fs, stock, setStock, orders, receptions, usage, defects, set
           : <button className="primary" onClick={save}>Enregistrer</button>}
       </div>
 
-      <table className="tbl">
+      <div className="tbl-wrap"><table className="tbl">
         <thead>
           <tr>
             <th>Article</th>
@@ -230,7 +230,7 @@ function StockTab({ fs, stock, setStock, orders, receptions, usage, defects, set
             );
           })}
         </tbody>
-      </table>
+      </table></div>
       <p style={{ fontSize: 12, color: "#666", marginTop: 10 }}>
         ⚠ = stock estimé bas (≤ 10). « Défectueux (en cours) » = linge propre arrivé sale, renvoyé et pas encore revenu : retiré du stock jusqu&apos;à son retour.
       </p>
@@ -358,7 +358,7 @@ function OrdersTab({ fs, orders, usage, reload, setStatus }) {
         <button className="primary" onClick={addOrder} disabled={!dateValide}>Ajouter la commande</button>
       </div>
 
-      <table className="tbl" style={{ marginTop: 18 }}>
+      <div className="tbl-wrap"><table className="tbl" style={{ marginTop: 18 }}>
         <thead>
           <tr>
             <th>Date</th><th>Type</th>
@@ -396,7 +396,7 @@ function OrdersTab({ fs, orders, usage, reload, setStatus }) {
           ))}
           {orders.length === 0 && <tr><td colSpan={LINEN_ARTICLES.length + 5} className="empty-state">Aucune commande.</td></tr>}
         </tbody>
-      </table>
+      </table></div>
     </>
   );
 }
@@ -504,7 +504,7 @@ function ReceptionsTab({ fs, orders, receptions, defects, reload, setStatus }) {
           )}
         </div>
 
-        <table className="tbl" style={{ marginBottom: 12 }}>
+        <div className="tbl-wrap"><table className="tbl" style={{ marginBottom: 12 }}>
           <thead>
             <tr>
               <th>Article</th>
@@ -536,7 +536,7 @@ function ReceptionsTab({ fs, orders, receptions, defects, reload, setStatus }) {
               );
             })}
           </tbody>
-        </table>
+        </table></div>
         <button className="primary" onClick={addReception}>Enregistrer la réception</button>
         <p style={{ fontSize: 12, color: "#666", marginTop: 8 }}>
           Écart <span style={{ color: "#e74c3c", fontWeight: 700 }}>négatif</span> = il manque du linge (défectueux non rendu ou commande incomplète).
@@ -544,7 +544,7 @@ function ReceptionsTab({ fs, orders, receptions, defects, reload, setStatus }) {
         </p>
       </div>
 
-      <table className="tbl" style={{ marginTop: 18 }}>
+      <div className="tbl-wrap"><table className="tbl" style={{ marginTop: 18 }}>
         <thead>
           <tr>
             <th>Reçu le</th><th>Commande</th>
@@ -572,7 +572,7 @@ function ReceptionsTab({ fs, orders, receptions, defects, reload, setStatus }) {
           ))}
           {receptions.length === 0 && <tr><td colSpan={LINEN_ARTICLES.length + 3} className="empty-state">Aucune réception.</td></tr>}
         </tbody>
-      </table>
+      </table></div>
       <p style={{ fontSize: 12, color: "#666", marginTop: 10 }}>
         Un nombre rouge entre parenthèses = quantité manquante par rapport à la commande (non livrée).
       </p>
@@ -629,7 +629,7 @@ function UsageTab({ fs, usage, reload, setStatus }) {
         <button className="primary" onClick={addUsage}>Enregistrer</button>
       </div>
 
-      <table className="tbl" style={{ marginTop: 18 }}>
+      <div className="tbl-wrap"><table className="tbl" style={{ marginTop: 18 }}>
         <thead>
           <tr>
             <th>Date</th>
@@ -647,7 +647,7 @@ function UsageTab({ fs, usage, reload, setStatus }) {
           ))}
           {usage.length === 0 && <tr><td colSpan={LINEN_ARTICLES.length + 2} className="empty-state">Aucune saisie.</td></tr>}
         </tbody>
-      </table>
+      </table></div>
     </>
   );
 }
@@ -766,7 +766,7 @@ function DefectsTab({ fs, defects, reload, setStatus }) {
         <button className="primary" onClick={addDefect}>Mettre de côté (accumuler)</button>
       </div>
 
-      <table className="tbl" style={{ marginTop: 18 }}>
+      <div className="tbl-wrap"><table className="tbl" style={{ marginTop: 18 }}>
         <thead>
           <tr>
             <th>Date</th>
@@ -798,7 +798,7 @@ function DefectsTab({ fs, defects, reload, setStatus }) {
           ))}
           {defects.length === 0 && <tr><td colSpan={LINEN_ARTICLES.length + 4} className="empty-state">Aucun linge défectueux.</td></tr>}
         </tbody>
-      </table>
+      </table></div>
     </>
   );
 }
@@ -916,7 +916,7 @@ function PositionTab({ fs, stock, orders, receptions, usage, defects, thresholds
         </div>
       )}
 
-      <table className="tbl">
+      <div className="tbl-wrap"><table className="tbl">
         <thead>
           <tr>
             <th>Article</th>
@@ -957,7 +957,7 @@ function PositionTab({ fs, stock, orders, receptions, usage, defects, thresholds
             );
           })}
         </tbody>
-      </table>
+      </table></div>
       <p style={{ fontSize: 12, color: "#666", marginTop: 10 }}>
         <strong style={{ color: "#2980b9" }}>En attente livraison</strong> = commande passée, pas encore reçue (normal, en route) — <em>pas</em> déduit du stock.
         <strong style={{ color: "#e74c3c" }}> Manquant commande</strong> = commande <em>déjà reçue</em> mais dont il manquait des pièces jamais livrées (vraie anomalie).
@@ -1085,7 +1085,7 @@ function CostTab({ fs, invoices, receptions, prices, setPrices, reload, setStatu
           <label>Au <input type="date" value={estTo} onChange={e => setEstTo(e.target.value)} /></label>
         </div>
 
-        <table className="tbl" style={{ marginBottom: 10 }}>
+        <div className="tbl-wrap"><table className="tbl" style={{ marginBottom: 10 }}>
           <thead>
             <tr><th>Article</th><th className="c">Reçu (app)</th><th className="c">Prix unit. HT</th><th className="c">Montant estimé</th></tr>
           </thead>
@@ -1110,7 +1110,7 @@ function CostTab({ fs, invoices, receptions, prices, setPrices, reload, setStatu
               );
             })}
           </tbody>
-        </table>
+        </table></div>
         {editPrices
           ? <button className="primary" onClick={savePrices}>Enregistrer les prix</button>
           : (
@@ -1158,7 +1158,7 @@ function CostTab({ fs, invoices, receptions, prices, setPrices, reload, setStatu
             }} style={{ fontSize: 12 }}>Pré-remplir depuis les réceptions</button>
           </div>
 
-          <table className="tbl" style={{ marginBottom: 12 }}>
+          <div className="tbl-wrap"><table className="tbl" style={{ marginBottom: 12 }}>
             <thead>
               <tr><th>Article (Elis)</th><th className="c">Reçu (app, réf.)</th><th className="c">Qté livrée</th><th className="c">Prix unit. HT</th><th className="c">Montant HT</th></tr>
             </thead>
@@ -1177,7 +1177,7 @@ function CostTab({ fs, invoices, receptions, prices, setPrices, reload, setStatu
                 );
               })}
             </tbody>
-          </table>
+          </table></div>
           <p style={{ fontSize: 12, color: "#666", marginTop: -6, marginBottom: 12 }}>
             « Reçu (app, réf.) » = total déjà enregistré dans Réceptions sur la période choisie, pour t&apos;aider à estimer avant l&apos;arrivée de la vraie facture. Les lignes Cocoon/Horizon partagent la même référence (l&apos;app ne distingue pas la gamme reçue).
           </p>
@@ -1193,7 +1193,7 @@ function CostTab({ fs, invoices, receptions, prices, setPrices, reload, setStatu
         </div>
       )}
 
-      <table className="tbl" style={{ marginTop: 18 }}>
+      <div className="tbl-wrap"><table className="tbl" style={{ marginTop: 18 }}>
         <thead>
           <tr><th>N° facture</th><th>Date</th><th>Période</th><th className="c">Net à payer</th><th></th></tr>
         </thead>
@@ -1203,7 +1203,7 @@ function CostTab({ fs, invoices, receptions, prices, setPrices, reload, setStatu
           ))}
           {invoices.length === 0 && <tr><td colSpan={5} className="empty-state">Aucune facture enregistrée.</td></tr>}
         </tbody>
-      </table>
+      </table></div>
     </>
   );
 }
@@ -1246,7 +1246,7 @@ function InvoiceRow({ inv, receptions, onDelete }) {
             <div style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", marginBottom: 8, textTransform: "uppercase" }}>
               Rapprochement : facturé vs réceptionné dans l&apos;app sur la période
             </div>
-            <table className="tbl">
+            <div className="tbl-wrap"><table className="tbl">
               <thead>
                 <tr><th>Catégorie</th><th className="c">Facturé (Elis)</th><th className="c">Réceptionné (app)</th><th className="c">Écart</th></tr>
               </thead>
@@ -1268,7 +1268,7 @@ function InvoiceRow({ inv, receptions, onDelete }) {
                   );
                 })}
               </tbody>
-            </table>
+            </table></div>
             <p style={{ fontSize: 11, color: "#999", marginTop: 8 }}>
               Écart = réceptionné dans l&apos;app − facturé par Elis. Un écart peut venir d&apos;une réception non liée
               à cette période exacte, d&apos;un décalage de livraison, ou d&apos;une facture partielle.

@@ -241,7 +241,7 @@ function HistoriqueList({ reports, onSelect, onDelete }) {
           <div className="recap-sub">🔴 rapport avec un point signalé · 🟢 journée sans anomalie déclarée</div>
         </div>
       </div>
-      <table className="tbl">
+      <div className="tbl-wrap"><table className="tbl">
         <thead>
           <tr><th>Date</th><th>Rédigé par</th><th className="c">État</th><th></th></tr>
         </thead>
@@ -259,7 +259,7 @@ function HistoriqueList({ reports, onSelect, onDelete }) {
           ))}
           {reports.length === 0 && <tr><td colSpan={4} className="empty-state">Aucun rapport enregistré.</td></tr>}
         </tbody>
-      </table>
+      </table></div>
     </>
   );
 }

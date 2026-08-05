@@ -187,7 +187,7 @@ function Consignes() {
           </div>
 
           <div className="recap-title" style={{ fontSize: 15, marginTop: 24 }}>Réservations à venir et en cours</div>
-          <table className="tbl">
+          <div className="tbl-wrap"><table className="tbl">
             <thead>
               <tr><th>Résidence</th><th>Consigne</th><th>Date</th><th>Type</th><th>Appartement</th><th>Client</th><th>Code</th><th></th></tr>
             </thead>
@@ -206,7 +206,7 @@ function Consignes() {
               ))}
               {activeAndFuture.length === 0 && <tr><td colSpan={8} className="empty-state">Aucune réservation en cours ou à venir.</td></tr>}
             </tbody>
-          </table>
+          </table></div>
 
           {past.length > 0 && (
             <p style={{ fontSize: 12, color: "#999", marginTop: 10 }}>

@@ -55,7 +55,7 @@ function ControleExclusions({ data }) {
       </div>
 
       {ouvert && detail.length > 0 && (
-        <table className="tbl" style={{ marginTop: 10 }}>
+        <div className="tbl-wrap"><table className="tbl" style={{ marginTop: 10 }}>
           <thead>
             <tr><th>Client</th><th>Arrivée</th><th>Appartement</th><th>Canal</th><th>Statut paiement</th><th>Motif</th></tr>
           </thead>
@@ -76,7 +76,7 @@ function ControleExclusions({ data }) {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       )}
     </div>
   );
@@ -209,7 +209,7 @@ function TaxesImpayees() {
                 <span className="resid-name">{g.residence}</span>
                 <span className="resid-count">{g.items.length} résa · {euros(g.sum)}</span>
               </div>
-              <table className="tbl">
+              <div className="tbl-wrap"><table className="tbl">
                 <thead>
                   <tr>
                     <th>N°</th>
@@ -234,7 +234,7 @@ function TaxesImpayees() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
             </div>
           ))}
 
@@ -581,7 +581,7 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
           onDone={() => { setShowRecoverForm(false); reload(); }} setStatus={setStatus} />
       )}
 
-      <table className="tbl" style={{ marginTop: 10 }}>
+      <div className="tbl-wrap"><table className="tbl" style={{ marginTop: 10 }}>
         <thead>
           <tr>
             <th>Date</th><th>Type</th><th>Saisi par</th><th>Client</th><th>Appartement</th>
@@ -606,7 +606,7 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
           ))}
           {unrecovered.length === 0 && <tr><td colSpan={9} className="empty-state">Rien depuis la dernière récupération.</td></tr>}
         </tbody>
-      </table>
+      </table></div>
       <p style={{ fontSize: 12, color: "#666", marginTop: 10 }}>
         Total en caisse = reliquat laissé à la dernière récupération ({euros2(baseline)}) + paiements clients ({euros2(sumClient)}) − dépenses ({euros2(sumExpense)}).
       </p>
@@ -749,7 +749,7 @@ function CashHistory({ recoveries, entries, fs, reload, setStatus }) {
           <div className="recap-sub">Chaque récupération est exportable individuellement</div>
         </div>
       </div>
-      <table className="tbl">
+      <div className="tbl-wrap"><table className="tbl">
         <thead>
           <tr>
             <th>Date</th><th className="c">Total avant</th><th className="c">Récupéré</th>
@@ -772,7 +772,7 @@ function CashHistory({ recoveries, entries, fs, reload, setStatus }) {
           ))}
           {recoveries.length === 0 && <tr><td colSpan={6} className="empty-state">Aucune récupération enregistrée.</td></tr>}
         </tbody>
-      </table>
+      </table></div>
     </>
   );
 }

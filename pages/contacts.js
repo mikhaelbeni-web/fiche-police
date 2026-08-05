@@ -157,7 +157,7 @@ function Contacts() {
             </div>
           )}
 
-          <table className="tbl">
+          <div className="tbl-wrap"><table className="tbl">
             <thead>
               <tr><th>Nom</th><th>Société</th><th>Téléphone(s)</th><th></th></tr>
             </thead>
@@ -175,7 +175,7 @@ function Contacts() {
               ))}
               {filtered.length === 0 && <tr><td colSpan={4} className="empty-state">Aucun contact.</td></tr>}
             </tbody>
-          </table>
+          </table></div>
         </div>
       </div>
     </>
