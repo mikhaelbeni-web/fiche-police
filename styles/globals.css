@@ -298,11 +298,18 @@ body {
   .recap-head { flex-direction: column; align-items: flex-start; gap: 10px; }
   .recap-total { align-self: flex-end; }
 
-  .tbl, .linge-tbl { display: block; overflow-x: auto; white-space: nowrap; }
-  .tbl thead, .linge-tbl thead,
-  .tbl tbody, .linge-tbl tbody,
-  .tbl tr, .linge-tbl tr { display: table; width: 100%; table-layout: auto; }
-  .tbl .note-col { min-width: 140px; }
+  /* Tableaux larges sur mobile : on scrolle le CONTENEUR parent, on ne touche
+     plus aux rôles internes du tableau (thead/tbody/tr) — les forcer en
+     display:table cassait l'alignement colonnes/en-têtes (chacun devenait un
+     tableau indépendant avec ses propres largeurs). Le tableau reste un vrai
+     <table> natif, donc les colonnes restent alignées, quelle que soit la
+     longueur des libellés d'en-tête. */
+  *:has(> table.tbl), *:has(> table.linge-tbl) {
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+  }
+  .tbl, .linge-tbl { width: auto; min-width: 100%; table-layout: auto; }
+  .tbl th, .tbl td, .linge-tbl th, .linge-tbl td { white-space: nowrap; }
+  .tbl .note-col { min-width: 140px; white-space: normal; }
 
   .resid-head { flex-direction: column; align-items: flex-start; gap: 4px; }
 
