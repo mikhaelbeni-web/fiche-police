@@ -155,14 +155,24 @@ function Linge() {
   // Ménages supplémentaires Belleville du jour affiché : ajoutés comme colonnes
   // supplémentaires sur la feuille de linge, pour que le personnel sache qu'il
   // faut aussi passer dans cet appartement (même sans check-out réel ce jour-là).
+  // Si l'appartement a DÉJÀ sa colonne (un vrai départ ce jour-là), on fusionne
+  // le décalé dedans au lieu d'en créer une seconde colonne pour le même logement.
   const extraToday = extraMenages.filter(e => e.residence === "Belleville" && e.date === day);
-  const sheetItems = [
-    ...items,
-    ...extraToday.map(e => ({
-      unitNumber: e.unitNumber, appartement: e.appartement, attendu: null,
-      extra: true, motif: e.motif, extraType: e.type, datePrevue: e.datePrevue,
-    })),
-  ];
+  const sheetItems = [...items];
+  for (const e of extraToday) {
+    const existing = sheetItems.find(it => it.unitNumber === e.unitNumber);
+    if (existing) {
+      existing.extra = true;
+      existing.motif = e.motif;
+      existing.extraType = e.type;
+      existing.datePrevue = e.datePrevue;
+    } else {
+      sheetItems.push({
+        unitNumber: e.unitNumber, appartement: e.appartement, attendu: null,
+        extra: true, motif: e.motif, extraType: e.type, datePrevue: e.datePrevue,
+      });
+    }
+  }
 
   return (
     <>
