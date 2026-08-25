@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
-import { listApartments } from "../lib/apartments";
+import { listApartments, isDepartureMoved } from "../lib/apartments";
 
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
@@ -65,8 +65,8 @@ function Linge() {
       const { isFirebaseConfigured } = await import("../lib/firebase");
       if (!isFirebaseConfigured()) { setFbConfigured(false); return; }
       const { db } = await import("../lib/firebase");
-      const { collection, doc, getDocs, addDoc, deleteDoc, query, orderBy } = await import("firebase/firestore");
-      const api = { db, collection, doc, getDocs, addDoc, deleteDoc, query, orderBy };
+      const { collection, doc, getDocs, addDoc, updateDoc, deleteDoc, query, orderBy } = await import("firebase/firestore");
+      const api = { db, collection, doc, getDocs, addDoc, updateDoc, deleteDoc, query, orderBy };
       setFs(api);
       await loadExtras(api);
     })();
@@ -81,25 +81,55 @@ function Linge() {
     if (!extraApt) { setExtraStatus("Choisis un appartement."); return; }
     if (!extraMotif.trim()) { setExtraStatus("Le motif est obligatoire."); return; }
     const info = apartments.find(a => a.id === extraApt);
-    // Un ménage décalé (fait le lendemain car non réalisé la veille par manque
-    // de temps) n'est jamais facturé en plus — c'est le même ménage que celui
-    // déjà dû, juste reporté d'un jour. Coût forcé à zéro, mais la date prévue
-    // et le motif restent visibles comme justificatif dans les coûts.
+    // Un ménage décalé est le MÊME ménage, simplement reporté à une autre date :
+    // il porte donc le vrai coût, et le départ d'origine est masqué + décompté
+    // ailleurs (voir isDepartureMoved). Une seule facturation au total, rattachée
+    // au jour où le ménage est réellement fait.
+    // Le marqueur movesDeparture distingue ces nouveaux décalés des anciens
+    // (enregistrés à 0 €), repris uniquement via le bouton dédié ci-dessous.
     const isDecale = extraType === "decale";
     try {
       setExtraStatus("Enregistrement…");
       await fs.addDoc(fs.collection(fs.db, "extra_menages"), {
         listingId: extraApt, residence: info.residence, appartement: info.appartement,
         unitNumber: info.unitNumber,
-        menageHT: isDecale ? 0 : info.menageHT,
-        amenitiesHT: isDecale ? 0 : info.amenitiesHT,
+        menageHT: info.menageHT,
+        amenitiesHT: info.amenitiesHT,
         date: extraDate, motif: extraMotif.trim(),
         type: extraType, datePrevue: isDecale ? extraDatePrevue : null,
+        movesDeparture: isDecale ? true : null,
         createdAt: new Date().toISOString(),
       });
       setExtraMotif("");
       await loadExtras(fs);
-      setExtraStatus(isDecale ? "Ménage décalé ajouté (non facturé)." : "Ménage supplémentaire ajouté.");
+      setExtraStatus(isDecale ? "Ménage décalé — déplacé et facturé à la nouvelle date." : "Ménage supplémentaire ajouté.");
+    } catch (err) { setExtraStatus("Erreur : " + err.message); }
+  }
+
+  // ---- Reprise des anciens décalés (avant ce correctif, enregistrés à 0 €) ----
+  // Ne traite QUE les décalés sans le marqueur movesDeparture — donc jamais les
+  // nouveaux, et jamais deux fois le même : une fois repris, un décalé porte le
+  // marqueur et n'est plus jamais retouché par ce bouton, même si on le reclique.
+  const oldDecales = extraMenages.filter(e => e.type === "decale" && e.movesDeparture !== true);
+
+  async function migrateOldDecales() {
+    if (oldDecales.length === 0) return;
+    if (!checkDeletePassword()) return;
+    if (!confirm(`Reprendre ${oldDecales.length} ancien(s) ménage(s) décalé(s) ? Ils passeront de 0 € au vrai coût, et leur départ d'origine sera masqué du planning de sa date.`)) return;
+    try {
+      setExtraStatus("Reprise des anciens décalés…");
+      let done = 0;
+      for (const e of oldDecales) {
+        const info = apartments.find(a => a.id === e.listingId)
+          || apartments.find(a => a.unitNumber === e.unitNumber && a.residence === e.residence);
+        if (!info) continue; // appartement introuvable : on laisse tel quel plutôt que de deviner un montant
+        await fs.updateDoc(fs.doc(fs.db, "extra_menages", e.id), {
+          menageHT: info.menageHT, amenitiesHT: info.amenitiesHT, movesDeparture: true,
+        });
+        done += 1;
+      }
+      await loadExtras(fs);
+      setExtraStatus(`${done} ancien(s) décalé(s) repris — coût réel appliqué, départs d'origine masqués.`);
     } catch (err) { setExtraStatus("Erreur : " + err.message); }
   }
 
@@ -158,7 +188,13 @@ function Linge() {
   // Si l'appartement a DÉJÀ sa colonne (un vrai départ ce jour-là), on fusionne
   // le décalé dedans au lieu d'en créer une seconde colonne pour le même logement.
   const extraToday = extraMenages.filter(e => e.residence === "Belleville" && e.date === day);
-  const sheetItems = [...items];
+  // Un départ dont le ménage a été décalé à une autre date ne doit plus figurer
+  // sur la feuille de ce jour : il est déplacé, pas dupliqué. Les items de la
+  // feuille n'ont pas de champ `depart` (leur date est celle affichée), d'où
+  // l'item synthétique passé au helper.
+  const sheetItems = items.filter(
+    it => !isDepartureMoved({ ...it, depart: day }, extraMenages)
+  );
   for (const e of extraToday) {
     const existing = sheetItems.find(it => it.unitNumber === e.unitNumber);
     if (existing) {
@@ -199,7 +235,7 @@ function Linge() {
               <label>Type
                 <select value={extraType} onChange={e => setExtraType(e.target.value)}>
                   <option value="supplement">Supplément payant</option>
-                  <option value="decale">Ménage décalé (non facturé)</option>
+                  <option value="decale">Ménage décalé (déplacé à une autre date)</option>
                 </select>
               </label>
               <label>Appartement
@@ -227,9 +263,24 @@ function Linge() {
             </div>
             {extraType === "decale" && (
               <p style={{ fontSize: 12, color: "#2980b9", marginTop: -6, marginBottom: 10 }}>
-                Ce ménage n&apos;est pas facturé en plus (coût 0 €) — il apparaîtra dans les coûts comme justificatif, avec la date prévue et la date réelle.
+                Le ménage est <strong>déplacé</strong> : il disparaît du planning de la date prévue et n&apos;apparaît qu&apos;à la date réelle. Une seule facturation, comptée à la date réelle.
               </p>
             )}
+
+            {oldDecales.length > 0 && (
+              <div style={{ background: "#fdf3e6", border: "1px solid #f0d9b5", borderRadius: 6, padding: "10px 14px", marginTop: 4, marginBottom: 12 }}>
+                <div style={{ fontSize: 13, marginBottom: 6 }}>
+                  <strong>{oldDecales.length} ancien(s) ménage(s) décalé(s)</strong> enregistré(s) avant ce correctif, toujours à 0 € et sans masquer leur départ d&apos;origine.
+                </div>
+                <button onClick={migrateOldDecales} className="ghost" style={{ fontSize: 12, color: "#b8860b" }}>
+                  Reprendre ces {oldDecales.length} ancien(s) décalé(s) (code requis)
+                </button>
+                <div style={{ fontSize: 11, color: "#888", marginTop: 4 }}>
+                  Sûr à recliquer : une fois repris, un décalé ne réapparaît plus jamais dans cette liste.
+                </div>
+              </div>
+            )}
+
             <button className="primary" onClick={addExtraMenage}>Ajouter</button>
             {extraStatus && <span style={{ marginLeft: 10, fontSize: 12, color: "#666" }}>{extraStatus}</span>}
 

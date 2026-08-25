@@ -4,6 +4,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
+import { isDepartureMoved } from "../lib/apartments";
 
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
@@ -97,7 +98,12 @@ function Couts() {
   }
 
   const residences = Array.from(new Set(rows.map(r => r.residence))).sort((a, b) => a.localeCompare(b));
-  const filtered = rows.filter(r => residence === "__all__" || r.residence === residence);
+  // Un départ dont le ménage a été décalé n'est plus facturé à sa date d'origine :
+  // le coût suit le ménage et est porté par le décalé, à la date réelle.
+  // Une seule facturation au total, jamais deux, jamais zéro.
+  const filtered = rows.filter(
+    r => (residence === "__all__" || r.residence === residence) && !isDepartureMoved(r, extraMenages)
+  );
 
   // Ménages supplémentaires dans la plage de dates sélectionnée
   const extraFiltered = extraMenages.filter(e => {

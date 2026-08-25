@@ -1,6 +1,7 @@
 // pages/menage.js
 import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
+import { isDepartureMoved } from "../lib/apartments";
 
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
@@ -89,7 +90,10 @@ function Menage() {
 
   const byResidence = {};
   for (const g of groups) {
-    byResidence[g.residence] = { residence: g.residence, items: [...g.items], count: g.count };
+    // Un départ dont le ménage a été décalé à une autre date ne doit plus
+    // apparaître ici : il est déplacé, pas dupliqué.
+    const visibles = g.items.filter(it => !isDepartureMoved(it, extraMenages));
+    byResidence[g.residence] = { residence: g.residence, items: visibles, count: visibles.length };
   }
   for (const e of extraFiltered) {
     if (!byResidence[e.residence]) byResidence[e.residence] = { residence: e.residence, items: [], count: 0 };
