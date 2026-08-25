@@ -97,11 +97,27 @@ function Menage() {
   }
   for (const e of extraFiltered) {
     if (!byResidence[e.residence]) byResidence[e.residence] = { residence: e.residence, items: [], count: 0 };
-    byResidence[e.residence].items.push({
-      unitNumber: e.unitNumber, appartement: e.appartement, depart: e.date,
-      client: null, extra: true, motif: e.motif, extraType: e.type, datePrevue: e.datePrevue,
-    });
-    byResidence[e.residence].count += 1;
+    // Si l'appartement a DÉJÀ un départ ce jour-là (cas d'une réservation
+    // scindée par Hostaway : la vraie date de fin coïncide avec un départ
+    // naturel), on fusionne dedans plutôt que d'ajouter une seconde ligne
+    // pour le même appartement le même jour.
+    const list = byResidence[e.residence].items;
+    const existing = e.type === "decale"
+      ? list.find(it => !it.extra && it.unitNumber === e.unitNumber && (it.depart || "").slice(0, 10) === (e.date || "").slice(0, 10))
+      : null;
+    if (existing) {
+      existing.extra = true;
+      existing.motif = e.motif;
+      existing.extraType = e.type;
+      existing.datePrevue = e.datePrevue;
+      existing.mergedDecale = true; // repère visuel : doublon évité ici
+    } else {
+      byResidence[e.residence].items.push({
+        unitNumber: e.unitNumber, appartement: e.appartement, depart: e.date,
+        client: null, extra: true, motif: e.motif, extraType: e.type, datePrevue: e.datePrevue,
+      });
+      byResidence[e.residence].count += 1;
+    }
   }
   const mergedGroups = Object.values(byResidence).sort((a, b) => a.residence.localeCompare(b.residence));
   const shownTotal = mergedGroups.reduce((s, g) => s + g.count, 0);
@@ -209,11 +225,17 @@ function Menage() {
                       <td>{it.appartement}</td>
                       <td>{fmtFr(it.depart)}</td>
                       <td>
-                        {it.extra
-                          ? (it.extraType === "decale"
-                              ? <span style={{ color: "#2980b9", fontWeight: 700, fontSize: 12 }}>DÉCALÉ</span>
-                              : <span style={{ color: "#b8860b", fontWeight: 700, fontSize: 12 }}>SUPPLÉMENTAIRE</span>)
-                          : it.client}
+                        {it.client}
+                        {it.extra && (
+                          it.extraType === "decale"
+                            ? <span style={{ color: "#2980b9", fontWeight: 700, fontSize: 12, marginLeft: it.client ? 6 : 0 }}>DÉCALÉ</span>
+                            : <span style={{ color: "#b8860b", fontWeight: 700, fontSize: 12, marginLeft: it.client ? 6 : 0 }}>SUPPLÉMENTAIRE</span>
+                        )}
+                        {it.mergedDecale && (
+                          <span style={{ color: "#c0392b", fontWeight: 700, fontSize: 11, marginLeft: 6 }} title="Un doublon a été évité ici : ce départ avait aussi un ménage décalé sur la même date/appartement.">
+                            ⚠ doublon évité
+                          </span>
+                        )}
                       </td>
                       <td className="note-col">
                         {it.extra ? (

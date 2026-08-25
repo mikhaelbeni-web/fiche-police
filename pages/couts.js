@@ -121,11 +121,20 @@ function Couts() {
   }
   // Intègre les ménages supplémentaires : ajoutés au total ménage de leur résidence,
   // et listés à part pour rester traçables avec leur motif.
+  // Cas particulier (réservation scindée par Hostaway) : si un décalé atterrit
+  // sur une date/appartement où un départ existe DÉJÀ (donc déjà compté dans
+  // byResidence[...].menage ci-dessus), on ne rajoute PAS son coût une seconde
+  // fois — seul le motif reste tracé, avec un repère "doublon évité".
   for (const e of extraFiltered) {
     if (!byResidence[e.residence]) byResidence[e.residence] = { residence: e.residence, items: [], menage: 0, amenities: 0, unknown: 0, extras: [] };
-    byResidence[e.residence].menage += e.menageHT || 0;
-    byResidence[e.residence].amenities += e.amenitiesHT || 0;
-    byResidence[e.residence].extras.push(e);
+    const alreadyCounted = e.type === "decale" && byResidence[e.residence].items.some(
+      r => r.unitNumber === e.unitNumber && (r.depart || "").slice(0, 10) === (e.date || "").slice(0, 10)
+    );
+    if (!alreadyCounted) {
+      byResidence[e.residence].menage += e.menageHT || 0;
+      byResidence[e.residence].amenities += e.amenitiesHT || 0;
+    }
+    byResidence[e.residence].extras.push({ ...e, mergedDecale: alreadyCounted });
   }
   const groups = Object.values(byResidence).sort((a, b) => a.residence.localeCompare(b.residence));
   const grandMenage = groups.reduce((s, g) => s + g.menage, 0);
@@ -237,10 +246,15 @@ function Couts() {
                           <>
                             <span style={{ color: "#2980b9", fontWeight: 600 }}>Ménage décalé</span> — {e.motif}
                             {e.datePrevue && <> · prévu le {fmtFr(e.datePrevue)}, fait le {fmtFr(e.date)}</>}
+                            {e.mergedDecale && (
+                              <span style={{ color: "#c0392b", fontWeight: 700 }} title="Ce décalé tombe sur une date/appartement qui avait déjà un départ naturel — son coût n'a pas été rajouté une seconde fois.">
+                                {" "}· ⚠ doublon évité (coût non recompté)
+                              </span>
+                            )}
                           </>
                         ) : e.motif}
                       </span>
-                      <span className="c">{euros((e.menageHT || 0) + (e.amenitiesHT || 0))}</span>
+                      <span className="c">{e.mergedDecale ? "0,00 €" : euros((e.menageHT || 0) + (e.amenitiesHT || 0))}</span>
                     </div>
                   ))}
                 </div>
