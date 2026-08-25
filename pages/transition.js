@@ -6,17 +6,13 @@
 import { useState, useEffect } from "react";
 import Head from "next/head";
 import { RESIDENCES, QUESTIONS, emptyReport, today, yesterday, isLocked, hasAlert } from "../lib/shiftReport";
+import CodeModal from "../components/CodeModal";
+import { useCodeGate } from "../hooks/useCodeGate";
 
-// Même mot de passe que les autres suppressions sensibles de l'app. Frein
-// volontaire côté navigateur, pas une vraie sécurité. Changeable via
+// Même code que les autres suppressions sensibles de l'app. Frein volontaire
+// côté navigateur, pas une vraie sécurité. Changeable via
 // NEXT_PUBLIC_DELETE_PASSWORD sur Vercel.
 const DELETE_PASSWORD = process.env.NEXT_PUBLIC_DELETE_PASSWORD || "2305";
-function checkDeletePassword() {
-  const entered = prompt("Mot de passe requis pour cette suppression :");
-  if (entered === null) return false;
-  if (entered !== DELETE_PASSWORD) { alert("Mot de passe incorrect."); return false; }
-  return true;
-}
 
 function fmtFr(d) {
   if (!d) return "";
@@ -26,6 +22,7 @@ function fmtFr(d) {
 
 
 function Transition() {
+  const { requestCode, codeModalProps } = useCodeGate(DELETE_PASSWORD, "Code requis pour cette suppression");
   const [ready, setReady] = useState(false);
   const [configured, setConfigured] = useState(true);
   const [fs, setFs] = useState(null);
@@ -75,38 +72,23 @@ function Transition() {
     } catch (err) { setStatus("Erreur : " + err.message); }
   }
 
-  // Suppression protégée par mot de passe. Le rapport peut être supprimé qu'il
-  // soit verrouillé ou non — la protection par date ne concerne que l'édition.
+  // Suppression protégée par code, réservée aux rapports verrouillés (hier /
+  // historique) — jamais au rapport du jour en cours de rédaction.
   async function deleteReport(report) {
-    if (!checkDeletePassword()) return;
     if (!confirm(`Êtes-vous sûr de vouloir supprimer le rapport du ${fmtFr(report.date)} ?`)) return;
-    try {
-      setStatus("Suppression…");
-      await fs.deleteDoc(fs.doc(fs.db, "shift_reports", report.date));
-      if (report.date === today()) setTodayReport(emptyReport(today()));
-      if (report.date === yesterday()) setYesterdayReport(null);
-      setAllReports(prev => prev.filter(r => r.date !== report.date));
-      setSelectedReport(null);
-      setStatus("Rapport supprimé.");
-    } catch (err) { setStatus("Erreur : " + err.message); }
-  }
-
-  // Suppression protégée par mot de passe, réservée aux rapports verrouillés
-  // (hier / historique) — jamais au rapport du jour en cours de rédaction.
-  async function deleteReport(report) {
-    if (!checkDeletePassword()) return;
-    if (!confirm(`Êtes-vous sûr de vouloir supprimer le rapport du ${fmtFr(report.date)} ?`)) return;
-    try {
-      setStatus("Suppression…");
-      const { deleteDoc, doc } = await import("firebase/firestore");
-      await deleteDoc(doc(fs.db, "shift_reports", report.date));
-      if (tab === "hier") setYesterdayReport(null);
-      if (tab === "historique") {
-        setSelectedReport(null);
-        await loadHistorique(fs);
-      }
-      setStatus("Rapport supprimé.");
-    } catch (err) { setStatus("Erreur : " + err.message); }
+    requestCode(async () => {
+      try {
+        setStatus("Suppression…");
+        const { deleteDoc, doc } = await import("firebase/firestore");
+        await deleteDoc(doc(fs.db, "shift_reports", report.date));
+        if (tab === "hier") setYesterdayReport(null);
+        if (tab === "historique") {
+          setSelectedReport(null);
+          await loadHistorique(fs);
+        }
+        setStatus("Rapport supprimé.");
+      } catch (err) { setStatus("Erreur : " + err.message); }
+    });
   }
 
   function openTab(t) {
@@ -162,6 +144,7 @@ function Transition() {
           )}
         </div>
       </div>
+      <CodeModal {...codeModalProps} />
     </>
   );
 }

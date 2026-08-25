@@ -1,6 +1,8 @@
 // pages/taxes.js
 import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
+import CodeModal from "../components/CodeModal";
+import { useCodeGate } from "../hooks/useCodeGate";
 
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
@@ -16,18 +18,13 @@ function euros(n) {
   return Number(n).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
 }
 
-// Mot de passe demandé avant de supprimer un solde de départ ou une ligne de
-// taxe de séjour. Ce n'est pas une vraie sécurité (comparaison faite dans le
-// navigateur) — juste un frein volontaire contre une suppression accidentelle
-// ou par une personne non autorisée à qui l'accès à l'app a été partagé.
-// Changeable via NEXT_PUBLIC_DELETE_PASSWORD sur Vercel.
+// Code demandé avant de supprimer un solde de départ ou une ligne de taxe de
+// séjour, ou avant de confirmer une récupération d'espèces. Ce n'est pas une
+// vraie sécurité (comparaison faite dans le navigateur) — juste un frein
+// volontaire contre une action accidentelle ou par une personne non autorisée
+// à qui l'accès à l'app a été partagé. Changeable via NEXT_PUBLIC_DELETE_PASSWORD
+// sur Vercel.
 const DELETE_PASSWORD = process.env.NEXT_PUBLIC_DELETE_PASSWORD || "2305";
-function checkDeletePassword() {
-  const entered = prompt("Mot de passe requis pour cette suppression :");
-  if (entered === null) return false; // annulé
-  if (entered !== DELETE_PASSWORD) { alert("Mot de passe incorrect."); return false; }
-  return true;
-}
 
 function ControleExclusions({ data }) {
   const [ouvert, setOuvert] = useState(false);
@@ -266,6 +263,7 @@ function TaxesImpayees() {
 // une partie des espèces, laisse un reliquat en caisse — chaque récupération est tracée
 // et exportable en Excel (CSV), avec un historique complet consultable à tout moment.
 function CashManagement() {
+  const { requestCode, codeModalProps } = useCodeGate(DELETE_PASSWORD, "Code requis");
   const [ready, setReady] = useState(false);
   const [configured, setConfigured] = useState(true);
   const [fs, setFs] = useState(null);
@@ -329,13 +327,14 @@ function CashManagement() {
               fs={fs} entries={entries} unrecovered={unrecovered} recoveries={recoveries}
               baseline={baseline} sumClient={sumClient} sumExpense={sumExpense} totalEnCaisse={totalEnCaisse}
               showRecoverForm={showRecoverForm} setShowRecoverForm={setShowRecoverForm}
-              reload={() => loadAll(fs)} setStatus={setStatus}
+              reload={() => loadAll(fs)} setStatus={setStatus} requestCode={requestCode}
             />
           ) : (
-            <CashHistory recoveries={recoveries} entries={entries} fs={fs} reload={() => loadAll(fs)} setStatus={setStatus} />
+            <CashHistory recoveries={recoveries} entries={entries} fs={fs} reload={() => loadAll(fs)} setStatus={setStatus} requestCode={requestCode} />
           )}
         </div>
       </div>
+      <CodeModal {...codeModalProps} />
     </>
   );
 }
@@ -359,7 +358,7 @@ function downloadEntriesCSV(filename, rows) {
 }
 
 // ---- Vue courante : saisie + solde + liste depuis la dernière récupération ----
-function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient, sumExpense, totalEnCaisse, showRecoverForm, setShowRecoverForm, reload, setStatus }) {
+function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient, sumExpense, totalEnCaisse, showRecoverForm, setShowRecoverForm, reload, setStatus, requestCode }) {
   const today = isoDay(new Date());
   const [mode, setMode] = useState("client"); // client | expense
   const [date, setDate] = useState(today);
@@ -445,10 +444,13 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
   async function delEntry(entry) {
     const isTaxeSejour = (entry.designation || "").toLowerCase().includes("taxe de séjour")
       || (entry.designation || "").toLowerCase().includes("taxe de sejour");
-    if (isTaxeSejour && !checkDeletePassword()) return;
     if (!confirm("Êtes-vous sûr de vouloir supprimer cette entrée ?")) return;
-    await fs.deleteDoc(fs.doc(fs.db, "cash_entries", entry.id));
-    await reload();
+    if (isTaxeSejour) {
+      requestCode(async () => { await fs.deleteDoc(fs.doc(fs.db, "cash_entries", entry.id)); await reload(); });
+    } else {
+      await fs.deleteDoc(fs.doc(fs.db, "cash_entries", entry.id));
+      await reload();
+    }
   }
 
   function exportCurrentCSV() {
@@ -578,7 +580,7 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
 
       {showRecoverForm && (
         <RecoverForm fs={fs} unrecovered={unrecovered} totalEnCaisse={totalEnCaisse}
-          onDone={() => { setShowRecoverForm(false); reload(); }} setStatus={setStatus} />
+          onDone={() => { setShowRecoverForm(false); reload(); }} setStatus={setStatus} requestCode={requestCode} />
       )}
 
       <div className="tbl-wrap"><table className="tbl" style={{ marginTop: 10 }}>
@@ -641,7 +643,7 @@ function StartingBalanceForm({ hasRecoveries, onConfirm, onCancel }) {
   );
 }
 
-function RecoverForm({ fs, unrecovered, totalEnCaisse, onDone, setStatus }) {
+function RecoverForm({ fs, unrecovered, totalEnCaisse, onDone, setStatus, requestCode }) {
   const [amountRecovered, setAmountRecovered] = useState("");
   const [note, setNote] = useState("");
 
@@ -662,23 +664,24 @@ function RecoverForm({ fs, unrecovered, totalEnCaisse, onDone, setStatus }) {
   async function confirmRecovery() {
     if (!totalPositif) { setStatus("La caisse est vide ou négative, rien à récupérer."); return; }
     if (!montantValide) { setStatus("Le montant récupéré ne peut pas dépasser le total en caisse."); return; }
-    if (!checkDeletePassword()) return;
-    try {
-      setStatus("Enregistrement de la récupération…");
-      const date = isoDay(new Date());
-      const entryIds = unrecovered.map(e => e.id);
-      const recDoc = await fs.addDoc(fs.collection(fs.db, "cash_recoveries"), {
-        date, amountRecovered: rec, amountLeftInBox: left, note: note || "",
-        totalAvant: totalEnCaisse, entryIds, createdAt: new Date().toISOString(),
-      });
-      const batch = fs.writeBatch(fs.db);
-      for (const id of entryIds) {
-        batch.update(fs.doc(fs.db, "cash_entries", id), { recoveryId: recDoc.id });
-      }
-      await batch.commit();
-      setStatus(`Récupération enregistrée : ${euros2(rec)} récupérés, ${euros2(left)} laissés en caisse.`);
-      onDone();
-    } catch (err) { setStatus("Erreur : " + err.message); }
+    requestCode(async () => {
+      try {
+        setStatus("Enregistrement de la récupération…");
+        const date = isoDay(new Date());
+        const entryIds = unrecovered.map(e => e.id);
+        const recDoc = await fs.addDoc(fs.collection(fs.db, "cash_recoveries"), {
+          date, amountRecovered: rec, amountLeftInBox: left, note: note || "",
+          totalAvant: totalEnCaisse, entryIds, createdAt: new Date().toISOString(),
+        });
+        const batch = fs.writeBatch(fs.db);
+        for (const id of entryIds) {
+          batch.update(fs.doc(fs.db, "cash_entries", id), { recoveryId: recDoc.id });
+        }
+        await batch.commit();
+        setStatus(`Récupération enregistrée : ${euros2(rec)} récupérés, ${euros2(left)} laissés en caisse.`);
+        onDone();
+      } catch (err) { setStatus("Erreur : " + err.message); }
+    });
   }
 
   return (
@@ -700,7 +703,7 @@ function RecoverForm({ fs, unrecovered, totalEnCaisse, onDone, setStatus }) {
 }
 
 // ---- Historique des récupérations ----
-function CashHistory({ recoveries, entries, fs, reload, setStatus }) {
+function CashHistory({ recoveries, entries, fs, reload, setStatus, requestCode }) {
   function exportRecoveryCSV(rec) {
     const linked = entries.filter(e => e.recoveryId === rec.id);
     const rows = [["Type", "Date", "Saisi par", "Client", "Appartement", "Date arrivée", "Fournisseur", "Désignation", "Montant"]];
@@ -723,22 +726,24 @@ function CashHistory({ recoveries, entries, fs, reload, setStatus }) {
   async function delRecovery(rec) {
     const isSoldeDepart = (rec.note || "").toLowerCase().includes("solde de départ")
       || (rec.note || "").toLowerCase().includes("solde de depart");
-    if (isSoldeDepart && !checkDeletePassword()) return;
     if (!confirm(`Êtes-vous sûr de vouloir supprimer "${rec.note || "cette récupération"}" du ${fmtFrShort(rec.date)} ?`)) return;
-    try {
-      setStatus("Suppression…");
-      const linked = entries.filter(e => e.recoveryId === rec.id);
-      if (linked.length > 0) {
-        const batch = fs.writeBatch(fs.db);
-        for (const e of linked) {
-          batch.update(fs.doc(fs.db, "cash_entries", e.id), { recoveryId: null });
+    const doDelete = async () => {
+      try {
+        setStatus("Suppression…");
+        const linked = entries.filter(e => e.recoveryId === rec.id);
+        if (linked.length > 0) {
+          const batch = fs.writeBatch(fs.db);
+          for (const e of linked) {
+            batch.update(fs.doc(fs.db, "cash_entries", e.id), { recoveryId: null });
+          }
+          await batch.commit();
         }
-        await batch.commit();
-      }
-      await fs.deleteDoc(fs.doc(fs.db, "cash_recoveries", rec.id));
-      await reload();
-      setStatus("Récupération supprimée.");
-    } catch (err) { setStatus("Erreur : " + err.message); }
+        await fs.deleteDoc(fs.doc(fs.db, "cash_recoveries", rec.id));
+        await reload();
+        setStatus("Récupération supprimée.");
+      } catch (err) { setStatus("Erreur : " + err.message); }
+    };
+    if (isSoldeDepart) requestCode(doDelete); else await doDelete();
   }
 
   return (

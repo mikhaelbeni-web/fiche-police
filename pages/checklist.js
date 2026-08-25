@@ -11,17 +11,13 @@ import {
 } from "../lib/checklistTemplate";
 import { getCurrentStaff, setCurrentStaff, listStaff, ensureStaff, deleteStaff } from "../lib/staff";
 import StaffBar from "../components/StaffBar";
+import CodeModal from "../components/CodeModal";
+import { useCodeGate } from "../hooks/useCodeGate";
 
 // Code admin pour ajouter/modifier/supprimer une ligne de tâche du planning.
 // Distinct du code de suppression 2305 utilisé ailleurs — celui-ci ouvre un vrai
 // mode édition du référentiel de tâches, pas juste une confirmation ponctuelle.
 const ADMIN_CODE = process.env.NEXT_PUBLIC_CHECKLIST_ADMIN_CODE || "2305";
-function checkAdminCode() {
-  const entered = prompt("Code admin requis :");
-  if (entered === null) return false;
-  if (entered !== ADMIN_CODE) { alert("Code incorrect."); return false; }
-  return true;
-}
 
 function todayISO() {
   // Date locale (pas UTC) : évite le décalage "hier" entre minuit et l'heure UTC.
@@ -73,6 +69,7 @@ function TaskRow({ id, time, task, entry, editable, overdue, onToggle, adminMode
 }
 
 function Checklist() {
+  const { requestCode, codeModalProps } = useCodeGate(ADMIN_CODE, "Code admin requis");
   const [ready, setReady] = useState(false);
   const [configured, setConfigured] = useState(true);
   const [api, setApi] = useState(null);
@@ -183,7 +180,7 @@ function Checklist() {
   // ---- Mode admin : ajouter / modifier / supprimer une ligne du planning ----
   function toggleAdminMode() {
     if (adminMode) { setAdminMode(false); return; }
-    if (checkAdminCode()) setAdminMode(true);
+    requestCode(() => setAdminMode(true));
   }
 
   function collectionFor(section) {
@@ -393,6 +390,7 @@ function Checklist() {
           </div>
         </div>
       </div>
+      <CodeModal {...codeModalProps} />
     </>
   );
 }

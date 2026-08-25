@@ -6,20 +6,16 @@
 import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
 import { listApartments, isDepartureMoved } from "../lib/apartments";
+import CodeModal from "../components/CodeModal";
+import { useCodeGate } from "../hooks/useCodeGate";
 
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
 
-// Même mot de passe que pour les suppressions sensibles de Gestion des espèces
-// (solde de départ / lignes taxe de séjour). Frein volontaire côté navigateur,
-// pas une vraie sécurité. Changeable via NEXT_PUBLIC_DELETE_PASSWORD sur Vercel.
+// Même code que pour les suppressions sensibles de Gestion des espèces (solde
+// de départ / lignes taxe de séjour). Frein volontaire côté navigateur, pas
+// une vraie sécurité. Changeable via NEXT_PUBLIC_DELETE_PASSWORD sur Vercel.
 const DELETE_PASSWORD = process.env.NEXT_PUBLIC_DELETE_PASSWORD || "2305";
-function checkDeletePassword() {
-  const entered = prompt("Mot de passe requis pour cette suppression :");
-  if (entered === null) return false;
-  if (entered !== DELETE_PASSWORD) { alert("Mot de passe incorrect."); return false; }
-  return true;
-}
 
 const LINEN_ROWS = [
   "Grande serviette",
@@ -42,6 +38,7 @@ function euros(n) {
 }
 
 function Linge() {
+  const { requestCode, codeModalProps } = useCodeGate(DELETE_PASSWORD, "Code requis");
   const [day, setDay] = useState(isoDay(new Date()));
   const [items, setItems] = useState([]);
   const [status, setStatus] = useState("");
@@ -114,30 +111,32 @@ function Linge() {
 
   async function migrateOldDecales() {
     if (oldDecales.length === 0) return;
-    if (!checkDeletePassword()) return;
     if (!confirm(`Reprendre ${oldDecales.length} ancien(s) ménage(s) décalé(s) ? Ils passeront de 0 € au vrai coût, et leur départ d'origine sera masqué du planning de sa date.`)) return;
-    try {
-      setExtraStatus("Reprise des anciens décalés…");
-      let done = 0;
-      for (const e of oldDecales) {
-        const info = apartments.find(a => a.id === e.listingId)
-          || apartments.find(a => a.unitNumber === e.unitNumber && a.residence === e.residence);
-        if (!info) continue; // appartement introuvable : on laisse tel quel plutôt que de deviner un montant
-        await fs.updateDoc(fs.doc(fs.db, "extra_menages", e.id), {
-          menageHT: info.menageHT, amenitiesHT: info.amenitiesHT, movesDeparture: true,
-        });
-        done += 1;
-      }
-      await loadExtras(fs);
-      setExtraStatus(`${done} ancien(s) décalé(s) repris — coût réel appliqué, départs d'origine masqués.`);
-    } catch (err) { setExtraStatus("Erreur : " + err.message); }
+    requestCode(async () => {
+      try {
+        setExtraStatus("Reprise des anciens décalés…");
+        let done = 0;
+        for (const e of oldDecales) {
+          const info = apartments.find(a => a.id === e.listingId)
+            || apartments.find(a => a.unitNumber === e.unitNumber && a.residence === e.residence);
+          if (!info) continue; // appartement introuvable : on laisse tel quel plutôt que de deviner un montant
+          await fs.updateDoc(fs.doc(fs.db, "extra_menages", e.id), {
+            menageHT: info.menageHT, amenitiesHT: info.amenitiesHT, movesDeparture: true,
+          });
+          done += 1;
+        }
+        await loadExtras(fs);
+        setExtraStatus(`${done} ancien(s) décalé(s) repris — coût réel appliqué, départs d'origine masqués.`);
+      } catch (err) { setExtraStatus("Erreur : " + err.message); }
+    });
   }
 
   async function delExtraMenage(id) {
-    if (!checkDeletePassword()) return;
     if (!confirm("Êtes-vous sûr de vouloir supprimer ce ménage supplémentaire ?")) return;
-    await fs.deleteDoc(fs.doc(fs.db, "extra_menages", id));
-    await loadExtras(fs);
+    requestCode(async () => {
+      await fs.deleteDoc(fs.doc(fs.db, "extra_menages", id));
+      await loadExtras(fs);
+    });
   }
 
   useEffect(() => {
@@ -362,6 +361,7 @@ function Linge() {
           </div>
         )}
       </div>
+      <CodeModal {...codeModalProps} />
     </>
   );
 }

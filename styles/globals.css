@@ -540,3 +540,21 @@ body {
   .phone-row { flex-wrap: wrap; }
   .phone-row input { flex: 1; min-width: 0; width: auto !important; }
 }
+
+/* --- Fenêtre de saisie de code protégé (remplace prompt(), masqué type=password) --- */
+.code-modal-overlay {
+  position: fixed; inset: 0; background: rgba(15, 23, 42, .55);
+  display: flex; align-items: center; justify-content: center; z-index: 1000;
+  padding: 16px;
+}
+.code-modal {
+  background: #fff; border-radius: 10px; padding: 22px 24px; width: 100%; max-width: 300px;
+  box-shadow: 0 10px 40px rgba(0,0,0,.25);
+}
+.code-modal-title { font-weight: 700; font-size: 15px; margin-bottom: 14px; color: var(--ink); }
+.code-modal-input {
+  width: 100%; box-sizing: border-box; padding: 10px 12px; font-size: 18px;
+  letter-spacing: 4px; border: 1px solid #ccc; border-radius: 6px; text-align: center;
+  margin-bottom: 14px;
+}
+.code-modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
