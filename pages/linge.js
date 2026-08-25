@@ -249,20 +249,20 @@ function Linge() {
                   ))}
                 </select>
               </label>
-              <label>{extraType === "decale" ? "Date réelle (aujourd'hui)" : "Date"} <input type="date" value={extraDate} onChange={e => setExtraDate(e.target.value)} /></label>
+              <label>{extraType === "decale" ? "Date où le ménage sera réellement fait" : "Date"} <input type="date" value={extraDate} onChange={e => setExtraDate(e.target.value)} /></label>
               {extraType === "decale" && (
-                <label>Date prévue (veille) <input type="date" value={extraDatePrevue} onChange={e => setExtraDatePrevue(e.target.value)} /></label>
+                <label>Date normalement prévue <input type="date" value={extraDatePrevue} onChange={e => setExtraDatePrevue(e.target.value)} /></label>
               )}
             </div>
             <div className="linen-form-row">
               <label style={{ flex: 1 }}>Motif (obligatoire)
                 <input type="text" value={extraMotif} onChange={e => setExtraMotif(e.target.value)}
-                  placeholder={extraType === "decale" ? "ex. non fait la veille, trop de travail" : "ex. technicien est intervenu et a fait du désordre"} style={{ width: "100%" }} />
+                  placeholder={extraType === "decale" ? "ex. reporté au lendemain, ou avancé car appartement libéré plus tôt" : "ex. technicien est intervenu et a fait du désordre"} style={{ width: "100%" }} />
               </label>
             </div>
             {extraType === "decale" && (
               <p style={{ fontSize: 12, color: "#2980b9", marginTop: -6, marginBottom: 10 }}>
-                Le ménage est <strong>déplacé</strong> : il disparaît du planning de la date prévue et n&apos;apparaît qu&apos;à la date réelle. Une seule facturation, comptée à la date réelle.
+                Le ménage est <strong>déplacé</strong> — dans un sens ou dans l&apos;autre (avancé ou reporté) : il disparaît du planning de la date normalement prévue et n&apos;apparaît qu&apos;à la date où il sera réellement fait. Une seule facturation, comptée à cette date réelle.
               </p>
             )}
 
