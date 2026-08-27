@@ -93,7 +93,7 @@ function Sheet({ r }) {
       <div className="footer-block">
         <div className="sig">
           <div className="lbl">Fait à Paris, le / Done in Paris, on {today}</div>
-          <div className="line" />
+          <div className="box"><span className="word">Signature</span></div>
           <div className="hint">Signature du voyageur / Guest signature</div>
         </div>
       </div>
