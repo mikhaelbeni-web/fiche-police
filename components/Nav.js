@@ -19,6 +19,7 @@ const MAIN = [
 const MORE = [
   { href: "/couts", label: "Coûts ménage" },
   { href: "/taxes", label: "Taxes de séjour / Espèces" },
+  { href: "/sinistres", label: "Sinistres" },
   { href: "/consignes", label: "Consignes à bagages" },
   { href: "/contacts", label: "Contacts" },
   { href: "/codes", label: "Codes d'accès" },
