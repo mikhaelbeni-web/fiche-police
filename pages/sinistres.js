@@ -22,10 +22,16 @@ function euros(n) {
   return Number(n).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
 }
 
-const STATUT_BOOKING = [
-  { value: "non_ouvert", label: "Pas encore ouvert sur Booking" },
-  { value: "ouvert", label: "Ouvert sur Booking" },
-  { value: "ferme", label: "Fermé sur Booking" },
+const CANAUX = [
+  { value: "booking", label: "Booking.com" },
+  { value: "airbnb", label: "Airbnb" },
+  { value: "autre", label: "Autre plateforme" },
+];
+
+const STATUT_PLATEFORME = [
+  { value: "non_ouvert", label: "Pas encore ouvert" },
+  { value: "ouvert", label: "Ouvert" },
+  { value: "ferme", label: "Fermé" },
 ];
 
 function Sinistres() {
@@ -151,10 +157,11 @@ function SinistreForm({ onSave, onCancel }) {
 
   const [motif, setMotif] = useState("");
   const [montant, setMontant] = useState("");
-  const [origine, setOrigine] = useState("booking"); // booking | direct
+  const [origine, setOrigine] = useState("plateforme"); // plateforme | direct
+  const [canal, setCanal] = useState("booking"); // booking | airbnb | autre (si origine === "plateforme")
   const [problemeRegle, setProblemeRegle] = useState(false);
   const [reponseRapide, setReponseRapide] = useState(false);
-  const [statutBooking, setStatutBooking] = useState("non_ouvert");
+  const [statutPlateforme, setStatutPlateforme] = useState("non_ouvert");
   const [note, setNote] = useState("");
   const [date, setDate] = useState(isoDay(new Date()));
   const [formStatus, setFormStatus] = useState("");
@@ -195,9 +202,10 @@ function SinistreForm({ onSave, onCancel }) {
       motif: motif.trim(),
       montant: montant === "" ? null : Number(montant),
       origine,
+      canal: origine === "plateforme" ? canal : null,
       problemeRegle,
       reponseRapide,
-      statutBooking,
+      statutPlateforme,
       note: note.trim(),
     });
   }
@@ -224,7 +232,13 @@ function SinistreForm({ onSave, onCancel }) {
             {!picked && results.length > 0 && (
               <div style={{ border: "1px solid #ddd", borderRadius: 6, marginTop: 4, maxHeight: 220, overflowY: "auto", background: "#fff", position: "relative", zIndex: 5 }}>
                 {results.map((r, i) => (
-                  <div key={i} onClick={() => { setPicked(r); setResults([]); }}
+                  <div key={i} onClick={() => {
+                    setPicked(r); setResults([]);
+                    const ch = (r.channel || "").toLowerCase();
+                    if (ch.includes("airbnb")) setCanal("airbnb");
+                    else if (ch.includes("booking")) setCanal("booking");
+                    else setCanal("autre");
+                  }}
                     style={{ padding: "8px 10px", cursor: "pointer", borderBottom: "1px solid #f0f0f0", fontSize: 13 }}>
                     <strong>{r.client}</strong> — {r.residence} {r.appartement} ({r.unitNumber})
                     <div style={{ fontSize: 11, color: "#888" }}>{fmtFr(r.arrivee)} → {fmtFr(r.depart)} · {r.channel}</div>
@@ -257,15 +271,24 @@ function SinistreForm({ onSave, onCancel }) {
       <div className="linen-form-row">
         <label>Géré
           <select value={origine} onChange={e => setOrigine(e.target.value)}>
-            <option value="booking">Sur Booking</option>
+            <option value="plateforme">Sur une plateforme</option>
             <option value="direct">En direct (téléphone)</option>
           </select>
         </label>
-        <label>Statut sur Booking
-          <select value={statutBooking} onChange={e => setStatutBooking(e.target.value)}>
-            {STATUT_BOOKING.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
-        </label>
+        {origine === "plateforme" && (
+          <label>Plateforme
+            <select value={canal} onChange={e => setCanal(e.target.value)}>
+              {CANAUX.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          </label>
+        )}
+        {origine === "plateforme" && (
+          <label>Statut sur la plateforme
+            <select value={statutPlateforme} onChange={e => setStatutPlateforme(e.target.value)}>
+              {STATUT_PLATEFORME.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          </label>
+        )}
       </div>
 
       <div className="linen-form-row">
@@ -291,7 +314,14 @@ function SinistreForm({ onSave, onCancel }) {
 }
 
 // ---- Ligne d'un sinistre existant ----
+const CANAL_LABEL = { booking: "Booking.com", airbnb: "Airbnb", autre: "Autre plateforme" };
+
 function SinistreRow({ s, onUpdate, onDelete }) {
+  // Rétrocompatibilité : les sinistres créés avant l'ajout d'Airbnb avaient
+  // origine: "booking" directement (pas de champ canal séparé).
+  const isDirect = s.origine === "direct";
+  const canal = s.canal || (s.origine === "booking" ? "booking" : null);
+
   return (
     <div className="resid" style={{ padding: "12px 14px", background: s.problemeRegle ? "#f4faf4" : "#fdf9f0", borderRadius: 8, marginBottom: 10, border: "1px solid #eee" }}>
       <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
@@ -301,8 +331,8 @@ function SinistreRow({ s, onUpdate, onDelete }) {
           <span style={{ fontSize: 12, color: "#888" }}> · {fmtFr(s.date)}</span>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <span style={{ fontSize: 12, fontWeight: 600, color: s.origine === "booking" ? "#2980b9" : "#8e44ad" }}>
-            {s.origine === "booking" ? "Sur Booking" : "En direct"}
+          <span style={{ fontSize: 12, fontWeight: 600, color: isDirect ? "#8e44ad" : "#2980b9" }}>
+            {isDirect ? "En direct" : (CANAL_LABEL[canal] || "Plateforme")}
           </span>
           <button onClick={onDelete} className="ghost" style={{ color: "#e74c3c" }}>✕</button>
         </div>
@@ -322,9 +352,9 @@ function SinistreRow({ s, onUpdate, onDelete }) {
           Problème réglé
         </label>
         <label style={{ fontSize: 12 }}>
-          Statut Booking{" "}
-          <select value={s.statutBooking || "non_ouvert"} onChange={e => onUpdate({ statutBooking: e.target.value })}>
-            {STATUT_BOOKING.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          Statut plateforme{" "}
+          <select value={s.statutPlateforme || s.statutBooking || "non_ouvert"} onChange={e => onUpdate({ statutPlateforme: e.target.value })}>
+            {STATUT_PLATEFORME.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         </label>
       </div>
