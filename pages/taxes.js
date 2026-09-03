@@ -80,6 +80,7 @@ function ControleExclusions({ data }) {
 }
 
 function TaxesImpayees() {
+  const { requestCode, codeModalProps } = useCodeGate(DELETE_PASSWORD, "Code admin requis pour masquer cette taxe");
   const today = isoDay(new Date());
   const [from, setFrom] = useState("2026-07-10"); // départ fixe : 10 juillet
   const [to, setTo] = useState(today);
@@ -88,13 +89,61 @@ function TaxesImpayees() {
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const [creds, setCreds] = useState({ account: "", key: "" });
+  const [fs, setFs] = useState(null);
+  const [masked, setMasked] = useState([]); // taxes masquées manuellement (Firestore)
+  const [showMasked, setShowMasked] = useState(false);
 
   useEffect(() => {
     setCreds({
       account: window.localStorage.getItem(ACCOUNT_KEY) || "",
       key: window.localStorage.getItem(KEY_KEY) || "",
     });
+    (async () => {
+      const { isFirebaseConfigured } = await import("../lib/firebase");
+      if (!isFirebaseConfigured()) return;
+      const { db } = await import("../lib/firebase");
+      const { collection, doc, getDocs, addDoc, deleteDoc, query, orderBy } = await import("firebase/firestore");
+      const api = { db, collection, doc, getDocs, addDoc, deleteDoc, query, orderBy };
+      setFs(api);
+      await loadMasked(api);
+    })();
   }, []);
+
+  async function loadMasked(api) {
+    const snap = await api.getDocs(api.query(api.collection(api.db, "taxes_masquees"), api.orderBy("maskedAt", "desc")));
+    setMasked(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  }
+
+  // Masque définitivement une taxe qui apparaît "partiellement payée" sur
+  // Hostaway alors qu'elle est en réalité déjà réglée (désynchro côté PMS).
+  // Protégé par code : à n'utiliser qu'après vérification manuelle du vrai
+  // statut de paiement, pas comme raccourci pour ignorer une vraie impayée.
+  function maskTax(it) {
+    if (!fs) { setStatus("Firebase non configuré — impossible de masquer."); return; }
+    if (!confirm(`Masquer définitivement la taxe de ${it.client} (${euros(it.taxeSejour)}) ? Elle disparaîtra de cette liste, considérée comme déjà payée.`)) return;
+    requestCode(async () => {
+      try {
+        await fs.addDoc(fs.collection(fs.db, "taxes_masquees"), {
+          reservation: it.reservation || "", client: it.client, residence: it.residence,
+          appartement: it.appartement, arrivee: it.arrivee, taxeSejour: it.taxeSejour,
+          maskedAt: new Date().toISOString(),
+        });
+        await loadMasked(fs);
+        setStatus("Taxe masquée.");
+      } catch (err) { setStatus("Erreur : " + err.message); }
+    });
+  }
+
+  function unmaskTax(m) {
+    if (!confirm(`Réafficher la taxe de ${m.client} dans la liste des impayées ?`)) return;
+    requestCode(async () => {
+      try {
+        await fs.deleteDoc(fs.doc(fs.db, "taxes_masquees", m.id));
+        await loadMasked(fs);
+        setStatus("Taxe réaffichée.");
+      } catch (err) { setStatus("Erreur : " + err.message); }
+    });
+  }
 
   const load = useCallback(async (f, t, acc, key) => {
     if (!acc || !key) { setStatus("Identifiants Hostaway manquants — configure-les sur la page Fiches."); return; }
@@ -121,7 +170,10 @@ function TaxesImpayees() {
   }, [from, to, creds, load]);
 
   const residences = Array.from(new Set((data?.items || []).map(i => i.residence))).sort((a, b) => a.localeCompare(b));
-  const items = (data?.items || []).filter(i => residence === "__all__" || i.residence === residence);
+  const maskedKeys = new Set(masked.map(m => m.reservation).filter(Boolean));
+  const items = (data?.items || [])
+    .filter(i => residence === "__all__" || i.residence === residence)
+    .filter(i => !(i.reservation && maskedKeys.has(i.reservation)));
 
   // Regroupement par résidence
   const byResidence = {};
@@ -216,6 +268,7 @@ function TaxesImpayees() {
                     <th>Statut</th>
                     <th className="c">Taxe séjour</th>
                     <th className="c">Réglé</th>
+                    <th></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -228,6 +281,12 @@ function TaxesImpayees() {
                       <td>{it.paymentStatus}</td>
                       <td className="c">{euros(it.taxeSejour)}</td>
                       <td className="c"><span className="box" /></td>
+                      <td>
+                        <button onClick={() => maskTax(it)} className="ghost" style={{ fontSize: 11, color: "#999" }}
+                          title="Déjà réglée en réalité (désynchro Hostaway) — la masquer définitivement de cette liste">
+                          Masquer
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -251,8 +310,36 @@ function TaxesImpayees() {
               <span className="gt">Total taxe due : {euros(shownTotal)}</span>
             </div>
           )}
+
+          {masked.length > 0 && (
+            <div style={{ marginTop: 20 }}>
+              <button onClick={() => setShowMasked(s => !s)} className="ghost" style={{ fontSize: 12, color: "#888" }}>
+                {showMasked ? "Masquer" : `Voir les ${masked.length} taxe(s) masquée(s) manuellement`}
+              </button>
+              {showMasked && (
+                <div className="tbl-wrap" style={{ marginTop: 8 }}><table className="tbl">
+                  <thead>
+                    <tr><th>Client</th><th>Appartement</th><th>Arrivée</th><th className="c">Taxe</th><th>Masquée le</th><th></th></tr>
+                  </thead>
+                  <tbody>
+                    {masked.map(m => (
+                      <tr key={m.id}>
+                        <td>{m.client}</td>
+                        <td>{m.residence} {m.appartement}</td>
+                        <td>{fmtFr(m.arrivee)}</td>
+                        <td className="c">{euros(m.taxeSejour)}</td>
+                        <td>{fmtFr((m.maskedAt || "").slice(0, 10))}</td>
+                        <td><button onClick={() => unmaskTax(m)} className="ghost" style={{ fontSize: 11, color: "#2980b9" }}>Réafficher</button></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table></div>
+              )}
+            </div>
+          )}
         </div>
       </div>
+      <CodeModal {...codeModalProps} />
     </>
   );
 }
