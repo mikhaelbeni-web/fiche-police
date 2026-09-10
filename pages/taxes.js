@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
 import CodeModal from "../components/CodeModal";
 import { useCodeGate } from "../hooks/useCodeGate";
+import { listStaff, ensureStaff, deleteStaff } from "../lib/staff";
 
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
@@ -456,9 +457,45 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
   const [fournisseur, setFournisseur] = useState("");
   const [amount, setAmount] = useState("");
   const [saisiPar, setSaisiPar] = useState("");
-  const [clientMode, setClientMode] = useState("taxe"); // taxe | autre
+  const [staffList, setStaffList] = useState([]);
+  const [staffAdmin, setStaffAdmin] = useState(false);
+  const [newStaffName, setNewStaffName] = useState("");
+  const [clientMode, setClientMode] = useState("taxe"); // taxe | recherche | autre
   const [taxeClients, setTaxeClients] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [searching, setSearching] = useState(false);
   const [showStartForm, setShowStartForm] = useState(false);
+
+  // Liste des réceptionnistes : partagée avec la Check-list (collection
+  // Firestore "staff_members"), pour n'avoir qu'un seul endroit à tenir à
+  // jour quand l'équipe change, au lieu d'une liste figée dans le code.
+  useEffect(() => {
+    (async () => {
+      try { setStaffList(await listStaff(fs)); } catch { /* collection pas encore créée */ }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function toggleStaffAdmin() {
+    if (staffAdmin) { setStaffAdmin(false); return; }
+    requestCode(() => setStaffAdmin(true));
+  }
+
+  async function addStaffName() {
+    const name = newStaffName.trim();
+    if (!name) return;
+    await ensureStaff(fs, name);
+    setNewStaffName("");
+    setStaffList(await listStaff(fs));
+  }
+
+  async function removeStaffName(name) {
+    if (!confirm(`Retirer "${name}" de la liste des réceptionnistes ?`)) return;
+    await deleteStaff(fs, name);
+    if (saisiPar === name) setSaisiPar("");
+    setStaffList(await listStaff(fs));
+  }
 
   // Charge les clients Belleville avec taxe de séjour à régler depuis Hostaway :
   // un paiement espèces sert le plus souvent à encaisser une taxe impayée, donc
@@ -502,6 +539,28 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
       await reload();
       setStatus(`Solde de départ de ${amt.toFixed(2)} € enregistré au ${startDate}.`);
     } catch (err) { setStatus("Erreur : " + err.message); }
+  }
+
+  // Recherche un client parmi TOUTES les réservations (peu importe leur statut
+  // de paiement) — utile quand le paiement a déjà été marqué réglé dans
+  // Hostaway, ce qui le fait disparaître de la liste "taxe impayée" ci-dessus
+  // sans qu'il soit pour autant réglé en espèces dans notre app.
+  async function runClientSearch(q) {
+    setSearchQuery(q);
+    setClient(""); setAppartement(""); setArrivalDate("");
+    if (q.trim().length < 2) { setSearchResults([]); return; }
+    setSearching(true);
+    try {
+      const acc = window.localStorage.getItem(ACCOUNT_KEY) || "";
+      const key = window.localStorage.getItem(KEY_KEY) || "";
+      if (!acc || !key) { setSearching(false); return; }
+      const res = await fetch(`/api/reservation-search?q=${encodeURIComponent(q.trim())}`, {
+        headers: { "x-hostaway-account": acc, "x-hostaway-key": key },
+      });
+      const d = await res.json();
+      setSearchResults(res.ok ? (d.items || []) : []);
+    } catch { setSearchResults([]); }
+    setSearching(false);
   }
 
   async function addEntry() {
@@ -580,13 +639,34 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
           <label style={{ fontWeight: 700 }}>Réceptionniste (obligatoire)
             <select value={saisiPar} onChange={e => setSaisiPar(e.target.value)}>
               <option value="">— Qui saisit ? —</option>
-              <option value="Zack">Zack</option>
-              <option value="Kurtis">Kurtis</option>
-              <option value="Esteban">Esteban</option>
+              {staffList.map(name => <option key={name} value={name}>{name}</option>)}
             </select>
           </label>
           {!saisiPar && <span style={{ fontSize: 12, color: "#e67e22", alignSelf: "center" }}>À renseigner avant toute saisie</span>}
+          <button type="button" onClick={toggleStaffAdmin} className="ghost" style={{ fontSize: 11, color: staffAdmin ? "#1f7a3f" : "#999", marginLeft: "auto" }}>
+            {staffAdmin ? "✓ Édition liste active" : "Gérer la liste"}
+          </button>
         </div>
+        {staffAdmin && (
+          <div style={{ background: "#eef7ee", border: "1px solid #bfe3bf", borderRadius: 6, padding: "8px 12px", marginBottom: 10 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Réceptionnistes (liste partagée avec la Check-list)</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
+              {staffList.map(name => (
+                <span key={name} style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "#fff", border: "1px solid #cde", borderRadius: 999, padding: "3px 4px 3px 10px", fontSize: 12 }}>
+                  {name}
+                  <button type="button" onClick={() => removeStaffName(name)} style={{ background: "transparent", border: "none", color: "#e74c3c", cursor: "pointer", fontSize: 13, lineHeight: 1, padding: "0 6px" }}>✕</button>
+                </span>
+              ))}
+              {staffList.length === 0 && <span style={{ fontSize: 12, color: "#888" }}>Aucun nom pour l&apos;instant.</span>}
+            </div>
+            <div style={{ display: "flex", gap: 6 }}>
+              <input type="text" value={newStaffName} onChange={e => setNewStaffName(e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter") addStaffName(); }}
+                placeholder="Ajouter un prénom…" style={{ padding: "6px 9px", border: "1px solid #ccc", borderRadius: 5, fontSize: 13 }} />
+              <button type="button" onClick={addStaffName} className="primary" style={{ fontSize: 12 }}>Ajouter</button>
+            </div>
+          </div>
+        )}
         <div className="linen-form-row">
           <label>Type
             <select value={mode} onChange={e => setMode(e.target.value)}>
@@ -602,9 +682,10 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
               <label>Client
                 <select value={clientMode} onChange={e => {
                   setClientMode(e.target.value);
-                  if (e.target.value === "taxe") { setClient(""); setAppartement(""); setArrivalDate(""); }
+                  setClient(""); setAppartement(""); setArrivalDate(""); setSearchQuery(""); setSearchResults([]);
                 }}>
                   <option value="taxe">Client taxe de séjour (Belleville)</option>
+                  <option value="recherche">Rechercher un client (toutes réservations)</option>
                   <option value="autre">Autre client (saisie manuelle)</option>
                 </select>
               </label>
@@ -633,6 +714,31 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
                   </select>
                   {taxeClients.length === 0 && (
                     <span style={{ fontSize: 11, color: "#e67e22" }}>Aucun client taxe Belleville chargé (vérifie les identifiants Hostaway sur Fiches, ou utilise « Autre client »).</span>
+                  )}
+                </label>
+              ) : clientMode === "recherche" ? (
+                <label style={{ minWidth: 320, position: "relative" }}>Nom du client
+                  <input type="text" value={client || searchQuery} onChange={e => runClientSearch(e.target.value)}
+                    placeholder="Tape au moins 2 lettres du nom…" style={{ width: "100%" }} />
+                  {searching && <span style={{ fontSize: 11, color: "#666" }}>Recherche…</span>}
+                  {!client && searchResults.length > 0 && (
+                    <div style={{ border: "1px solid #ddd", borderRadius: 6, marginTop: 4, maxHeight: 220, overflowY: "auto", background: "#fff", position: "absolute", width: "100%", zIndex: 5 }}>
+                      {searchResults.map((r, i) => (
+                        <div key={i} onClick={() => {
+                          setClient(r.client); setAppartement(r.unitNumber || r.appartement || ""); setArrivalDate(r.arrivee || "");
+                          setDesignation("Taxe de séjour"); setSearchResults([]);
+                        }} style={{ padding: "8px 10px", cursor: "pointer", borderBottom: "1px solid #f0f0f0", fontSize: 13 }}>
+                          <strong>{r.client}</strong> — {r.residence} {r.appartement} ({r.unitNumber})
+                          <div style={{ fontSize: 11, color: "#888" }}>{fmtFr(r.arrivee)} → {fmtFr(r.depart)} · {r.channel}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {client && (
+                    <div style={{ fontSize: 11, color: "#1f7a3f", marginTop: 4 }}>
+                      {appartement} · {fmtFr(arrivalDate)}
+                      {" "}<button type="button" onClick={() => { setClient(""); setSearchQuery(""); }} className="ghost" style={{ fontSize: 11 }}>changer</button>
+                    </div>
                   )}
                 </label>
               ) : (
