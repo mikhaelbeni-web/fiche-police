@@ -30,12 +30,32 @@ export default async function handler(req, res) {
     const accessToken = await getAccessToken(accountId, apiKey);
     const listingMap = await getListingMap(accessToken, accountId); // repli si totalement inconnu
 
-    const all = (await fetchReservations(accessToken, {
+    const rawAll = await fetchReservations(accessToken, {
       arrivalStartDate: from,
       arrivalEndDate: to,
       limit: "500",
       includeResources: "1",
-    })).filter(isActive);
+    });
+
+    // Mode diagnostic : montre, pour chaque réservation de la période, si elle
+    // a été écartée par isActive() et pourquoi (statut brut, canal, annulation).
+    // Sert à repérer un statut/canal (ex. Airbnb) non couvert par le filtre.
+    if (req.query.debug === "1") {
+      const rows = rawAll.map(rv => ({
+        listingMapId: rv.listingMapId ?? rv.listingId ?? null,
+        listingName: rv.listingName || null,
+        guest: rv.guestName || [rv.guestFirstName, rv.guestLastName].filter(Boolean).join(" ") || null,
+        arrivalDate: (rv.arrivalDate || rv.checkInDate || "").slice(0, 10),
+        channelName: rv.channelName || null,
+        status: rv.status || null,
+        isCancelled: rv.isCancelled ?? null,
+        cancellationDate: rv.cancellationDate || null,
+        passeIsActive: isActive(rv),
+      }));
+      return res.status(200).json({ from, to, total: rawAll.length, rows });
+    }
+
+    const all = rawAll.filter(isActive);
 
     const inRange = all.filter(rv => {
       const d = (rv.arrivalDate || rv.checkInDate || "").slice(0, 10);
