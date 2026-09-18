@@ -18,6 +18,13 @@ function Debug() {
   const [status, setStatus] = useState("");
   const [creds, setCreds] = useState({ account: "", key: "" });
 
+  // Diagnostic arrivées : voit pourquoi une réservation (ex. Airbnb) est
+  // écartée par isActive() — statut brut, canal, annulation.
+  const [arrFrom, setArrFrom] = useState(isoDay(new Date()));
+  const [arrTo, setArrTo] = useState(isoDay(new Date()));
+  const [arrRows, setArrRows] = useState(null);
+  const [arrStatus, setArrStatus] = useState("");
+
   useEffect(() => {
     setCreds({
       account: window.localStorage.getItem(ACCOUNT_KEY) || "",
@@ -52,6 +59,22 @@ function Debug() {
     }
     for (const [name, ids] of Object.entries(byName)) {
       if (ids.size > 1) suspects.add(name);
+    }
+  }
+
+  async function loadArrivals() {
+    setArrStatus("Chargement…");
+    try {
+      const res = await fetch(`/api/arrivals?from=${arrFrom}&to=${arrTo}&debug=1`, {
+        headers: { "x-hostaway-account": creds.account, "x-hostaway-key": creds.key },
+      });
+      const j = await res.json();
+      if (!res.ok) throw new Error(j.error || "Erreur");
+      setArrRows(j.rows);
+      setArrStatus(`${j.total} réservation(s) sur la période`);
+    } catch (err) {
+      setArrStatus("Erreur : " + err.message);
+      setArrRows(null);
     }
   }
 
@@ -94,6 +117,49 @@ function Debug() {
                   <td style={{ padding: 6, fontWeight: 700 }}>{r.reservationUnitListingUnitId ?? "—"}</td>
                   <td style={{ padding: 6 }}>{r.resoluResidence ?? "?"}</td>
                   <td style={{ padding: 6 }}>{r.resoluNumero ?? "?"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+
+        <h2 style={{ margin: "36px 0 10px" }}>Diagnostic arrivées (statut / canal écarté)</h2>
+        <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 14 }}>
+          <input type="date" value={arrFrom} onChange={e => setArrFrom(e.target.value)} />
+          <input type="date" value={arrTo} onChange={e => setArrTo(e.target.value)} />
+          <button onClick={loadArrivals} style={{ padding: "6px 14px" }}>Charger</button>
+          <span>{arrStatus}</span>
+        </div>
+        <p style={{ color: "#666", fontSize: 13, marginBottom: 14 }}>
+          Lignes surlignées en rouge = écartées par le filtre (<code>passeIsActive: false</code>).
+          Regarde leur <code>status</code> brut — si une résa Airbnb a un statut différent de
+          « new », « modified » ou « ownerstay », c&apos;est la cause. Envoie une capture.
+        </p>
+        {arrRows && (
+          <table style={{ width: "100%", borderCollapse: "collapse", background: "#fff", fontSize: 13 }}>
+            <thead>
+              <tr style={{ textAlign: "left", borderBottom: "2px solid #333" }}>
+                <th style={{ padding: 6 }}>Client</th>
+                <th style={{ padding: 6 }}>Arrivée</th>
+                <th style={{ padding: 6 }}>listingMapId</th>
+                <th style={{ padding: 6 }}>Nom listing</th>
+                <th style={{ padding: 6 }}>Canal</th>
+                <th style={{ padding: 6 }}>Statut brut</th>
+                <th style={{ padding: 6 }}>Annulée ?</th>
+                <th style={{ padding: 6 }}>Retenue ?</th>
+              </tr>
+            </thead>
+            <tbody>
+              {arrRows.map((r, i) => (
+                <tr key={i} style={{ borderBottom: "1px solid #eee", background: r.passeIsActive ? "transparent" : "#fde2e2" }}>
+                  <td style={{ padding: 6 }}>{r.guest}</td>
+                  <td style={{ padding: 6 }}>{r.arrivalDate}</td>
+                  <td style={{ padding: 6 }}>{r.listingMapId}</td>
+                  <td style={{ padding: 6 }}>{r.listingName}</td>
+                  <td style={{ padding: 6 }}>{r.channelName}</td>
+                  <td style={{ padding: 6, fontWeight: 700 }}>{r.status ?? "—"}</td>
+                  <td style={{ padding: 6 }}>{r.isCancelled === true ? "Oui" : (r.cancellationDate ? `Oui (${r.cancellationDate})` : "Non")}</td>
+                  <td style={{ padding: 6, fontWeight: 700, color: r.passeIsActive ? "#1f7a3f" : "#c0392b" }}>{r.passeIsActive ? "Oui" : "Non"}</td>
                 </tr>
               ))}
             </tbody>
