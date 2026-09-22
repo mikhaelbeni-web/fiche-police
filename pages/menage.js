@@ -1,7 +1,7 @@
 // pages/menage.js
 import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
-import { isDepartureMoved } from "../lib/apartments";
+import { isDepartureMoved, isNoShowHidden } from "../lib/apartments";
 
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
@@ -23,6 +23,7 @@ function Menage() {
   const [loading, setLoading] = useState(false);
   const [creds, setCreds] = useState({ account: "", key: "" });
   const [extraMenages, setExtraMenages] = useState([]);
+  const [hiddenMenages, setHiddenMenages] = useState([]);
 
   useEffect(() => {
     const a = window.localStorage.getItem(ACCOUNT_KEY) || "";
@@ -32,6 +33,8 @@ function Menage() {
 
   // Ménages supplémentaires ajoutés depuis /linge (Firebase) — doivent apparaître
   // dans la liste opérationnelle du jour, pas seulement dans les coûts.
+  // Ménages no-show masqués depuis /linge : ne doivent apparaître nulle part
+  // (ni ici, ni dans les coûts) — le ménage n'a jamais eu lieu.
   useEffect(() => {
     (async () => {
       const { isFirebaseConfigured } = await import("../lib/firebase");
@@ -40,6 +43,8 @@ function Menage() {
       const { collection, getDocs, query, orderBy } = await import("firebase/firestore");
       const snap = await getDocs(query(collection(db, "extra_menages"), orderBy("date", "desc")));
       setExtraMenages(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      const snapH = await getDocs(query(collection(db, "menages_masques"), orderBy("date", "desc")));
+      setHiddenMenages(snapH.docs.map(d => ({ id: d.id, ...d.data() })));
     })();
   }, []);
 
@@ -85,14 +90,16 @@ function Menage() {
   // marqués distinctement (badge + motif) mais comptés avec les autres.
   const extraFiltered = extraMenages.filter(e => {
     if (residence !== "__all__" && e.residence !== residence) return false;
-    return e.date >= from && e.date <= to;
+    if (e.date < from || e.date > to) return false;
+    return !isNoShowHidden(e, hiddenMenages);
   });
 
   const byResidence = {};
   for (const g of groups) {
     // Un départ dont le ménage a été décalé à une autre date ne doit plus
-    // apparaître ici : il est déplacé, pas dupliqué.
-    const visibles = g.items.filter(it => !isDepartureMoved(it, extraMenages));
+    // apparaître ici : il est déplacé, pas dupliqué. Un no-show masqué depuis
+    // /linge ne doit plus apparaître ici non plus : le ménage n'a jamais eu lieu.
+    const visibles = g.items.filter(it => !isDepartureMoved(it, extraMenages) && !isNoShowHidden(it, hiddenMenages));
     byResidence[g.residence] = { residence: g.residence, items: visibles, count: visibles.length };
   }
   for (const e of extraFiltered) {

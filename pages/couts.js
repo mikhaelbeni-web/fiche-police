@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
-import { isDepartureMoved } from "../lib/apartments";
+import { isDepartureMoved, isNoShowHidden } from "../lib/apartments";
 
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
@@ -29,6 +29,7 @@ function Couts() {
   const [loading, setLoading] = useState(false);
   const [creds, setCreds] = useState({ account: "", key: "" });
   const [extraMenages, setExtraMenages] = useState([]);
+  const [hiddenMenages, setHiddenMenages] = useState([]);
 
   useEffect(() => {
     setCreds({
@@ -38,6 +39,8 @@ function Couts() {
   }, []);
 
   // Ménages supplémentaires ajoutés depuis /linge (Firebase) — indépendants de Hostaway.
+  // Ménages no-show masqués depuis /linge : à exclure ici aussi, sinon un ménage
+  // qui n'a jamais eu lieu resterait facturé.
   useEffect(() => {
     (async () => {
       const { isFirebaseConfigured } = await import("../lib/firebase");
@@ -46,6 +49,8 @@ function Couts() {
       const { collection, getDocs, query, orderBy } = await import("firebase/firestore");
       const snap = await getDocs(query(collection(db, "extra_menages"), orderBy("date", "desc")));
       setExtraMenages(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      const snapH = await getDocs(query(collection(db, "menages_masques"), orderBy("date", "desc")));
+      setHiddenMenages(snapH.docs.map(d => ({ id: d.id, ...d.data() })));
     })();
   }, []);
 
@@ -102,13 +107,16 @@ function Couts() {
   // le coût suit le ménage et est porté par le décalé, à la date réelle.
   // Une seule facturation au total, jamais deux, jamais zéro.
   const filtered = rows.filter(
-    r => (residence === "__all__" || r.residence === residence) && !isDepartureMoved(r, extraMenages)
+    r => (residence === "__all__" || r.residence === residence)
+      && !isDepartureMoved(r, extraMenages)
+      && !isNoShowHidden(r, hiddenMenages)
   );
 
   // Ménages supplémentaires dans la plage de dates sélectionnée
   const extraFiltered = extraMenages.filter(e => {
     if (residence !== "__all__" && e.residence !== residence) return false;
-    return e.date >= from && e.date <= to;
+    if (e.date < from || e.date > to) return false;
+    return !isNoShowHidden(e, hiddenMenages);
   });
 
   const byResidence = {};

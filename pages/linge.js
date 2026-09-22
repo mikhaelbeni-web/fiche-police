@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
-import { listApartments, isDepartureMoved } from "../lib/apartments";
+import { listApartments, isDepartureMoved, isNoShowHidden } from "../lib/apartments";
 import CodeModal from "../components/CodeModal";
 import { useCodeGate } from "../hooks/useCodeGate";
 
@@ -84,11 +84,6 @@ function Linge() {
     const snap = await api.getDocs(api.query(api.collection(api.db, "menages_masques"), api.orderBy("date", "desc")));
     setHiddenMenages(snap.docs.map(d => ({ id: d.id, ...d.data() })));
   }
-
-  // Clé stable pour repérer le même ménage entre la feuille du jour et un
-  // masquage enregistré : listingId si dispo (départs réels), sinon unitNumber
-  // (ménages supplémentaires, qui n'ont pas de listingId).
-  function noShowKey(unitNumber, listingId) { return listingId ? `L:${listingId}` : `U:${unitNumber}`; }
 
   // Masquer un ménage no-show (client jamais arrivé) : PAS de code requis,
   // motif obligatoire. Choix délibéré demandé par l'utilisateur — ce n'est
@@ -259,10 +254,11 @@ function Linge() {
   }
 
   // No-shows du jour : masqués de la feuille de linge (mais gardés en trace
-  // ci-dessous, avec motif, pour vérification / restauration).
+  // ci-dessous, avec motif, pour vérification / restauration). Le même
+  // helper exclut aussi ce ménage des coûts (couts.js) et du planning
+  // (menage.js) : un no-show ne doit être facturé nulle part.
   const hiddenToday = hiddenMenages.filter(h => h.date === day);
-  const hiddenKeys = new Set(hiddenToday.map(h => noShowKey(h.unitNumber, h.listingId)));
-  sheetItems = sheetItems.filter(it => !hiddenKeys.has(noShowKey(it.unitNumber, it.listingId)));
+  sheetItems = sheetItems.filter(it => !isNoShowHidden({ ...it, depart: day }, hiddenMenages));
 
   return (
     <>
