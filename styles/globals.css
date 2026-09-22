@@ -240,7 +240,21 @@ body {
   .linge-sheet { box-shadow: none; max-width: 100%; padding: 8mm; }
   .linge-tbl th, .linge-tbl td { font-size: 11px; padding: 5px 4px; }
   .linge-page .linen-form { display: none; }
+  .no-print { display: none !important; }
 }
+
+.linge-tbl th.noshow-cell { background: #fff; padding: 3px 2px; }
+.noshow-btn {
+  font-size: 10px; line-height: 1.2; border: 1px solid #e74c3c; color: #e74c3c;
+  background: #fff; border-radius: 4px; padding: 2px 6px; cursor: pointer;
+}
+.noshow-btn:hover { background: #fdecea; }
+.noshow-hidden-box {
+  background: #fdecea; border: 1px solid #f5c6cb; border-radius: 6px;
+  padding: 10px 14px; margin-bottom: 14px; font-size: 13px;
+}
+.noshow-hidden-box table { width: 100%; margin-top: 6px; font-size: 12px; }
+.noshow-hidden-box td, .noshow-hidden-box th { padding: 3px 6px; text-align: left; }
 
 .linge-footer { margin-top: 18px; }
 .linge-signature { font-size: 13px; color: var(--muted); }

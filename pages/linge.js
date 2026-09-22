@@ -57,6 +57,11 @@ function Linge() {
   const [extraDatePrevue, setExtraDatePrevue] = useState(isoDay(new Date(Date.now() - 86400000)));
   const apartments = listApartments();
 
+  // No-shows : ménage masqué de la feuille de linge (client jamais arrivé).
+  // Volontairement SANS code — décision prise sur le terrain, pas une
+  // suppression sensible — mais le motif reste obligatoire pour garder une trace.
+  const [hiddenMenages, setHiddenMenages] = useState([]);
+
   useEffect(() => {
     (async () => {
       const { isFirebaseConfigured } = await import("../lib/firebase");
@@ -66,12 +71,56 @@ function Linge() {
       const api = { db, collection, doc, getDocs, addDoc, updateDoc, deleteDoc, query, orderBy };
       setFs(api);
       await loadExtras(api);
+      await loadHidden(api);
     })();
   }, []);
 
   async function loadExtras(api) {
     const snap = await api.getDocs(api.query(api.collection(api.db, "extra_menages"), api.orderBy("date", "desc")));
     setExtraMenages(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  }
+
+  async function loadHidden(api) {
+    const snap = await api.getDocs(api.query(api.collection(api.db, "menages_masques"), api.orderBy("date", "desc")));
+    setHiddenMenages(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  }
+
+  // Clé stable pour repérer le même ménage entre la feuille du jour et un
+  // masquage enregistré : listingId si dispo (départs réels), sinon unitNumber
+  // (ménages supplémentaires, qui n'ont pas de listingId).
+  function noShowKey(unitNumber, listingId) { return listingId ? `L:${listingId}` : `U:${unitNumber}`; }
+
+  // Masquer un ménage no-show (client jamais arrivé) : PAS de code requis,
+  // motif obligatoire. Choix délibéré demandé par l'utilisateur — ce n'est
+  // pas une suppression sensible (argent, données), c'est une correction de
+  // planning faite sur le terrain, qui doit rester rapide.
+  async function hideNoShow(it) {
+    if (!fs) return;
+    const motif = window.prompt(
+      "No-show — motif obligatoire pour retirer ce ménage de la feuille de linge du jour :",
+      ""
+    );
+    if (motif === null) return; // annulé
+    if (!motif.trim()) { alert("Le motif est obligatoire — ménage non masqué."); return; }
+    try {
+      await fs.addDoc(fs.collection(fs.db, "menages_masques"), {
+        date: day,
+        listingId: it.listingId || null,
+        unitNumber: it.unitNumber,
+        appartement: it.appartement,
+        motif: motif.trim(),
+        createdAt: new Date().toISOString(),
+      });
+      await loadHidden(fs);
+    } catch (err) { alert("Erreur : " + err.message); }
+  }
+
+  async function unhideNoShow(id) {
+    if (!fs) return;
+    try {
+      await fs.deleteDoc(fs.doc(fs.db, "menages_masques", id));
+      await loadHidden(fs);
+    } catch (err) { alert("Erreur : " + err.message); }
   }
 
   async function addExtraMenage() {
@@ -191,7 +240,7 @@ function Linge() {
   // sur la feuille de ce jour : il est déplacé, pas dupliqué. Les items de la
   // feuille n'ont pas de champ `depart` (leur date est celle affichée), d'où
   // l'item synthétique passé au helper.
-  const sheetItems = items.filter(
+  let sheetItems = items.filter(
     it => !isDepartureMoved({ ...it, depart: day }, extraMenages)
   );
   for (const e of extraToday) {
@@ -208,6 +257,12 @@ function Linge() {
       });
     }
   }
+
+  // No-shows du jour : masqués de la feuille de linge (mais gardés en trace
+  // ci-dessous, avec motif, pour vérification / restauration).
+  const hiddenToday = hiddenMenages.filter(h => h.date === day);
+  const hiddenKeys = new Set(hiddenToday.map(h => noShowKey(h.unitNumber, h.listingId)));
+  sheetItems = sheetItems.filter(it => !hiddenKeys.has(noShowKey(it.unitNumber, it.listingId)));
 
   return (
     <>
@@ -311,6 +366,24 @@ function Linge() {
           </div>
         )}
 
+        {hiddenToday.length > 0 && (
+          <div className="noshow-hidden-box no-print">
+            <strong>{hiddenToday.length} ménage(s) masqué(s) (no-show)</strong> pour le {fmtFr(day)} — retirés de la feuille de linge.
+            <table>
+              <thead><tr><th>Appartement</th><th>Motif</th><th></th></tr></thead>
+              <tbody>
+                {hiddenToday.map(h => (
+                  <tr key={h.id}>
+                    <td>{h.appartement || h.unitNumber}</td>
+                    <td>{h.motif}</td>
+                    <td><button onClick={() => unhideNoShow(h.id)} className="ghost" style={{ fontSize: 11 }}>Réafficher</button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
         {sheetItems.length === 0 && !loading && (
           <div className="empty-state">Aucun appartement Belleville à faire ce jour.</div>
         )}
@@ -342,6 +415,16 @@ function Linge() {
                   <th className="rowlabel">N° Appartement</th>
                   {sheetItems.map((it, i) => (
                     <th key={i} className="aptnum" title={it.extra ? (it.extraType === "decale" ? `${it.motif} (prévu le ${fmtFr(it.datePrevue)})` : it.motif) : undefined}>{it.unitNumber}</th>
+                  ))}
+                </tr>
+                <tr className="no-print">
+                  <th className="rowlabel"></th>
+                  {sheetItems.map((it, i) => (
+                    <th key={i} className="noshow-cell">
+                      <button className="noshow-btn" onClick={() => hideNoShow(it)} title="Masquer ce ménage (no-show) — motif obligatoire, sans code">
+                        No-show ✕
+                      </button>
+                    </th>
                   ))}
                 </tr>
               </thead>
