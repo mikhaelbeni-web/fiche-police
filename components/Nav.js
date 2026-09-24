@@ -11,6 +11,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 
 const ALL_ITEMS = [
   { href: "/", label: "Fiches de police" },
+  { href: "/alertes", label: "🔔 Alertes" },
   { href: "/arrivees", label: "Arrivées" },
   { href: "/menage", label: "Ménages" },
   { href: "/checklist", label: "Check-list" },
