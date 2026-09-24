@@ -111,6 +111,27 @@ body {
 
 .empty-state { color: var(--muted); text-align: center; padding: 60px 20px; max-width: 480px; }
 
+/* Alertes / tâches prioritaires */
+.alert-list { display: flex; flex-direction: column; gap: 8px; }
+.alert-card {
+  display: flex; align-items: flex-start; gap: 12px;
+  border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px;
+  background: #fff;
+}
+.alert-card.urgent { border-color: #e74c3c; background: #fdecea; }
+.alert-card.done { opacity: .6; }
+.alert-check input[type="checkbox"] { width: 20px; height: 20px; margin-top: 2px; cursor: pointer; }
+.alert-body { flex: 1; }
+.alert-title { font-weight: 700; font-size: 14px; }
+.alert-title.done { text-decoration: line-through; font-weight: 500; }
+.alert-badge {
+  display: inline-block; background: #e74c3c; color: #fff; font-size: 10px;
+  font-weight: 800; letter-spacing: .5px; border-radius: 4px; padding: 2px 6px;
+  margin-right: 8px; vertical-align: middle;
+}
+.alert-note { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.alert-meta { font-size: 11px; color: #999; margin-top: 4px; }
+
 /* Masqué à l'impression, sur TOUTES les pages — la barre de navigation
    (logos + onglets) ne doit jamais apparaître sur une fiche imprimée. */
 @media print {
