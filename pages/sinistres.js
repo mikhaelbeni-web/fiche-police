@@ -1,11 +1,13 @@
 // pages/sinistres.js
 // Suivi des sinistres/réclamations clients : cause, statut de résolution,
 // et suivi côté Booking (ouvert/fermé, géré via Booking ou en direct).
+// 2e vue « Réclamations Gmail » : voir components/ReclamationsGmail.js.
 
 import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
 import CodeModal from "../components/CodeModal";
 import { useCodeGate } from "../hooks/useCodeGate";
+import ReclamationsGmail, { RECLAMATIONS_COLLECTION } from "../components/ReclamationsGmail";
 
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
@@ -43,6 +45,8 @@ function Sinistres() {
   const [sinistres, setSinistres] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [filterStatut, setFilterStatut] = useState("tous"); // tous | ouverts | regles
+  const [vue, setVue] = useState("sinistres"); // sinistres | gmail
+  const [reclamations, setReclamations] = useState([]);
 
   useEffect(() => {
     (async () => {
@@ -52,7 +56,7 @@ function Sinistres() {
       const { collection, doc, getDocs, addDoc, updateDoc, deleteDoc, query, orderBy } = await import("firebase/firestore");
       const api = { db, collection, doc, getDocs, addDoc, updateDoc, deleteDoc, query, orderBy };
       setFs(api);
-      await loadSinistres(api);
+      await Promise.all([loadSinistres(api), loadReclamations(api)]);
       setReady(true);
     })();
   }, []);
@@ -60,6 +64,11 @@ function Sinistres() {
   async function loadSinistres(api) {
     const snap = await api.getDocs(api.query(api.collection(api.db, "sinistres"), api.orderBy("date", "desc")));
     setSinistres(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  }
+
+  async function loadReclamations(api) {
+    const snap = await api.getDocs(api.query(api.collection(api.db, RECLAMATIONS_COLLECTION), api.orderBy("dateRecu", "desc")));
+    setReclamations(snap.docs.map(d => ({ id: d.id, ...d.data() })));
   }
 
   async function addSinistre(payload) {
@@ -96,6 +105,8 @@ function Sinistres() {
     return true;
   });
 
+  const aTraiter = reclamations.filter(r => !r.traite).length;
+
   if (!ready) return <div className="menage-page"><div className="recap"><div className="empty-state">Chargement…</div></div></div>;
   if (!configured) {
     return (
@@ -115,15 +126,30 @@ function Sinistres() {
       <div className="toolbar">
         <h1>Sinistres</h1>
         <div className="quick">
-          <button onClick={() => setFilterStatut("tous")} className={filterStatut === "tous" ? "primary" : ""}>Tous</button>
-          <button onClick={() => setFilterStatut("ouverts")} className={filterStatut === "ouverts" ? "primary" : ""}>Non réglés</button>
-          <button onClick={() => setFilterStatut("regles")} className={filterStatut === "regles" ? "primary" : ""}>Réglés</button>
+          <button onClick={() => setVue("sinistres")} className={vue === "sinistres" ? "primary" : ""}>Sinistres</button>
+          <button onClick={() => setVue("gmail")} className={vue === "gmail" ? "primary" : ""}>
+            Réclamations Gmail{aTraiter > 0 ? ` (${aTraiter})` : ""}
+          </button>
         </div>
-        <button className="primary" onClick={() => setShowForm(s => !s)}>{showForm ? "Annuler" : "+ Nouveau sinistre"}</button>
+        {vue === "sinistres" && (
+          <>
+            <div className="quick">
+              <button onClick={() => setFilterStatut("tous")} className={filterStatut === "tous" ? "primary" : ""}>Tous</button>
+              <button onClick={() => setFilterStatut("ouverts")} className={filterStatut === "ouverts" ? "primary" : ""}>Non réglés</button>
+              <button onClick={() => setFilterStatut("regles")} className={filterStatut === "regles" ? "primary" : ""}>Réglés</button>
+            </div>
+            <button className="primary" onClick={() => setShowForm(s => !s)}>{showForm ? "Annuler" : "+ Nouveau sinistre"}</button>
+          </>
+        )}
         <span className="status">{status}</span>
       </div>
 
       <div className="menage-page">
+        {vue === "gmail" ? (
+          <div className="recap">
+            <ReclamationsGmail fs={fs} items={reclamations} onReload={() => loadReclamations(fs)} onStatus={setStatus} />
+          </div>
+        ) : (
         <div className="recap">
           {showForm && <SinistreForm onSave={addSinistre} onCancel={() => setShowForm(false)} />}
 
@@ -140,6 +166,7 @@ function Sinistres() {
             <SinistreRow key={s.id} s={s} onUpdate={patch => updateSinistre(s.id, patch)} onDelete={() => deleteSinistre(s)} />
           ))}
         </div>
+        )}
       </div>
       <CodeModal {...codeModalProps} />
     </>

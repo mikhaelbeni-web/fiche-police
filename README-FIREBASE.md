@@ -52,3 +52,4 @@ Firebase Auth. Pour l'instant, l'accès reste limité par le fait que l'URL et l
 - `access_codes` : codes des boîtes à clés statiques par résidence
 - `extra_menages` : ménages supplémentaires ajoutés manuellement (répercutés sur les coûts)
 - `shift_reports` : rapports de transition quotidiens entre équipes (doc ID = date)
+- `reclamations_gmail` : réclamations clients repérées chaque jour dans Gmail par la routine Claude (doc ID = `gmail_<threadId>`), traitées dans l'onglet Sinistres > Réclamations Gmail
