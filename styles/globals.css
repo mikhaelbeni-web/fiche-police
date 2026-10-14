@@ -267,6 +267,9 @@ body {
 
 /* Colonne Note (menage) : large et vide, pour écrire à la main après impression */
 .tbl .note-col { min-width: 220px; }
+.auto-note { display: block; font-size: 12.5px; line-height: 1.35; white-space: normal; }
+.auto-note.alerte { color: #b45309; font-weight: 500; }
+.auto-note-maj { color: #999; font-weight: 400; font-size: 11px; }
 @media print {
   .tbl .note-col { min-width: 260px; border-left: 1px solid #ccc; }
 }

@@ -5,11 +5,22 @@ import Head from "next/head";
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
 
+// Notes de synthèse écrites chaque matin par une routine Claude (lecture seule
+// de Hostaway + Gmail). Un document par réservation, doc ID = id Hostaway.
+// Champs : date (AAAA-MM-JJ d'arrivée), client, note (1-2 lignes, seulement
+// les infos qui existent), alerte (true s'il reste quelque chose à faire), majLe (ISO).
+const NOTES_COLLECTION = "notes_arrivees";
+
 function isoDay(d) { return d.toISOString().slice(0, 10); }
 function fmtFr(d) {
   if (!d) return "";
   const x = new Date(d + "T12:00:00");
   return isNaN(x) ? d : x.toLocaleDateString("fr-FR");
+}
+
+function fmtHeure(iso) {
+  const x = new Date(iso);
+  return isNaN(x) ? "" : x.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" }).replace(":", "h");
 }
 
 function Arrivees() {
@@ -21,6 +32,7 @@ function Arrivees() {
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const [creds, setCreds] = useState({ account: "", key: "" });
+  const [notes, setNotes] = useState({});
 
   useEffect(() => {
     const a = window.localStorage.getItem(ACCOUNT_KEY) || "";
@@ -52,6 +64,22 @@ function Arrivees() {
     if (creds.account && creds.key) load(from, to, creds.account, creds.key);
   }, [from, to, creds, load]);
 
+  const loadNotes = useCallback(async (f, t) => {
+    try {
+      const { isFirebaseConfigured, db } = await import("../lib/firebase");
+      if (!isFirebaseConfigured()) return;
+      const { collection, getDocs, query, where } = await import("firebase/firestore");
+      const snap = await getDocs(query(collection(db, NOTES_COLLECTION), where("date", ">=", f), where("date", "<=", t)));
+      const byId = {};
+      snap.forEach(d => { byId[d.id] = d.data(); });
+      setNotes(byId);
+    } catch {
+      setNotes({});
+    }
+  }, []);
+
+  useEffect(() => { loadNotes(from, to); }, [from, to, loadNotes]);
+
   function setToday() { setFrom(today); setTo(today); }
   function setTomorrow() {
     const t = isoDay(new Date(Date.now() + 864e5));
@@ -71,7 +99,7 @@ function Arrivees() {
     const rows = [["Résidence", "N°", "Appartement", "Date d'arrivée", "Client", "Note", "Réservation"]];
     for (const g of groups) {
       for (const it of g.items) {
-        rows.push([g.residence, it.unitNumber, it.appartement, fmtFr(it.arrivee), it.client, "", it.reservation]);
+        rows.push([g.residence, it.unitNumber, it.appartement, fmtFr(it.arrivee), it.client, notes[it.reservationId]?.note || "", it.reservation]);
       }
     }
     const csv = rows
@@ -116,7 +144,7 @@ function Arrivees() {
           </select>
         </div>
 
-        <button onClick={() => load(from, to, creds.account, creds.key)} disabled={loading} title="Actualiser">↻</button>
+        <button onClick={() => { load(from, to, creds.account, creds.key); loadNotes(from, to); }} disabled={loading} title="Actualiser">↻</button>
         <button className="primary" onClick={downloadCSV} disabled={!shownTotal}>Télécharger CSV</button>
         <button onClick={() => window.print()} disabled={!shownTotal}>Imprimer</button>
 
@@ -164,7 +192,16 @@ function Arrivees() {
                       <td>{it.appartement}</td>
                       <td>{fmtFr(it.arrivee)}</td>
                       <td>{it.client}</td>
-                      <td className="note-col"></td>
+                      <td className="note-col">
+                        {notes[it.reservationId]?.note && (
+                          <span className={"auto-note" + (notes[it.reservationId].alerte ? " alerte" : "")}>
+                            {notes[it.reservationId].note}
+                            {notes[it.reservationId].majLe && (
+                              <span className="auto-note-maj"> · {fmtHeure(notes[it.reservationId].majLe)}</span>
+                            )}
+                          </span>
+                        )}
+                      </td>
                       <td className="c"><span className="box" /></td>
                     </tr>
                   ))}

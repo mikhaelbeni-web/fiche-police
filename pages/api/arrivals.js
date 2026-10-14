@@ -84,6 +84,7 @@ export default async function handler(req, res) {
           depart: (rv.departureDate || rv.checkOutDate || "").slice(0, 10),
           client: rv.guestName || [rv.guestFirstName, rv.guestLastName].filter(Boolean).join(" ") || "—",
           reservation: rv.hostawayReservationId || rv.channelReservationId || rv.id || "",
+          reservationId: String(rv.id ?? ""),
           voyageurs: rv.numberOfGuests ?? rv.adults ?? "",
         });
       }
