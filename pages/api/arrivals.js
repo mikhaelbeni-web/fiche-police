@@ -6,6 +6,35 @@
 import { verifySession, getAccessToken, getListingMap, isActive, fetchReservations } from "../../lib/hostaway";
 import { resolveApartments } from "../../lib/apartments";
 
+// OTA réelle : Hostaway affiche « direct » pour certaines résas Hotels.com,
+// l'email du voyageur fait foi.
+function otaOf(rv) {
+  const email = (rv.guestEmail || "").toLowerCase();
+  if (email.endsWith("@expedia-import.local")) return "Hotels.com";
+  const c = (rv.channelName || "").toLowerCase();
+  if (c.includes("booking")) return "Booking";
+  if (c.includes("expedia")) return "Expedia";
+  if (c.includes("airbnb")) return "Airbnb";
+  if (c.includes("vrbo") || c.includes("homeaway")) return "Vrbo";
+  if (c === "direct" || c === "website" || c.includes("bookingengine")) return "Direct";
+  return rv.channelName || "—";
+}
+
+// Taxe de séjour. Expedia/Hotels.com/Airbnb l'encaissent eux-mêmes. Booking :
+// ligne « taxe de séjour » + résa partiellement payée = taxe non encaissée
+// (même règle que /api/tourist-tax). Sinon on ne conclut pas.
+function taxeOf(rv, ota) {
+  if (["Expedia", "Hotels.com", "Airbnb"].includes(ota)) return { statut: "reglee", libelle: "Réglée" };
+  const fees = Array.isArray(rv.reservationFees) ? rv.reservationFees : [];
+  const taxes = fees.filter(f => (f.name || "").toLowerCase().includes("taxe de séjour"));
+  const fee = taxes.find(f => f.feeType === "guest") || taxes[0];
+  const montant = fee ? Number(fee.amount) || 0 : 0;
+  const pay = (rv.paymentStatus || "").toLowerCase();
+  if (fee && pay.includes("partial")) return { statut: "a_regler", libelle: "À régler", montant };
+  if (pay === "paid") return { statut: "reglee", libelle: "Réglée" };
+  return { statut: "inconnue", libelle: "À vérifier", montant: montant || null };
+}
+
 export default async function handler(req, res) {
   if (req.method !== "GET") {
     res.setHeader("Allow", "GET");
@@ -72,6 +101,7 @@ export default async function handler(req, res) {
           ? { residence: fb.residence, appartement: fb.appartement, unitNumber: fb.unitNumber }
           : { residence: "Sans résidence", appartement: rv.listingName || "—", unitNumber: "" }];
       }
+      const ota = otaOf(rv);
       for (const info of infos) {
         const key = info.residence;
         if (!byResidence[key]) byResidence[key] = { residence: key, count: 0, items: [] };
@@ -84,6 +114,9 @@ export default async function handler(req, res) {
           depart: (rv.departureDate || rv.checkOutDate || "").slice(0, 10),
           client: rv.guestName || [rv.guestFirstName, rv.guestLastName].filter(Boolean).join(" ") || "—",
           reservation: rv.hostawayReservationId || rv.channelReservationId || rv.id || "",
+          reservationId: String(rv.id ?? ""),
+          ota,
+          taxe: taxeOf(rv, ota),
           voyageurs: rv.numberOfGuests ?? rv.adults ?? "",
         });
       }
