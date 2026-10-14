@@ -35,6 +35,42 @@ function taxeOf(rv, ota) {
   return { statut: "inconnue", libelle: "À vérifier", montant: montant || null };
 }
 
+// Villiers et Lantiez : taxe de séjour encaissée par les OTA, mais les clients
+// Booking doivent laisser un dépôt de garantie (pré-autorisation Stripe faite
+// par Hostaway la veille de l'arrivée). Ces résidences ont une colonne Dépôt et
+// une colonne Codes à la place de la colonne Taxe.
+const RESIDENCES_DEPOT = ["Villiers", "Lantiez"];
+
+// Dates Hostaway « AAAA-MM-JJ HH:MM:SS » en UTC → « JJ/MM HHhMM » heure de Paris.
+function fmtJourHeure(s) {
+  const x = new Date((s || "").replace(" ", "T") + "Z");
+  if (!s || isNaN(x)) return "";
+  const p = Object.fromEntries(new Intl.DateTimeFormat("fr-FR", {
+    timeZone: "Europe/Paris", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
+  }).formatToParts(x).map(o => [o.type, o.value]));
+  return `${p.day}/${p.month} ${p.hour}h${p.minute}`;
+}
+
+// Statut du dépôt de garantie d'une résa, d'après ses pré-autorisations
+// (GET /guestPayments/charges, lecture seule). Une pré-autorisation réussie
+// l'emporte sur un échec antérieur (client qui a refait sa carte via le lien).
+async function depotOf(accessToken, reservationId) {
+  const r = await fetch(`https://api.hostaway.com/v1/guestPayments/charges?reservationId=${reservationId}`, {
+    headers: { Authorization: `Bearer ${accessToken}`, "Cache-control": "no-cache" },
+  });
+  if (!r.ok) return { statut: "inconnue", libelle: "À vérifier" };
+  const d = await r.json();
+  const holds = (d.result || []).filter(c => c.type === "preAuth");
+  if (holds.length === 0) return { statut: "a_regler", libelle: "Aucune demande" };
+  const ok = holds.find(c => c.status === "holdSuccess" || c.status === "captured" || Number(c.capturedAmount) > 0);
+  if (ok) return { statut: "reglee", libelle: "Réussi", detail: `${ok.amount} € · ${fmtJourHeure(ok.chargeDate)}` };
+  const last = holds.sort((a, b) => String(b.scheduledDate).localeCompare(String(a.scheduledDate)))[0];
+  if (last.status === "awaitingHold") return { statut: "attente", libelle: "Prévu", detail: fmtJourHeure(last.scheduledDate) };
+  if (last.status === "holdFail") return { statut: "a_regler", libelle: "Échec", detail: "codes non envoyés" };
+  if (last.status === "holdCancelled") return { statut: "a_regler", libelle: "Annulé" };
+  return { statut: "inconnue", libelle: last.status || "À vérifier" };
+}
+
 export default async function handler(req, res) {
   if (req.method !== "GET") {
     res.setHeader("Allow", "GET");
@@ -116,14 +152,27 @@ export default async function handler(req, res) {
           reservation: rv.hostawayReservationId || rv.channelReservationId || rv.id || "",
           reservationId: String(rv.id ?? ""),
           ota,
-          taxe: taxeOf(rv, ota),
+          taxe: RESIDENCES_DEPOT.includes(key) ? null : taxeOf(rv, ota),
+          depot: null,
           voyageurs: rv.numberOfGuests ?? rv.adults ?? "",
         });
       }
     }
 
+    // Dépôt de garantie : Booking à Villiers/Lantiez seulement (une requête par résa).
+    const depots = {};
+    await Promise.all(Object.values(byResidence)
+      .filter(g => RESIDENCES_DEPOT.includes(g.residence))
+      .flatMap(g => g.items)
+      .filter(it => it.ota === "Booking" && it.reservationId)
+      .map(async it => {
+        if (!depots[it.reservationId]) depots[it.reservationId] = depotOf(accessToken, it.reservationId);
+        it.depot = await depots[it.reservationId];
+      }));
+
     const groups = Object.values(byResidence).sort((a, b) => a.residence.localeCompare(b.residence));
     for (const g of groups) {
+      g.mode = RESIDENCES_DEPOT.includes(g.residence) ? "depot" : "taxe";
       g.items.sort((a, b) => {
         if (a.arrivee !== b.arrivee) return a.arrivee.localeCompare(b.arrivee);
         return (a.unitNumber || a.appartement).localeCompare(b.unitNumber || b.appartement, undefined, { numeric: true });
