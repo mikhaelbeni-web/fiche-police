@@ -5,10 +5,12 @@ import Head from "next/head";
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
 
-// Notes de synthèse écrites chaque matin par une routine Claude (lecture seule
-// de Hostaway + Gmail). Un document par réservation, doc ID = id Hostaway.
-// Champs : date (AAAA-MM-JJ d'arrivée), client, note (1-2 lignes, seulement
-// les infos qui existent), alerte (true s'il reste quelque chose à faire), majLe (ISO).
+// Synthèse écrite chaque matin par une routine Claude (lecture seule de
+// Hostaway + Gmail). Un document par réservation, doc ID = id Hostaway.
+// Champs : date (AAAA-MM-JJ d'arrivée), client, heure (heure d'arrivée),
+// resume (conversations Hostaway + Gmail, 1-2 lignes, seulement ce qui existe),
+// ota et taxe (facultatifs : corrigent ce que Hostaway indique, ex. agence,
+// taxe payée à la réception), alerte (reste quelque chose à faire), majLe (ISO).
 const NOTES_COLLECTION = "notes_arrivees";
 
 function isoDay(d) { return d.toISOString().slice(0, 10); }
@@ -16,6 +18,26 @@ function fmtFr(d) {
   if (!d) return "";
   const x = new Date(d + "T12:00:00");
   return isNaN(x) ? d : x.toLocaleDateString("fr-FR");
+}
+
+function euros(n) {
+  return n ? Number(n).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €" : "";
+}
+
+// Ligne affichée : les valeurs de la note du matin priment sur celles de Hostaway.
+function ligne(it, note) {
+  const n = note || {};
+  const taxe = n.taxe
+    ? { libelle: n.taxe, statut: /(à|a) r[ée]gler|impay/i.test(n.taxe) ? "a_regler" : /r[ée]gl|pay/i.test(n.taxe) ? "reglee" : "inconnue" }
+    : (it.taxe || { libelle: "", statut: "inconnue" });
+  return {
+    ota: n.ota || it.ota || "",
+    heure: n.heure || "",
+    resume: n.resume || n.note || "",
+    alerte: !!n.alerte,
+    majLe: n.majLe || "",
+    taxe,
+  };
 }
 
 function fmtHeure(iso) {
@@ -96,10 +118,12 @@ function Arrivees() {
   const shownTotal = groups.reduce((s, g) => s + g.count, 0);
 
   function downloadCSV() {
-    const rows = [["Résidence", "N°", "Appartement", "Date d'arrivée", "Client", "Note", "Réservation"]];
+    const rows = [["Résidence", "N°", "Appartement", "Date d'arrivée", "Client", "OTA", "Heure", "Résumé", "Taxe de séjour", "Réservation"]];
     for (const g of groups) {
       for (const it of g.items) {
-        rows.push([g.residence, it.unitNumber, it.appartement, fmtFr(it.arrivee), it.client, notes[it.reservationId]?.note || "", it.reservation]);
+        const l = ligne(it, notes[it.reservationId]);
+        rows.push([g.residence, it.unitNumber, it.appartement, fmtFr(it.arrivee), it.client, l.ota, l.heure, l.resume,
+          [l.taxe.libelle, euros(l.taxe.montant)].filter(Boolean).join(" "), it.reservation]);
       }
     }
     const csv = rows
@@ -174,37 +198,45 @@ function Arrivees() {
                 <span className="resid-name">{g.residence}</span>
                 <span className="resid-count">{g.count} arrivée{g.count > 1 ? "s" : ""}</span>
               </div>
-              <div className="tbl-wrap"><table className="tbl">
+              <div className="tbl-wrap"><table className="tbl arr-tbl">
                 <thead>
                   <tr>
                     <th>N°</th>
-                    <th>Appartement</th>
-                    <th>Arrivée</th>
                     <th>Client</th>
-                    <th className="note-col">Note</th>
+                    <th>OTA</th>
+                    <th>Arrivée</th>
+                    <th className="arr-resume">Résumé des échanges</th>
+                    <th>Taxe de séjour</th>
                     <th className="c">Fait</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {g.items.map((it, i) => (
-                    <tr key={i}>
-                      <td className="apt">{it.unitNumber || "—"}</td>
-                      <td>{it.appartement}</td>
-                      <td>{fmtFr(it.arrivee)}</td>
-                      <td>{it.client}</td>
-                      <td className="note-col">
-                        {notes[it.reservationId]?.note && (
-                          <span className={"auto-note" + (notes[it.reservationId].alerte ? " alerte" : "")}>
-                            {notes[it.reservationId].note}
-                            {notes[it.reservationId].majLe && (
-                              <span className="auto-note-maj"> · {fmtHeure(notes[it.reservationId].majLe)}</span>
-                            )}
-                          </span>
-                        )}
-                      </td>
-                      <td className="c"><span className="box" /></td>
-                    </tr>
-                  ))}
+                  {g.items.map((it, i) => {
+                    const l = ligne(it, notes[it.reservationId]);
+                    return (
+                      <tr key={i} className={i % 2 ? "alt" : ""}>
+                        <td className="apt">
+                          <div className="arr-num">{it.unitNumber || "—"}</div>
+                          <div className="arr-sub">{it.appartement}</div>
+                        </td>
+                        <td>
+                          <div className="arr-client">{it.client}</div>
+                          {it.voyageurs !== "" && <div className="arr-sub">{it.voyageurs} pers.{from !== to ? " · " + fmtFr(it.arrivee) : ""}</div>}
+                        </td>
+                        <td className="arr-ota">{l.ota}</td>
+                        <td className="arr-heure">{l.heure}</td>
+                        <td className={"arr-resume" + (l.alerte ? " alerte" : "")}>
+                          {l.resume}
+                          {l.majLe && <span className="auto-note-maj"> · {fmtHeure(l.majLe)}</span>}
+                        </td>
+                        <td className={"arr-taxe " + l.taxe.statut}>
+                          {l.taxe.libelle}
+                          {l.taxe.montant ? <div className="arr-sub">{euros(l.taxe.montant)}</div> : null}
+                        </td>
+                        <td className="c"><span className="box" /></td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table></div>
             </div>
