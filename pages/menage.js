@@ -250,7 +250,10 @@ function Menage() {
           {mergedGroups.map(g => (
             <div className="resid" key={g.residence}>
               <div className="resid-head">
-                <span className="resid-name">{g.residence}</span>
+                {/* Date répétée sur chaque bandeau : une capture d'une seule résidence reste datée. */}
+                <span className="resid-name">
+                  {g.residence} — {from === to ? fmtFr(from) : `du ${fmtFr(from)} au ${fmtFr(to)}`}
+                </span>
                 <span className="resid-count">{g.count} ménage{g.count > 1 ? "s" : ""}</span>
               </div>
               <div className="tbl-wrap"><table className="tbl">
