@@ -197,6 +197,7 @@ body {
 .tbl tr:last-child td { border-bottom: none; }
 .tbl .c { text-align: center; }
 .tbl .apt { font-weight: 600; }
+.tbl .heure { font-weight: 700; white-space: nowrap; }
 .tbl .box {
   display: inline-block; width: 15px; height: 15px;
   border: 1.5px solid #999; border-radius: 3px;

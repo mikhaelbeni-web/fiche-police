@@ -5,6 +5,9 @@ import { isDepartureMoved, isNoShowHidden } from "../lib/apartments";
 
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
+// Heures de départ annoncées par les clients (messagerie Hostaway, Gmail),
+// écrites chaque matin par la routine 9h. Doc ID = id Hostaway de la résa.
+const HEURES_COLLECTION = "heures_depart";
 
 function isoDay(d) { return d.toISOString().slice(0, 10); }
 function fmtFr(d) {
@@ -24,6 +27,7 @@ function Menage() {
   const [creds, setCreds] = useState({ account: "", key: "" });
   const [extraMenages, setExtraMenages] = useState([]);
   const [hiddenMenages, setHiddenMenages] = useState([]);
+  const [heures, setHeures] = useState({});
 
   useEffect(() => {
     const a = window.localStorage.getItem(ACCOUNT_KEY) || "";
@@ -71,6 +75,35 @@ function Menage() {
   useEffect(() => {
     if (creds.account && creds.key) load(from, to, creds.account, creds.key);
   }, [from, to, creds, load]);
+
+  const loadHeures = useCallback(async (f, t) => {
+    try {
+      const { isFirebaseConfigured, db } = await import("../lib/firebase");
+      if (!isFirebaseConfigured()) return;
+      const { collection, getDocs, query, where } = await import("firebase/firestore");
+      const snap = await getDocs(query(collection(db, HEURES_COLLECTION), where("date", ">=", f), where("date", "<=", t)));
+      const byId = {};
+      snap.forEach(d => { byId[d.id] = d.data(); });
+      setHeures(byId);
+    } catch {
+      setHeures({});
+    }
+  }, []);
+
+  useEffect(() => { loadHeures(from, to); }, [from, to, loadHeures]);
+
+  // Heure annoncée par le client, seulement si elle concerne bien ce départ.
+  function heureDe(it) {
+    if (!it.reservationId) return "";
+    const h = heures[it.reservationId];
+    if (!h || (h.date && h.date !== (it.depart || "").slice(0, 10))) return "";
+    return h.heure || "";
+  }
+
+  const derniereMaj = Object.values(heures)
+    .map(h => h.majLe || "")
+    .sort()
+    .pop();
 
   function setToday() { setFrom(today); setTo(today); }
   function setTomorrow() {
@@ -130,7 +163,7 @@ function Menage() {
   const shownTotal = mergedGroups.reduce((s, g) => s + g.count, 0);
 
   function downloadCSV() {
-    const rows = [["Résidence", "N°", "Appartement", "Date de départ", "Client", "Note", "Réservation"]];
+    const rows = [["Résidence", "N°", "Appartement", "Date de départ", "Heure annoncée", "Client", "Note", "Réservation"]];
     for (const g of mergedGroups) {
       for (const it of g.items) {
         const note = it.extra
@@ -138,7 +171,7 @@ function Menage() {
               ? `Ménage décalé (prévu le ${fmtFr(it.datePrevue)}) : ${it.motif}`
               : `Ménage supplémentaire : ${it.motif}`)
           : "";
-        rows.push([g.residence, it.unitNumber, it.appartement, fmtFr(it.depart), it.client || "", note, it.reservation || ""]);
+        rows.push([g.residence, it.unitNumber, it.appartement, fmtFr(it.depart), heureDe(it), it.client || "", note, it.reservation || ""]);
       }
     }
     const csv = rows
@@ -184,7 +217,7 @@ function Menage() {
           </select>
         </div>
 
-        <button onClick={() => load(from, to, creds.account, creds.key)} disabled={loading} title="Actualiser">↻</button>
+        <button onClick={() => { load(from, to, creds.account, creds.key); loadHeures(from, to); }} disabled={loading} title="Actualiser">↻</button>
         <button className="primary" onClick={downloadCSV} disabled={!shownTotal}>Télécharger CSV</button>
         <button onClick={() => window.print()} disabled={!shownTotal}>Imprimer</button>
 
@@ -201,6 +234,12 @@ function Menage() {
                   : `Ménages du ${fmtFr(from)} au ${fmtFr(to)}`}
               </div>
               <div className="recap-sub">Un check-out = un ménage · réservations annulées exclues</div>
+              {derniereMaj && (
+                <div className="recap-sub">
+                  Heures de départ relevées dans les messages le{" "}
+                  {new Date(derniereMaj).toLocaleString("fr-FR", { timeZone: "Europe/Paris", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                </div>
+              )}
             </div>
             <div className="recap-total">
               <div className="n">{shownTotal}</div>
@@ -220,6 +259,7 @@ function Menage() {
                     <th>N°</th>
                     <th>Appartement</th>
                     <th>Départ</th>
+                    <th title="Heure annoncée par le client dans ses messages (vide s'il n'a rien dit)">Heure</th>
                     <th>Client</th>
                     <th className="note-col">Note</th>
                     <th className="c">Fait</th>
@@ -231,6 +271,7 @@ function Menage() {
                       <td className="apt">{it.unitNumber || "—"}</td>
                       <td>{it.appartement}</td>
                       <td>{fmtFr(it.depart)}</td>
+                      <td className="heure">{heureDe(it)}</td>
                       <td>
                         {it.client}
                         {it.extra && (
