@@ -263,6 +263,7 @@ function Arrivees() {
                         <td>
                           <div className="arr-client">{it.client}</div>
                           {it.voyageurs !== "" && <div className="arr-sub">{it.voyageurs} pers.{from !== to ? " · " + fmtFr(it.arrivee) : ""}</div>}
+                          {it.depart && <div className="arr-sub arr-depart">Départ {fmtFr(it.depart).slice(0, 5)}</div>}
                         </td>
                         <td className="arr-ota">{l.ota}</td>
                         <td className="arr-heure">{l.heure}</td>
