@@ -28,6 +28,9 @@ seule écriture : Firestore, collection `notes_arrivees`.
 2. Demandes spéciales (guestNote, messages) et notes Hostaway utiles.
 3. Mails Gmail liés à la réservation (nom du voyageur, n° de résa, agence) : ce qu'ils disent, en quelques mots.
 4. Incohérences repérées (code de porte, date, OTA).
+   Plusieurs réservations sur le même logement aux mêmes dates ne sont pas une incohérence
+   pour Cosy, Confort et Chic (Belleville) : chacun a 5 sous-appartements. Ne jamais le signaler.
+   Les autres logements Belleville sont uniques.
 
 Ne jamais écrire un champ vide (« pas de note », « aucun mail ») ni une consigne que le
 réceptionniste connaît déjà (lien taxe de séjour après 18h, etc.).
