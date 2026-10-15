@@ -287,22 +287,39 @@ body {
 .arr-taxe { font-weight: 700; white-space: nowrap; }
 .arr-taxe.reglee { color: #15803d; }
 .arr-taxe.a_regler { color: #b91c1c; }
+.arr-taxe.attente { color: #b45309; }
+.arr-codes { font-size: 12px; font-weight: 600; white-space: nowrap; }
+.arr-codes .reglee { color: #15803d; }
+.arr-codes .a_regler { color: #b91c1c; }
+/* Impression paysage (@page posé par la page Arrivées). Une résidence reste
+   d'un bloc : si elle ne tient pas dans la place restante, elle passe sur la
+   feuille suivante ; une résidence plus longue qu'une feuille se coupe entre
+   deux clients et l'en-tête du tableau est répété. */
 @media print {
   .arr-tbl { font-size: 11.5px; table-layout: fixed; width: 100%; }
-  .arr-tbl td { padding: 12px 6px; }
+  .arr-tbl thead { display: table-header-group; }
+  .arr-tbl td { padding: 10px 6px; }
   .arr-tbl th { padding: 6px; }
-  .arr-tbl th:nth-child(1) { width: 11%; }
-  .arr-tbl th:nth-child(2) { width: 17%; }
-  .arr-tbl th:nth-child(3) { width: 11%; }
-  .arr-tbl th:nth-child(4) { width: 8%; }
+  .arr-tbl th:nth-child(1) { width: 9%; }
+  .arr-tbl th:nth-child(2) { width: 16%; }
+  .arr-tbl th:nth-child(3) { width: 10%; }
+  .arr-tbl th:nth-child(4) { width: 7%; }
   .arr-tbl th:nth-child(6) { width: 11%; }
-  .arr-tbl th:nth-child(7) { width: 6%; }
+  .arr-tbl th:last-child { width: 5%; }
+  .mode-depot .arr-tbl th:nth-child(1) { width: 8%; }
+  .mode-depot .arr-tbl th:nth-child(2) { width: 14%; }
+  .mode-depot .arr-tbl th:nth-child(3) { width: 9%; }
+  .mode-depot .arr-tbl th:nth-child(6) { width: 11%; }
+  .mode-depot .arr-tbl th:nth-child(7) { width: 14%; }
   .arr-tbl .arr-resume { min-width: 0; }
-  .arr-tbl .arr-ota, .arr-tbl .arr-taxe { white-space: normal; }
+  .arr-tbl .arr-ota, .arr-tbl .arr-taxe, .arr-tbl .arr-codes { white-space: normal; }
   .arr-tbl tr.alt td { background: #e6e8eb; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .arr-taxe.reglee, .arr-taxe.a_regler, .arr-resume.alerte { color: #000; }
-  .arr-taxe.a_regler { text-decoration: underline; }
-  .resid:has(.arr-tbl) { page-break-inside: auto; }
+  .arr-taxe.reglee, .arr-taxe.a_regler, .arr-taxe.attente, .arr-resume.alerte,
+  .arr-codes .reglee, .arr-codes .a_regler { color: #000; }
+  .arr-taxe.a_regler, .arr-codes .a_regler { text-decoration: underline; }
+  .recap:has(.arr-tbl) { padding: 0; }
+  .recap:has(.arr-tbl) .recap-head { padding-bottom: 6px; margin-bottom: 10px; }
+  .arr-resid { break-inside: avoid; page-break-inside: avoid; margin-bottom: 14px; }
 }
 @media print {
   .tbl .note-col { min-width: 260px; border-left: 1px solid #ccc; }

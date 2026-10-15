@@ -11,6 +11,8 @@ const ACCOUNT_KEY = "hostaway_account";
 // resume (conversations Hostaway + Gmail, 1-2 lignes, seulement ce qui existe),
 // ota et taxe (facultatifs : corrigent ce que Hostaway indique, ex. agence,
 // taxe payée à la réception), alerte (reste quelque chose à faire), majLe (ISO).
+// Villiers et Lantiez seulement : codesEnvoyes (booléen), codesEnvoyesLe
+// (ex. « 14/10 13h »), codesConfirmes (booléen : le client a dit les avoir reçus).
 const NOTES_COLLECTION = "notes_arrivees";
 
 function isoDay(d) { return d.toISOString().slice(0, 10); }
@@ -37,7 +39,22 @@ function ligne(it, note) {
     alerte: !!n.alerte,
     majLe: n.majLe || "",
     taxe,
+    depot: it.depot || null,
+    codesEnvoyes: n.codesEnvoyes,
+    codesEnvoyesLe: n.codesEnvoyesLe || "",
+    codesConfirmes: n.codesConfirmes,
   };
+}
+
+// Texte des colonnes Dépôt et Codes (aussi utilisé pour le CSV).
+function depotTexte(l) {
+  return l.depot ? [l.depot.libelle, l.depot.detail].filter(Boolean).join(" · ") : "";
+}
+function codesTexte(l) {
+  if (l.codesEnvoyes === undefined) return "";
+  if (!l.codesEnvoyes) return "Non envoyés";
+  return ["Envoyés" + (l.codesEnvoyesLe ? " " + l.codesEnvoyesLe : ""),
+    l.codesConfirmes ? "Réception confirmée" : "Pas de confirmation"].join(" · ");
 }
 
 function fmtHeure(iso) {
@@ -118,12 +135,14 @@ function Arrivees() {
   const shownTotal = groups.reduce((s, g) => s + g.count, 0);
 
   function downloadCSV() {
-    const rows = [["Résidence", "N°", "Appartement", "Date d'arrivée", "Client", "OTA", "Heure", "Résumé", "Taxe de séjour", "Réservation"]];
+    const rows = [["Résidence", "N°", "Appartement", "Date d'arrivée", "Client", "OTA", "Heure", "Résumé", "Taxe de séjour", "Dépôt de garantie", "Codes", "Réservation"]];
     for (const g of groups) {
       for (const it of g.items) {
         const l = ligne(it, notes[it.reservationId]);
+        const depotMode = g.mode === "depot";
         rows.push([g.residence, it.unitNumber, it.appartement, fmtFr(it.arrivee), it.client, l.ota, l.heure, l.resume,
-          [l.taxe.libelle, euros(l.taxe.montant)].filter(Boolean).join(" "), it.reservation]);
+          depotMode ? "Réglée par l'OTA" : [l.taxe.libelle, euros(l.taxe.montant)].filter(Boolean).join(" "),
+          depotMode ? depotTexte(l) : "", depotMode ? codesTexte(l) : "", it.reservation]);
       }
     }
     const csv = rows
@@ -141,7 +160,11 @@ function Arrivees() {
 
   return (
     <>
-      <Head><title>Arrivées — Résidences</title></Head>
+      <Head>
+        <title>Arrivées — Résidences</title>
+        {/* Feuille imprimée en paysage, quelle que soit la résidence. */}
+        <style>{"@page { size: A4 landscape; margin: 8mm; }"}</style>
+      </Head>
 
       <div className="toolbar">
         <h1>Arrivées</h1>
@@ -193,7 +216,7 @@ function Arrivees() {
           </div>
 
           {groups.map(g => (
-            <div className="resid" key={g.residence}>
+            <div className={"resid arr-resid" + (g.mode === "depot" ? " mode-depot" : "")} key={g.residence}>
               <div className="resid-head">
                 <span className="resid-name">{g.residence}</span>
                 <span className="resid-count">{g.count} arrivée{g.count > 1 ? "s" : ""}</span>
@@ -206,7 +229,10 @@ function Arrivees() {
                     <th>OTA</th>
                     <th>Arrivée</th>
                     <th className="arr-resume">Résumé des échanges</th>
-                    <th>Taxe de séjour</th>
+                    {g.mode === "depot" ? <>
+                      <th>Dépôt de garantie</th>
+                      <th>Codes</th>
+                    </> : <th>Taxe de séjour</th>}
                     <th className="c">Fait</th>
                   </tr>
                 </thead>
@@ -229,10 +255,29 @@ function Arrivees() {
                           {l.resume}
                           {l.majLe && <span className="auto-note-maj"> · {fmtHeure(l.majLe)}</span>}
                         </td>
-                        <td className={"arr-taxe " + l.taxe.statut}>
-                          {l.taxe.libelle}
-                          {l.taxe.montant ? <div className="arr-sub">{euros(l.taxe.montant)}</div> : null}
-                        </td>
+                        {g.mode === "depot" ? <>
+                          <td className={"arr-taxe " + (l.depot ? l.depot.statut : "")}>
+                            {l.depot && <>
+                              {l.depot.libelle}
+                              {l.depot.detail && <div className="arr-sub">{l.depot.detail}</div>}
+                            </>}
+                          </td>
+                          <td className="arr-codes">
+                            {l.codesEnvoyes === undefined ? null : !l.codesEnvoyes
+                              ? <span className="a_regler">Non envoyés</span>
+                              : <>
+                                <div>Envoyés{l.codesEnvoyesLe && <span className="arr-sub"> {l.codesEnvoyesLe}</span>}</div>
+                                <div className={l.codesConfirmes ? "reglee" : "a_regler"}>
+                                  {l.codesConfirmes ? "Réception confirmée" : "Pas de confirmation"}
+                                </div>
+                              </>}
+                          </td>
+                        </> : (
+                          <td className={"arr-taxe " + l.taxe.statut}>
+                            {l.taxe.libelle}
+                            {l.taxe.montant ? <div className="arr-sub">{euros(l.taxe.montant)}</div> : null}
+                          </td>
+                        )}
                         <td className="c"><span className="box" /></td>
                       </tr>
                     );
