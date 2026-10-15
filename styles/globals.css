@@ -178,6 +178,7 @@ body {
 .recap-total { text-align: center; }
 .recap-total .n { font-size: 34px; font-weight: 800; color: var(--accent); line-height: 1; }
 .recap-total .l { font-size: 10px; text-transform: uppercase; color: var(--muted); letter-spacing: .5px; }
+.recap-total .maj { font-size: 10px; color: var(--muted); margin-top: 4px; white-space: nowrap; }
 
 .resid { margin-bottom: 22px; }
 .resid-head {

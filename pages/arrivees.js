@@ -57,6 +57,16 @@ function codesTexte(l) {
     l.codesConfirmes ? "Réception confirmée" : "Pas de confirmation"].join(" · ");
 }
 
+// « 15/10 à 08h56 » (heure de Paris) : date et heure de la dernière mise à jour des notes.
+function fmtDateHeure(iso) {
+  const x = new Date(iso);
+  if (isNaN(x)) return "";
+  const p = Object.fromEntries(new Intl.DateTimeFormat("fr-FR", {
+    timeZone: "Europe/Paris", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
+  }).formatToParts(x).map(o => [o.type, o.value]));
+  return `${p.day}/${p.month} à ${p.hour}h${p.minute}`;
+}
+
 function fmtHeure(iso) {
   const x = new Date(iso);
   return isNaN(x) ? "" : x.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" }).replace(":", "h");
@@ -133,6 +143,10 @@ function Arrivees() {
     g => residence === "__all__" || g.residence === residence
   );
   const shownTotal = groups.reduce((s, g) => s + g.count, 0);
+  // Dernière écriture de la routine parmi les arrivées affichées (toutes résidences).
+  const derniereMaj = groups.flatMap(g => g.items)
+    .map(it => (notes[it.reservationId] || {}).majLe || "")
+    .reduce((a, b) => (b > a ? b : a), "");
 
   function downloadCSV() {
     const rows = [["Résidence", "N°", "Appartement", "Date d'arrivée", "Client", "OTA", "Heure", "Résumé", "Taxe de séjour", "Dépôt de garantie", "Codes", "Réservation"]];
@@ -212,6 +226,7 @@ function Arrivees() {
             <div className="recap-total">
               <div className="n">{shownTotal}</div>
               <div className="l">arrivée{shownTotal > 1 ? "s" : ""}</div>
+              {derniereMaj && <div className="maj">Infos mises à jour le {fmtDateHeure(derniereMaj)}</div>}
             </div>
           </div>
 
