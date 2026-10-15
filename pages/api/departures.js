@@ -58,6 +58,7 @@ export default async function handler(req, res) {
         byResidence[key].count += 1;
         byResidence[key].items.push({
           listingId: lid,
+          reservationId: String(rv.id ?? ""),
           appartement: info.appartement,
           unitNumber: info.unitNumber || "",
           depart: (rv.departureDate || rv.checkOutDate || "").slice(0, 10),
