@@ -177,7 +177,7 @@ function Arrivees() {
       <Head>
         <title>Arrivées — Résidences</title>
         {/* Feuille imprimée en paysage, quelle que soit la résidence. */}
-        <style>{"@page { size: A4 landscape; margin: 8mm; }"}</style>
+        <style>{"@page { size: A4 landscape; margin: 6mm; }"}</style>
       </Head>
 
       <div className="toolbar">

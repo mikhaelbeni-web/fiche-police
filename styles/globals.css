@@ -325,7 +325,9 @@ body {
   .arr-taxe.reglee, .arr-taxe.a_regler, .arr-taxe.attente, .arr-resume.alerte,
   .arr-codes .reglee, .arr-codes .a_regler { color: #000; }
   .arr-taxe.a_regler, .arr-codes .a_regler { text-decoration: underline; }
-  .recap:has(.arr-tbl) { padding: 0; }
+  /* Marge interne propre à la page : certaines imprimantes ou navigateurs
+     ignorent la marge @page et rognent le bord de la feuille (colonne N°). */
+  .recap:has(.arr-tbl) { padding: 0 9mm; }
   .recap:has(.arr-tbl) .recap-head { padding-bottom: 6px; margin-bottom: 10px; }
   .arr-resid { break-inside: avoid; page-break-inside: avoid; margin-bottom: 14px; }
 }
