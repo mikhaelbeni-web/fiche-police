@@ -301,17 +301,24 @@ body {
   .arr-tbl thead { display: table-header-group; }
   .arr-tbl td { padding: 10px 6px; }
   .arr-tbl th { padding: 6px; }
-  .arr-tbl th:nth-child(1) { width: 9%; }
-  .arr-tbl th:nth-child(2) { width: 16%; }
-  .arr-tbl th:nth-child(3) { width: 10%; }
+  /* N° assez large pour « ÉLÉGANCE 60 » / « Studio V5 » sans déborder sous la
+     colonne suivante ; Client resserré contre OTA. */
+  .arr-tbl th:nth-child(1) { width: 12%; }
+  .arr-tbl th:nth-child(2) { width: 13%; }
+  .arr-tbl th:nth-child(3) { width: 9%; }
   .arr-tbl th:nth-child(4) { width: 7%; }
   .arr-tbl th:nth-child(6) { width: 11%; }
   .arr-tbl th:last-child { width: 5%; }
-  .mode-depot .arr-tbl th:nth-child(1) { width: 8%; }
-  .mode-depot .arr-tbl th:nth-child(2) { width: 14%; }
+  .mode-depot .arr-tbl th:nth-child(1) { width: 11%; }
+  .mode-depot .arr-tbl th:nth-child(2) { width: 13%; }
   .mode-depot .arr-tbl th:nth-child(3) { width: 9%; }
   .mode-depot .arr-tbl th:nth-child(6) { width: 11%; }
   .mode-depot .arr-tbl th:nth-child(7) { width: 14%; }
+  .arr-tbl td, .arr-tbl th { overflow-wrap: anywhere; }
+  .arr-tbl td:nth-child(1), .arr-tbl th:nth-child(1) { padding-left: 10px; }
+  .arr-tbl td:nth-child(2), .arr-tbl th:nth-child(2) { padding-right: 2px; }
+  .arr-tbl td:nth-child(3), .arr-tbl th:nth-child(3) { padding-left: 2px; }
+  .arr-tbl .arr-sub { font-size: 10px; }
   .arr-tbl .arr-resume { min-width: 0; }
   .arr-tbl .arr-ota, .arr-tbl .arr-taxe, .arr-tbl .arr-codes { white-space: normal; }
   .arr-tbl tr.alt td { background: #e6e8eb; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
