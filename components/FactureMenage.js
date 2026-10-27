@@ -7,7 +7,7 @@
 // ouvert dans la messagerie, et ne contient que les surfacturations.
 
 import { useState, useEffect } from "react";
-import { parseAnnexeRows, applyMapping, unitsResidence, buildExpected, controlerFacture, buildReclamation, TYPES, moisLabel } from "../lib/factureMenage";
+import { parseAnnexeRows, applyMapping, unitsResidence, buildExpected, controlerFacture, buildReclamation, totauxEcarts, TYPES, moisLabel } from "../lib/factureMenage";
 
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
@@ -125,7 +125,7 @@ export default function FactureMenage() {
       const expected = buildExpected({ residence, from, to, groups: j.groups, extras, hidden });
       const ht = factureHT === "" ? null : parseFloat(String(factureHT).replace(",", "."));
       const out = controlerFacture({ lines: mapped.lines, expected, facture: { ht }, mois });
-      const full = { residence, mois, numero: numero.trim(), factureHT: ht, lines: mapped.lines, ecarts: out.ecarts, totaux: out.totaux, surfactureHT: out.surfactureHT, annexeNom: file.name };
+      const full = { residence, mois, numero: numero.trim(), factureHT: ht, lines: mapped.lines, ecarts: out.ecarts, totaux: out.totaux, surfactureHT: out.netHT, brutHT: out.surfactureHT, compensationHT: out.sousFactureHT, annexeNom: file.name };
       setResult(full);
       setIgnored([]);
       setStatus("");
@@ -142,8 +142,8 @@ export default function FactureMenage() {
       const { isFirebaseConfigured, db } = await import("../lib/firebase");
       if (!isFirebaseConfigured()) return;
       const { doc, setDoc } = await import("firebase/firestore");
-      const enTrop = Math.round(full.ecarts.filter(e => e.reclamable && !ign.includes(ecartKey(e))).reduce((s, e) => s + e.montantHT, 0) * 100) / 100;
-      await setDoc(doc(db, "factures_menage", docId(full.residence, full.mois)), { ...full, surfactureHT: enTrop, ignores: ign, importeLe: new Date().toISOString() }, { merge: true });
+      const t = totauxEcarts(full.ecarts.map(e => ({ ...e, reclamable: e.reclamable && !ign.includes(ecartKey(e)), compensation: e.compensation && !ign.includes(ecartKey(e)) })));
+      await setDoc(doc(db, "factures_menage", docId(full.residence, full.mois)), { ...full, surfactureHT: t.netHT, brutHT: t.brutHT, compensationHT: t.compensationHT, ignores: ign, importeLe: new Date().toISOString() }, { merge: true });
       loadHistory();
     } catch (e) {
       setStatus("Contrôle fait, mais sauvegarde impossible : " + e.message);
@@ -185,9 +185,9 @@ export default function FactureMenage() {
 
   // Résultat effectif : les écarts décochés par l'utilisateur ne sont plus réclamés.
   const effective = result && (() => {
-    const ecarts = result.ecarts.map(e => ({ ...e, reclamable: e.reclamable && !ignored.includes(ecartKey(e)) }));
-    const surfactureHT = Math.round(ecarts.filter(e => e.reclamable).reduce((s, e) => s + e.montantHT, 0) * 100) / 100;
-    return { ...result, ecarts, surfactureHT };
+    const ecarts = result.ecarts.map(e => ({ ...e, reclamable: e.reclamable && !ignored.includes(ecartKey(e)), compensation: e.compensation && !ignored.includes(ecartKey(e)) }));
+    const t = totauxEcarts(ecarts);
+    return { ...result, ecarts, surfactureHT: t.netHT, brutHT: t.brutHT, compensationHT: t.compensationHT };
   })();
   const mail = effective && buildReclamation({ residence: result.residence, mois: result.mois, numero: result.numero, resultat: effective });
 
@@ -196,7 +196,8 @@ export default function FactureMenage() {
   }
 
   const communes = result ? result.lines.filter(l => l.commune) : [];
-  const info = effective ? effective.ecarts.filter(e => !TYPES[e.type].reclamable) : [];
+  const info = effective ? effective.ecarts.filter(e => !TYPES[e.type].reclamable && e.type !== "manquant") : [];
+  const compens = effective ? effective.ecarts.filter(e => e.type === "manquant") : [];
   const reclam = effective ? effective.ecarts.filter(e => TYPES[e.type].reclamable) : [];
 
   return (
@@ -239,11 +240,33 @@ export default function FactureMenage() {
             </div>
           )}
 
+          <div className="no-print" style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 14 }}>
+            {RESIDENCES.map(r => {
+              const h = history.find(x => x.id === docId(r, mois));
+              return (
+                <div key={r} style={{ border: "1px solid #ccc", borderRadius: 6, padding: "8px 12px", minWidth: 190 }}>
+                  <div style={{ fontWeight: 700 }}>{r} · {moisLabel(mois)}</div>
+                  {h ? (
+                    <>
+                      <div style={{ color: h.surfactureHT > 0 ? "#c0392b" : "#27ae60", fontWeight: 600 }}>{h.surfactureHT > 0 ? `${eur(h.surfactureHT)} HT en trop (net)` : "Rien à réclamer"}</div>
+                      <button onClick={() => reopen(h)} style={{ marginTop: 4, cursor: "pointer" }}>Ouvrir</button>
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ color: "#888" }}>Annexe non importée</div>
+                      <button onClick={() => setResidence(r)} style={{ marginTop: 4, cursor: "pointer" }}>Importer</button>
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
           {history.length > 0 && (
             <div className="resid no-print" style={{ marginBottom: 16 }}>
               <div className="resid-head"><span className="resid-name">Contrôles enregistrés</span><span className="resid-count">{history.length}</span></div>
               <div className="tbl-wrap"><table className="tbl">
-                <thead><tr><th>Mois</th><th>Résidence</th><th>N° facture</th><th className="c">Facture HT</th><th className="c">Facturé en trop HT</th><th>Suivi</th><th></th></tr></thead>
+                <thead><tr><th>Mois</th><th>Résidence</th><th>N° facture</th><th className="c">Facture HT</th><th className="c">Net facturé en trop HT</th><th>Suivi</th><th></th></tr></thead>
                 <tbody>{history.map(h => (
                   <tr key={h.id} style={result && docId(result.residence, result.mois) === h.id ? { background: "#f4f8fc" } : undefined}>
                     <td>{moisLabel(h.mois)}</td><td>{h.residence}</td><td>{h.numero || "—"}</td>
@@ -271,8 +294,10 @@ export default function FactureMenage() {
                 <span>Facture : <b>{eur(result.factureHT)}</b> HT</span>
                 <span>Annexe : <b>{eur(result.totaux.annexeHT)}</b> HT ({result.totaux.nbMenages} ménages{result.totaux.nbCommunes ? ` + ${result.totaux.nbCommunes} partie(s) commune(s)` : ""})</span>
                 <span>Ménages attendus dans le logiciel : <b>{result.totaux.nbAttendus}</b></span>
+                <span>Facturé sans ménage : <b>{eur(effective.brutHT)}</b> HT</span>
+                <span>Ménages effectués non facturés : <b>{eur(effective.compensationHT)}</b> HT</span>
                 <span style={{ color: effective.surfactureHT > 0 ? "#c0392b" : "#27ae60", fontWeight: 700 }}>
-                  {effective.surfactureHT > 0 ? `Facturé en trop : ${eur(effective.surfactureHT)} HT (${eur(effective.surfactureHT * 1.2)} TTC)` : "Aucune surfacturation détectée"}
+                  {effective.surfactureHT > 0 ? `Net facturé en trop : ${eur(effective.surfactureHT)} HT (${eur(effective.surfactureHT * 1.2)} TTC)` : "Rien à réclamer après compensation"}
                 </span>
                 <button className="no-print" onClick={() => window.print()} style={{ cursor: "pointer" }}>Imprimer (paysage)</button>
               </div>
@@ -293,6 +318,21 @@ export default function FactureMenage() {
                 </div>
               )}
 
+              {compens.length > 0 && (
+                <div className="resid">
+                  <div className="resid-head"><span className="resid-name">Ménages effectués mais non facturés (déduits de la réclamation)</span><span className="resid-count">{eur(effective.compensationHT)} HT</span></div>
+                  <div className="tbl-wrap"><table className="tbl">
+                    <thead><tr><th className="no-print">Compenser</th><th>N°</th><th>Date</th><th className="c">Valeur HT</th><th>Détail</th></tr></thead>
+                    <tbody>{compens.map(e => (
+                      <tr key={ecartKey(e)} style={e.compensation ? undefined : { opacity: .45 }}>
+                        <td className="no-print"><input type="checkbox" checked={e.compensation} onChange={() => toggle(e)} /></td>
+                        <td className="apt">{e.unit || "—"}</td><td>{fmtFr(e.date)}</td><td className="c">{eur(e.montantHT)}</td><td>{e.detail}</td>
+                      </tr>))}</tbody>
+                  </table></div>
+                  <div className="recap-sub no-print">Décoche un ménage s&apos;il n&apos;a finalement pas eu lieu : il n&apos;est plus déduit.</div>
+                </div>
+              )}
+
               {communes.length > 0 && (
                 <div className="resid">
                   <div className="resid-head"><span className="resid-name">Parties communes</span><span className="resid-count">{eur(result.totaux.communesHT)} HT · incluses dans le total contrôlé</span></div>
@@ -307,7 +347,7 @@ export default function FactureMenage() {
               {info.length > 0 && (
                 <div className="resid">
                   <div className="resid-head"><span className="resid-name">À vérifier de ton côté (rien à réclamer)</span><span className="resid-count">{info.length}</span></div>
-                  <div className="recap-sub" style={{ margin: "6px 0" }}>Écarts sans surfacturation. « Ménage absent de l&apos;annexe » : prévu chez toi, non facturé par le prestataire. « Date différente » : même logement facturé à une autre date que le départ.</div>
+                  <div className="recap-sub" style={{ margin: "6px 0" }}>Écarts sans impact sur le montant. « Date différente » : même logement facturé à une autre date que le départ (rapproché, rien à réclamer).</div>
                   <div className="tbl-wrap"><table className="tbl">
                     <thead><tr><th>Type</th><th>N°</th><th>Date</th><th>Détail</th></tr></thead>
                     <tbody>{info.map(e => (
@@ -318,7 +358,7 @@ export default function FactureMenage() {
 
               {mail && (
                 <div className="resid no-print">
-                  <div className="resid-head"><span className="resid-name">Mail de réclamation (surfacturations uniquement)</span></div>
+                  <div className="resid-head"><span className="resid-name">Mail de réclamation (montant net après compensation)</span></div>
                   <input readOnly value={mail.subject} style={{ width: "100%", marginTop: 8, padding: 6 }} />
                   <textarea readOnly value={mail.body} rows={Math.min(24, mail.body.split("\n").length + 1)} style={{ width: "100%", marginTop: 6, padding: 6, fontFamily: "inherit" }} />
                   <div style={{ marginTop: 6, display: "flex", gap: 8 }}>
