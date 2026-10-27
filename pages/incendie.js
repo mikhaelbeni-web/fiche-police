@@ -28,6 +28,7 @@ function Incendie() {
   const [verifs, setVerifs] = useState([]);
   const [docs, setDocs] = useState([]);
   const [ouvert, setOuvert] = useState(null); // id du type déplié
+  const [nouveau, setNouveau] = useState(false);
   const today = isoDay(new Date());
 
   useEffect(() => {
@@ -79,6 +80,11 @@ function Incendie() {
   }
 
   const actions = {
+    addType: (nom, mois) => run("Enregistrement", async () => {
+      const ordre = Math.max(0, ...types.map(t => t.ordre || 0)) + 1;
+      const id = nom.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "controle-" + Date.now();
+      await fs.setDoc(fs.doc(fs.db, COL_TYPES, types.some(t => t.id === id) ? id + "-" + Date.now() : id), { nom, ordre, periodiciteMois: mois });
+    }),
     savePeriodicite: (t, mois) => run("Enregistrement", () => fs.updateDoc(fs.doc(fs.db, COL_TYPES, t.id), { periodiciteMois: mois })),
     addVerif: (payload) => run("Enregistrement", async () => {
       const { doc: docData, ...v } = payload;
@@ -148,6 +154,7 @@ function Incendie() {
       </Head>
       <div className="toolbar">
         <h1>Sécurité incendie</h1>
+        <button className="primary" onClick={() => setNouveau(n => !n)}>+ Nouveau contrôle</button>
         <button onClick={() => window.print()}>Imprimer</button>
         <label className="inc-import">
           Importer l&apos;historique
@@ -171,6 +178,8 @@ function Incendie() {
               Aucun historique pour l&apos;instant. Utilise « Importer l&apos;historique » (fichier incendie-import.json) ou ajoute une vérification dans chaque type.
             </div>
           )}
+
+          {nouveau && <TypeForm onCancel={() => setNouveau(false)} onSave={(n, m) => { actions.addType(n, m); setNouveau(false); }} />}
 
           <Bandeau alertes={alertes} onOpen={setOuvert} />
 
@@ -203,6 +212,30 @@ function Incendie() {
       </div>
       <CodeModal {...codeModalProps} />
     </>
+  );
+}
+
+// ---- Création d'un contrôle (type + périodicité) ----
+function TypeForm({ onSave, onCancel }) {
+  const [nom, setNom] = useState("");
+  const [mois, setMois] = useState(12);
+  const [err, setErr] = useState("");
+  return (
+    <div className="linen-form inc-form no-print">
+      <div className="inc-form-title">Nouveau contrôle</div>
+      <div className="linen-form-row">
+        <label style={{ flex: 1 }}>Nom du contrôle <input type="text" value={nom} onChange={e => setNom(e.target.value)} placeholder="ex. Ascenseurs" style={{ width: "100%" }} /></label>
+        <label>Périodicité
+          <select value={mois} onChange={e => setMois(Number(e.target.value))}>
+            <option value={0}>Sans échéance</option>
+            {PERIODES.map(m => <option key={m} value={m}>{periodiciteLabel(m)}</option>)}
+          </select>
+        </label>
+      </div>
+      {err && <div style={{ fontSize: 12, color: "#c0392b", marginBottom: 8 }}>{err}</div>}
+      <button onClick={() => nom.trim() ? onSave(nom.trim(), mois || null) : setErr("Le nom est obligatoire.")} style={{ background: "#1f3a5f", color: "#fff", border: "none", padding: "8px 16px", borderRadius: 5, cursor: "pointer" }}>Créer le contrôle</button>
+      <button onClick={onCancel} className="ghost" style={{ marginLeft: 8 }}>Annuler</button>
+    </div>
   );
 }
 
