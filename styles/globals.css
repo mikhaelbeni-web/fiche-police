@@ -755,3 +755,21 @@ body {
   .inc-hist { width: 100%; font-size: 11.5px; table-layout: auto; }
   .inc-tbl tr, .inc-hist tr { break-inside: avoid; }
 }
+
+/* Sécurité incendie : coûts */
+.inc-cout-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.inc-cout { background: #f8f9fb; border: 1px solid #e3e6ea; border-radius: 8px; padding: 12px 14px; break-inside: avoid; }
+.inc-cout-ligne { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; padding: 3px 0; border-bottom: 1px solid #eee; }
+.inc-fact td { vertical-align: top; }
+.inc-fact tfoot td { border-top: 2px solid var(--line); padding: 10px; }
+@media screen and (max-width: 768px) {
+  .inc-fact, .inc-fact tbody, .inc-fact tfoot, .inc-fact tr, .inc-fact td { display: block; width: 100%; white-space: normal; }
+  .inc-fact thead { display: none; }
+  .inc-fact tbody tr { border: 1px solid #e3e6ea; border-radius: 8px; margin-bottom: 10px; padding: 6px 4px; background: #fff; }
+  .inc-fact td { border: none !important; padding: 4px 10px; }
+  .inc-fact td[data-label]::before { content: attr(data-label) " : "; font-size: 11px; color: var(--muted); font-weight: 600; }
+}
+@media print {
+  .inc-fact td, .inc-fact th { border: 1px solid #555; padding: 8px; }
+  .inc-cout { border: 1px solid #555; background: none; }
+}
