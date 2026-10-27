@@ -5,6 +5,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
 import { isDepartureMoved, isNoShowHidden } from "../lib/apartments";
+import FactureMenage from "../components/FactureMenage";
 
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
@@ -199,6 +200,7 @@ function Couts() {
       </div>
 
       <div className="menage-page">
+        <FactureMenage />
         <div className="recap">
           <div className="recap-head">
             <div>
