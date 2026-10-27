@@ -75,16 +75,19 @@ export default function FactureMenage() {
   }
   useEffect(() => { if (open) loadHistory(); }, [open]);
 
-  async function controler(newChoices = {}) {
-    if (!file) { setStatus("Choisis d'abord l'annexe (fichier XLSX)."); return; }
+  async function controler(newChoices = {}, over = {}) {
+    const resi = over.residence ?? residence;
+    const fichier = over.file ?? file;
+    if (!fichier) { setStatus("Choisis d'abord l'annexe (fichier XLSX)."); return; }
     const account = window.localStorage.getItem(ACCOUNT_KEY) || "";
     const key = window.localStorage.getItem(KEY_KEY) || "";
     if (!account || !key) { setStatus("Identifiants Hostaway manquants — configure-les sur la page Fiches."); return; }
     setBusy(true);
     setResult(null);
     try {
+      if (over.residence) { setResidence(resi); setFile(fichier); if (over.sansTotal) { setNumero(""); setFactureHT(""); } }
       setStatus("Lecture de l'annexe…");
-      const lines = parseAnnexeRows(await readXlsx(file));
+      const lines = parseAnnexeRows(await readXlsx(fichier));
       if (!lines.length) throw new Error("Aucune ligne trouvée dans l'annexe.");
 
       // Rapprochement des libellés de l'annexe aux appartements : automatique, puis
@@ -93,14 +96,14 @@ export default function FactureMenage() {
       let saved = {};
       if (fb.isFirebaseConfigured()) {
         const { doc, getDoc, setDoc } = await import("firebase/firestore");
-        const ref = doc(fb.db, "mapping_logements_facture", residence);
+        const ref = doc(fb.db, "mapping_logements_facture", resi);
         saved = (await getDoc(ref)).data()?.map || {};
         if (Object.keys(newChoices).length) {
           saved = { ...saved, ...newChoices };
-          await setDoc(ref, { map: saved, residence });
+          await setDoc(ref, { map: saved, residence: resi });
         }
       } else saved = newChoices;
-      const mapped = applyMapping(lines, residence, saved);
+      const mapped = applyMapping(lines, resi, saved);
       if (mapped.unresolved.length) {
         setPending(mapped.unresolved);
         setChoices({});
@@ -122,10 +125,10 @@ export default function FactureMenage() {
         extras = (await getDocs(query(collection(db, "extra_menages"), orderBy("date", "desc")))).docs.map(d => ({ id: d.id, ...d.data() }));
         hidden = (await getDocs(query(collection(db, "menages_masques"), orderBy("date", "desc")))).docs.map(d => ({ id: d.id, ...d.data() }));
       }
-      const expected = buildExpected({ residence, from, to, groups: j.groups, extras, hidden });
-      const ht = factureHT === "" ? null : parseFloat(String(factureHT).replace(",", "."));
+      const expected = buildExpected({ residence: resi, from, to, groups: j.groups, extras, hidden });
+      const ht = over.sansTotal || factureHT === "" ? null : parseFloat(String(factureHT).replace(",", "."));
       const out = controlerFacture({ lines: mapped.lines, expected, facture: { ht }, mois });
-      const full = { residence, mois, numero: numero.trim(), factureHT: ht, lines: mapped.lines, ecarts: out.ecarts, totaux: out.totaux, surfactureHT: out.netHT, brutHT: out.surfactureHT, compensationHT: out.sousFactureHT, annexeNom: file.name };
+      const full = { residence: resi, mois, numero: over.sansTotal ? "" : numero.trim(), factureHT: ht, lines: mapped.lines, ecarts: out.ecarts, totaux: out.totaux, surfactureHT: out.netHT, brutHT: out.surfactureHT, compensationHT: out.sousFactureHT, annexeNom: fichier.name };
       setResult(full);
       setIgnored([]);
       setStatus("");
@@ -254,7 +257,10 @@ export default function FactureMenage() {
                   ) : (
                     <>
                       <div style={{ color: "#888" }}>Annexe non importée</div>
-                      <button onClick={() => setResidence(r)} style={{ marginTop: 4, cursor: "pointer" }}>Importer</button>
+                      <label style={{ display: "inline-block", marginTop: 4, padding: "3px 10px", border: "1px solid #888", borderRadius: 4, cursor: "pointer" }}>
+                        Importer l&apos;annexe
+                        <input type="file" accept=".xlsx" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; e.target.value = ""; if (f) controler({}, { residence: r, file: f, sansTotal: true }); }} />
+                      </label>
                     </>
                   )}
                 </div>
