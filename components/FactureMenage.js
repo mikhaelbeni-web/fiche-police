@@ -7,7 +7,7 @@
 // ouvert dans la messagerie, et ne contient que les surfacturations.
 
 import { useState, useEffect } from "react";
-import { parseAnnexeRows, applyMapping, unitsResidence, buildExpected, controlerFacture, buildReclamation, totauxEcarts, TYPES, moisLabel } from "../lib/factureMenage";
+import { parseAnnexeRows, applyMapping, unitsResidence, buildExpected, controlerFacture, buildReclamation, totauxEcarts, appliquerTotalFacture, TYPES, moisLabel } from "../lib/factureMenage";
 
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
@@ -49,7 +49,7 @@ async function readXlsx(file) {
 }
 
 export default function FactureMenage() {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const [residence, setResidence] = useState("Belleville");
   const [mois, setMois] = useState(defaultMois());
   const [numero, setNumero] = useState("");
@@ -63,6 +63,13 @@ export default function FactureMenage() {
   const [copied, setCopied] = useState(false);
   const [pending, setPending] = useState([]); // libellés de l'annexe non rapprochés
   const [choices, setChoices] = useState({});
+  const [editNumero, setEditNumero] = useState("");
+  const [editHT, setEditHT] = useState("");
+  const resultId = result ? docId(result.residence, result.mois) : "";
+  useEffect(() => {
+    setEditNumero(result?.numero || "");
+    setEditHT(result?.factureHT ?? "");
+  }, [resultId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadHistory() {
     try {
@@ -151,6 +158,22 @@ export default function FactureMenage() {
     } catch (e) {
       setStatus("Contrôle fait, mais sauvegarde impossible : " + e.message);
     }
+  }
+
+  // Numéro et total HT de la facture propres à ce contrôle (une résidence, un mois).
+  async function majFacture() {
+    const ht = editHT === "" ? null : parseFloat(String(editHT).replace(",", "."));
+    if (editHT !== "" && isNaN(ht)) { setStatus("Total facture invalide."); return; }
+    const full = {
+      ...result,
+      numero: editNumero.trim(),
+      factureHT: ht,
+      totaux: { ...result.totaux, factureHT: ht },
+      ecarts: appliquerTotalFacture(result.ecarts, result.totaux.annexeHT, ht),
+    };
+    setResult(full);
+    setStatus("");
+    await sauvegarder(full, ignored);
   }
 
   function toggle(e) {
@@ -296,8 +319,14 @@ export default function FactureMenage() {
 
           {effective && (
             <>
+              <div className="no-print" style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "flex-end", margin: "10px 0 8px", padding: 10, background: "#f7f7f7", borderRadius: 6 }}>
+                <div style={{ fontWeight: 700, alignSelf: "center" }}>{result.residence} · {moisLabel(result.mois)}</div>
+                <div className="field"><label>N° facture</label><input value={editNumero} onChange={e => setEditNumero(e.target.value)} style={{ width: 100 }} /></div>
+                <div className="field"><label>Total facture HT (€)</label><input inputMode="decimal" value={editHT} onChange={e => setEditHT(e.target.value)} style={{ width: 120 }} /></div>
+                <button className="primary" onClick={majFacture} style={{ padding: "6px 12px", cursor: "pointer" }}>Enregistrer la facture</button>
+              </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 18, margin: "10px 0 16px", fontSize: 14 }}>
-                <span>Facture : <b>{eur(result.factureHT)}</b> HT</span>
+                <span>Facture n° {result.numero || "—"} : <b>{eur(result.factureHT)}</b> HT</span>
                 <span>Annexe : <b>{eur(result.totaux.annexeHT)}</b> HT ({result.totaux.nbMenages} ménages{result.totaux.nbCommunes ? ` + ${result.totaux.nbCommunes} partie(s) commune(s)` : ""})</span>
                 <span>Ménages attendus dans le logiciel : <b>{result.totaux.nbAttendus}</b></span>
                 <span>Facturé sans ménage : <b>{eur(effective.brutHT)}</b> HT</span>
