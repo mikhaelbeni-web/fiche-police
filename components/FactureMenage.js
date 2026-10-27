@@ -7,7 +7,7 @@
 // ouvert dans la messagerie, et ne contient que les surfacturations.
 
 import { useState, useEffect } from "react";
-import { parseAnnexeRows, buildExpected, controlerFacture, buildReclamation, TYPES, moisLabel } from "../lib/factureMenage";
+import { parseAnnexeRows, applyMapping, unitsResidence, buildExpected, controlerFacture, buildReclamation, TYPES, moisLabel } from "../lib/factureMenage";
 
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
@@ -61,6 +61,8 @@ export default function FactureMenage() {
   const [ignored, setIgnored] = useState([]);
   const [history, setHistory] = useState([]);
   const [copied, setCopied] = useState(false);
+  const [pending, setPending] = useState([]); // libellés de l'annexe non rapprochés
+  const [choices, setChoices] = useState({});
 
   async function loadHistory() {
     try {
@@ -73,7 +75,7 @@ export default function FactureMenage() {
   }
   useEffect(() => { if (open) loadHistory(); }, [open]);
 
-  async function controler() {
+  async function controler(newChoices = {}) {
     if (!file) { setStatus("Choisis d'abord l'annexe (fichier XLSX)."); return; }
     const account = window.localStorage.getItem(ACCOUNT_KEY) || "";
     const key = window.localStorage.getItem(KEY_KEY) || "";
@@ -84,6 +86,28 @@ export default function FactureMenage() {
       setStatus("Lecture de l'annexe…");
       const lines = parseAnnexeRows(await readXlsx(file));
       if (!lines.length) throw new Error("Aucune ligne trouvée dans l'annexe.");
+
+      // Rapprochement des libellés de l'annexe aux appartements : automatique, puis
+      // associations mémorisées (Firestore `mapping_logements_facture`), puis choix de l'utilisateur.
+      const fb = await import("../lib/firebase");
+      let saved = {};
+      if (fb.isFirebaseConfigured()) {
+        const { doc, getDoc, setDoc } = await import("firebase/firestore");
+        const ref = doc(fb.db, "mapping_logements_facture", residence);
+        saved = (await getDoc(ref)).data()?.map || {};
+        if (Object.keys(newChoices).length) {
+          saved = { ...saved, ...newChoices };
+          await setDoc(ref, { map: saved, residence });
+        }
+      } else saved = newChoices;
+      const mapped = applyMapping(lines, residence, saved);
+      if (mapped.unresolved.length) {
+        setPending(mapped.unresolved);
+        setChoices({});
+        setStatus("");
+        return;
+      }
+      setPending([]);
 
       setStatus("Chargement des ménages du mois…");
       const from = `${mois}-01`, to = lastDay(mois);
@@ -100,8 +124,8 @@ export default function FactureMenage() {
       }
       const expected = buildExpected({ residence, from, to, groups: j.groups, extras, hidden });
       const ht = factureHT === "" ? null : parseFloat(String(factureHT).replace(",", "."));
-      const out = controlerFacture({ lines, expected, facture: { ht }, mois });
-      const full = { residence, mois, numero: numero.trim(), factureHT: ht, lines, ecarts: out.ecarts, totaux: out.totaux, surfactureHT: out.surfactureHT, annexeNom: file.name };
+      const out = controlerFacture({ lines: mapped.lines, expected, facture: { ht }, mois });
+      const full = { residence, mois, numero: numero.trim(), factureHT: ht, lines: mapped.lines, ecarts: out.ecarts, totaux: out.totaux, surfactureHT: out.surfactureHT, annexeNom: file.name };
       setResult(full);
       setIgnored([]);
       setStatus("");
@@ -174,9 +198,25 @@ export default function FactureMenage() {
             <div className="field"><label>N° facture</label><input value={numero} onChange={e => setNumero(e.target.value)} style={{ width: 90 }} /></div>
             <div className="field"><label>Total facture HT (€)</label><input inputMode="decimal" value={factureHT} onChange={e => setFactureHT(e.target.value)} style={{ width: 110 }} placeholder="ex. 4465" /></div>
             <div className="field"><label>Annexe (XLSX)</label><input type="file" accept=".xlsx" onChange={e => setFile(e.target.files?.[0] || null)} /></div>
-            <button className="primary" onClick={controler} disabled={busy} style={{ padding: "8px 14px" }}>{busy ? "Contrôle…" : "Contrôler la facture"}</button>
+            <button className="primary" onClick={() => controler()} disabled={busy} style={{ padding: "8px 14px" }}>{busy ? "Contrôle…" : "Contrôler la facture"}</button>
           </div>
           {status && <div className="recap-sub" style={{ marginBottom: 10 }}>{status}</div>}
+
+          {pending.length > 0 && (
+            <div className="no-print" style={{ border: "1px solid #e67e22", borderRadius: 6, padding: 12, marginBottom: 14 }}>
+              <div style={{ fontWeight: 700, marginBottom: 6 }}>Ces libellés de l&apos;annexe ne correspondent à aucun appartement : choisis lesquels (mémorisé pour les mois suivants)</div>
+              {pending.map(label => (
+                <div key={label} style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 6 }}>
+                  <span style={{ minWidth: 160, fontWeight: 600 }}>{label}</span>
+                  <select value={choices[label] || ""} onChange={e => setChoices({ ...choices, [label]: e.target.value })}>
+                    <option value="">— choisir —</option>
+                    {unitsResidence(residence).map(u => <option key={u} value={u}>{u}</option>)}
+                  </select>
+                </div>
+              ))}
+              <button className="primary" disabled={busy || pending.some(l => !choices[l])} onClick={() => controler(choices)} style={{ padding: "6px 12px", cursor: "pointer" }}>Enregistrer et contrôler</button>
+            </div>
+          )}
 
           {history.length > 0 && (
             <div className="recap-sub no-print" style={{ marginBottom: 12 }}>
