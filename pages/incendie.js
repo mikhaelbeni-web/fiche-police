@@ -8,9 +8,10 @@
 import { useState, useEffect, useMemo } from "react";
 import Head from "next/head";
 import CodeModal from "../components/CodeModal";
+import IncendieAcces from "../components/IncendieAcces";
 import { useCodeGate } from "../hooks/useCodeGate";
 import {
-  COL_TYPES, COL_VERIFS, COL_DOCS, TYPES_PAR_DEFAUT, RESULTATS, ETAT_LABEL, ETAT_RANG,
+  COL_TYPES, COL_VERIFS, COL_DOCS, COL_FACTURES, CATEGORIES_FACTURE, TYPES_PAR_DEFAUT, RESULTATS, ETAT_LABEL, ETAT_RANG,
   SEUIL_BIENTOT_JOURS, isoDay, fmtFr, statutType, periodiciteLabel,
 } from "../lib/incendie";
 
@@ -18,7 +19,7 @@ const DELETE_PASSWORD = process.env.NEXT_PUBLIC_DELETE_PASSWORD || "2305";
 const MAX_FICHIER = 10 * 1024 * 1024;
 const PERIODES = [6, 12, 24, 36, 48, 60];
 
-function Incendie() {
+function Incendie({ verrouiller, changerCode }) {
   const { requestCode, codeModalProps } = useCodeGate(DELETE_PASSWORD, "Code requis pour cette suppression");
   const [ready, setReady] = useState(false);
   const [configured, setConfigured] = useState(true);
@@ -27,6 +28,8 @@ function Incendie() {
   const [types, setTypes] = useState([]);
   const [verifs, setVerifs] = useState([]);
   const [docs, setDocs] = useState([]);
+  const [factures, setFactures] = useState([]);
+  const [vue, setVue] = useState("verifications"); // verifications | factures
   const [ouvert, setOuvert] = useState(null); // id du type déplié
   const [nouveau, setNouveau] = useState(false);
   const today = isoDay(new Date());
@@ -51,13 +54,15 @@ function Incendie() {
       await Promise.all(TYPES_PAR_DEFAUT.map(t => api.setDoc(api.doc(api.db, COL_TYPES, t.id), t)));
       tSnap = await api.getDocs(api.collection(api.db, COL_TYPES));
     }
-    const [vSnap, dSnap] = await Promise.all([
+    const [vSnap, dSnap, fSnap] = await Promise.all([
       api.getDocs(api.collection(api.db, COL_VERIFS)),
       api.getDocs(api.collection(api.db, COL_DOCS)),
+      api.getDocs(api.collection(api.db, COL_FACTURES)),
     ]);
     setTypes(tSnap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (a.ordre || 99) - (b.ordre || 99)));
     setVerifs(vSnap.docs.map(d => ({ id: d.id, ...d.data() })));
     setDocs(dSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+    setFactures(fSnap.docs.map(d => ({ id: d.id, ...d.data() })));
   }
 
   const lignes = useMemo(() => types.map(t => {
@@ -103,6 +108,8 @@ function Incendie() {
       // Les documents restent consultables, détachés de la vérification supprimée.
       await Promise.all(docs.filter(d => d.verificationId === v.id).map(d => fs.updateDoc(fs.doc(fs.db, COL_DOCS, d.id), { verificationId: null })));
     })),
+    addFacture: (payload) => run("Enregistrement", () => fs.addDoc(fs.collection(fs.db, COL_FACTURES), { ...payload, createdAt: new Date().toISOString() })),
+    deleteFacture: (f) => requestCode(() => run("Suppression", () => fs.deleteDoc(fs.doc(fs.db, COL_FACTURES, f.id)))),
     deleteDocument: (d) => requestCode(() => run("Suppression", () => fs.deleteDoc(fs.doc(fs.db, COL_DOCS, d.id)))),
     importer: (file) => importer(file),
   };
@@ -113,13 +120,16 @@ function Incendie() {
       const existV = new Set(verifs.map(v => v.id));
       const existD = new Set(docs.map(d => d.id));
       const nv = (data.verifications || []).filter(v => v.id && !existV.has(v.id));
+      const existF = new Set(factures.map(f => f.id));
       const nd = (data.documents || []).filter(d => d.id && !existD.has(d.id));
-      if (!nv.length && !nd.length) { setStatus("Rien de nouveau à importer."); return; }
-      if (!window.confirm(`Importer ${nv.length} vérification(s) et ${nd.length} document(s) ?`)) return;
+      const nf = (data.factures || []).filter(f => f.id && !existF.has(f.id));
+      if (!nv.length && !nd.length && !nf.length) { setStatus("Rien de nouveau à importer."); return; }
+      if (!window.confirm(`Importer ${nv.length} vérification(s), ${nd.length} document(s) et ${nf.length} facture(s) ?`)) return;
       setStatus("Import en cours…");
       const ops = [
         ...nv.map(({ id, ...v }) => [COL_VERIFS, id, v]),
         ...nd.map(({ id, ...d }) => [COL_DOCS, id, d]),
+        ...nf.map(({ id, ...f }) => [COL_FACTURES, id, f]),
       ];
       for (let i = 0; i < ops.length; i += 400) {
         const batch = fs.writeBatch(fs.db);
@@ -127,7 +137,7 @@ function Incendie() {
         await batch.commit();
       }
       await charger(fs, false);
-      setStatus(`Import terminé : ${nv.length} vérification(s), ${nd.length} document(s).`);
+      setStatus(`Import terminé : ${nv.length} vérification(s), ${nd.length} document(s), ${nf.length} facture(s).`);
     } catch (err) { setStatus("Import impossible : " + err.message); }
   }
 
@@ -154,17 +164,26 @@ function Incendie() {
       </Head>
       <div className="toolbar">
         <h1>Sécurité incendie</h1>
-        <button className="primary" onClick={() => setNouveau(n => !n)}>+ Nouveau contrôle</button>
+        <div className="quick">
+          <button onClick={() => setVue("verifications")} className={vue === "verifications" ? "primary" : ""}>Vérification</button>
+          <button onClick={() => setVue("factures")} className={vue === "factures" ? "primary" : ""}>Factures et coûts</button>
+        </div>
+        {vue === "verifications" && <button className="primary" onClick={() => setNouveau(n => !n)}>+ Nouveau contrôle</button>}
         <button onClick={() => window.print()}>Imprimer</button>
         <label className="inc-import">
           Importer l&apos;historique
           <input type="file" accept="application/json,.json" style={{ display: "none" }}
             onChange={e => { const f = e.target.files?.[0]; e.target.value = ""; if (f) actions.importer(f); }} />
         </label>
+        {changerCode && <button className="ghost" onClick={changerCode}>Changer le code</button>}
+        {verrouiller && <button className="ghost" onClick={verrouiller}>Verrouiller</button>}
         <span className="status">{status}</span>
       </div>
 
       <div className="menage-page">
+        {vue === "factures" ? (
+          <Factures factures={factures} types={types} actions={actions} today={today} />
+        ) : (
         <div className="recap inc-page">
           <div className="recap-head">
             <div>
@@ -209,6 +228,7 @@ function Incendie() {
             ))}
           </div>
         </div>
+        )}
       </div>
       <CodeModal {...codeModalProps} />
     </>
@@ -513,6 +533,148 @@ function DocForm({ type, onSave, onCancel }) {
   );
 }
 
+// ---- Factures et coûts ----
+function euros(n) {
+  return Number(n || 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+}
+
+function Factures({ factures, types, actions, today }) {
+  const annees = [...new Set(factures.map(f => (f.date || "").slice(0, 4)).filter(Boolean).concat(today.slice(0, 4)))].sort().reverse();
+  const [annee, setAnnee] = useState("toutes");
+  const [form, setForm] = useState(false);
+  const nomType = id => types.find(t => t.id === id)?.nom || "Hors contrôle";
+  const liste = factures.filter(f => annee === "toutes" || (f.date || "").startsWith(annee)).sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+  const total = liste.reduce((s, f) => s + Number(f.montantTTC || 0), 0);
+  const totalHT = liste.reduce((s, f) => s + Number(f.montantHT || 0), 0);
+  const somme = (cle) => {
+    const m = {};
+    liste.forEach(f => { const k = cle(f); m[k] = (m[k] || 0) + Number(f.montantTTC || 0); });
+    return Object.entries(m).sort((a, b) => b[1] - a[1]);
+  };
+
+  return (
+    <div className="recap inc-page">
+      <div className="recap-head">
+        <div>
+          <div className="recap-title">Factures de sécurité incendie</div>
+          <div className="recap-sub">Vérifications, contrats et interventions (même hors contrôle obligatoire)</div>
+        </div>
+        <div className="recap-total"><div className="n">{euros(total)}</div><div className="l">TTC · {annee === "toutes" ? "toutes années" : annee}</div></div>
+      </div>
+
+      <div className="inc-line no-print">
+        <label>Année{" "}
+          <select value={annee} onChange={e => setAnnee(e.target.value)}>
+            <option value="toutes">Toutes</option>
+            {annees.map(a => <option key={a} value={a}>{a}</option>)}
+          </select>
+        </label>
+        <button className="primary" onClick={() => setForm(f => !f)}>{form ? "Annuler" : "+ Ajouter une facture"}</button>
+      </div>
+      {form && <FactureForm types={types} onCancel={() => setForm(false)} onSave={p => { actions.addFacture(p); setForm(false); }} />}
+
+      {liste.length > 0 && (
+        <div className="inc-cout-grid">
+          <CoutBloc titre="Par contrôle" lignes={somme(f => nomType(f.typeId))} />
+          <CoutBloc titre="Par nature" lignes={somme(f => CATEGORIES_FACTURE[f.categorie] || "Autre")} />
+          <CoutBloc titre="Par fournisseur" lignes={somme(f => f.fournisseur || "—")} />
+        </div>
+      )}
+
+      <div className="tbl-wrap">
+        <table className="tbl inc-tbl inc-fact">
+          <thead><tr><th>Date</th><th>Fournisseur</th><th>Contrôle</th><th>Nature</th><th>Objet</th><th>HT</th><th>TTC</th><th className="no-print"></th></tr></thead>
+          <tbody>
+            {liste.length === 0 && <tr><td colSpan={8} className="inc-empty">Aucune facture sur cette période.</td></tr>}
+            {liste.map(f => (
+              <tr key={f.id}>
+                <td data-label="Date">{fmtFr(f.date)}</td>
+                <td data-label="Fournisseur">{f.fournisseur || "—"}</td>
+                <td data-label="Contrôle">{nomType(f.typeId)}</td>
+                <td data-label="Nature">{CATEGORIES_FACTURE[f.categorie] || "—"}</td>
+                <td data-label="Objet">{f.objet}{f.reference ? <span className="inc-sub"> · {f.reference}</span> : null}
+                  {f.fichierUrl && <a className="inc-link no-print" href={f.fichierUrl} target="_blank" rel="noreferrer"> Fichier</a>}
+                  {f.lien && <a className="inc-link no-print" href={f.lien} target="_blank" rel="noreferrer"> Ouvrir</a>}
+                  {f.lienGmail && <a className="inc-link no-print" href={f.lienGmail} target="_blank" rel="noreferrer"> Ouvrir le mail</a>}
+                  {f.note && <div className="inc-sub">{f.note}</div>}
+                </td>
+                <td data-label="HT">{f.montantHT != null && f.montantHT !== "" ? euros(f.montantHT) : "—"}</td>
+                <td data-label="TTC"><strong>{euros(f.montantTTC)}</strong></td>
+                <td className="no-print"><button className="ghost" style={{ color: "#e74c3c" }} onClick={() => actions.deleteFacture(f)}>✕</button></td>
+              </tr>
+            ))}
+          </tbody>
+          {liste.length > 0 && <tfoot><tr><td colSpan={5}><strong>Total</strong></td><td>{totalHT ? euros(totalHT) : ""}</td><td><strong>{euros(total)}</strong></td><td className="no-print"></td></tr></tfoot>}
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function CoutBloc({ titre, lignes }) {
+  return (
+    <div className="inc-cout">
+      <div className="inc-h" style={{ marginTop: 0 }}>{titre}</div>
+      {lignes.map(([k, v]) => <div key={k} className="inc-cout-ligne"><span>{k}</span><strong>{euros(v)}</strong></div>)}
+    </div>
+  );
+}
+
+function FactureForm({ types, onSave, onCancel }) {
+  const [date, setDate] = useState(isoDay(new Date()));
+  const [fournisseur, setFournisseur] = useState("");
+  const [typeId, setTypeId] = useState("");
+  const [categorie, setCategorie] = useState("intervention");
+  const [objet, setObjet] = useState("");
+  const [reference, setReference] = useState("");
+  const [ttc, setTtc] = useState("");
+  const [ht, setHt] = useState("");
+  const [pj, setPj] = useState({});
+  const [err, setErr] = useState("");
+
+  function submit() {
+    if (!date) return setErr("La date est obligatoire.");
+    if (!objet.trim()) return setErr("Indique l'objet de la facture.");
+    if (ttc === "" || isNaN(Number(ttc))) return setErr("Le montant TTC est obligatoire.");
+    onSave({
+      date, fournisseur: fournisseur.trim(), typeId: typeId || null, categorie, objet: objet.trim(), reference: reference.trim(),
+      montantTTC: Number(ttc), montantHT: ht === "" ? null : Number(ht),
+      lien: pj.lien || "", fichierUrl: pj.fichierUrl || "", fichierNom: pj.fichierNom || "",
+    });
+  }
+
+  return (
+    <div className="linen-form inc-form no-print">
+      <div className="inc-form-title">Nouvelle facture</div>
+      <div className="linen-form-row">
+        <label>Date <input type="date" value={date} onChange={e => setDate(e.target.value)} /></label>
+        <label>Fournisseur <input type="text" value={fournisseur} onChange={e => setFournisseur(e.target.value)} placeholder="ex. FINSECUR" /></label>
+        <label>Contrôle concerné
+          <select value={typeId} onChange={e => setTypeId(e.target.value)}>
+            <option value="">Aucun (hors contrôle)</option>
+            {types.map(t => <option key={t.id} value={t.id}>{t.nom}</option>)}
+          </select>
+        </label>
+        <label>Nature
+          <select value={categorie} onChange={e => setCategorie(e.target.value)}>
+            {Object.entries(CATEGORIES_FACTURE).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+          </select>
+        </label>
+      </div>
+      <div className="linen-form-row">
+        <label style={{ flex: 1 }}>Objet <input type="text" value={objet} onChange={e => setObjet(e.target.value)} placeholder="ex. Détecteur remplacé 1er étage" style={{ width: "100%" }} /></label>
+        <label>N° de facture <input type="text" value={reference} onChange={e => setReference(e.target.value)} /></label>
+        <label>Montant TTC € <input type="number" min="0" step="0.01" value={ttc} onChange={e => setTtc(e.target.value)} style={{ width: 120 }} /></label>
+        <label>Montant HT € <input type="number" min="0" step="0.01" value={ht} onChange={e => setHt(e.target.value)} style={{ width: 120 }} /></label>
+      </div>
+      <div className="linen-form-row"><PieceJointe typeId="factures" value={pj} onChange={setPj} setErr={setErr} /></div>
+      {err && <div style={{ fontSize: 12, color: "#c0392b", marginBottom: 8 }}>{err}</div>}
+      <button onClick={submit} style={{ background: "#1f3a5f", color: "#fff", border: "none", padding: "8px 16px", borderRadius: 5, cursor: "pointer" }}>Enregistrer la facture</button>
+      <button onClick={onCancel} className="ghost" style={{ marginLeft: 8 }}>Annuler</button>
+    </div>
+  );
+}
+
 export default function IncendiePage() {
-  return <Incendie />;
+  return <IncendieAcces>{props => <Incendie {...props} />}</IncendieAcces>;
 }
