@@ -165,7 +165,7 @@ function Incendie({ verrouiller, changerCode }) {
       <div className="toolbar">
         <h1>Sécurité incendie</h1>
         <div className="quick">
-          <button onClick={() => setVue("verifications")} className={vue === "verifications" ? "primary" : ""}>Vérifications incendie</button>
+          <button onClick={() => setVue("verifications")} className={vue === "verifications" ? "primary" : ""}>Vérification</button>
           <button onClick={() => setVue("factures")} className={vue === "factures" ? "primary" : ""}>Factures et coûts</button>
         </div>
         {vue === "verifications" && <button className="primary" onClick={() => setNouveau(n => !n)}>+ Nouveau contrôle</button>}
