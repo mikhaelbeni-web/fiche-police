@@ -142,7 +142,8 @@ export default function FactureMenage() {
       const { isFirebaseConfigured, db } = await import("../lib/firebase");
       if (!isFirebaseConfigured()) return;
       const { doc, setDoc } = await import("firebase/firestore");
-      await setDoc(doc(db, "factures_menage", docId(full.residence, full.mois)), { ...full, ignores: ign, importeLe: new Date().toISOString() });
+      const enTrop = Math.round(full.ecarts.filter(e => e.reclamable && !ign.includes(ecartKey(e))).reduce((s, e) => s + e.montantHT, 0) * 100) / 100;
+      await setDoc(doc(db, "factures_menage", docId(full.residence, full.mois)), { ...full, surfactureHT: enTrop, ignores: ign, importeLe: new Date().toISOString() }, { merge: true });
       loadHistory();
     } catch (e) {
       setStatus("Contrôle fait, mais sauvegarde impossible : " + e.message);
@@ -154,6 +155,26 @@ export default function FactureMenage() {
     const next = ignored.includes(k) ? ignored.filter(x => x !== k) : [...ignored, k];
     setIgnored(next);
     sauvegarder(result, next);
+  }
+
+  async function majSuivi(h, suivi) {
+    setHistory(history.map(x => x.id === h.id ? { ...x, suivi } : x));
+    try {
+      const { db } = await import("../lib/firebase");
+      const { doc, setDoc } = await import("firebase/firestore");
+      await setDoc(doc(db, "factures_menage", h.id), { suivi }, { merge: true });
+    } catch (e) { setStatus("Suivi non enregistré : " + e.message); }
+  }
+
+  async function supprimer(h) {
+    if (!window.confirm(`Supprimer le contrôle ${h.residence} · ${moisLabel(h.mois)} ?`)) return;
+    try {
+      const { db } = await import("../lib/firebase");
+      const { doc, deleteDoc } = await import("firebase/firestore");
+      await deleteDoc(doc(db, "factures_menage", h.id));
+      if (result && docId(result.residence, result.mois) === h.id) setResult(null);
+      loadHistory();
+    } catch (e) { setStatus("Suppression impossible : " + e.message); }
   }
 
   function reopen(h) {
@@ -219,13 +240,28 @@ export default function FactureMenage() {
           )}
 
           {history.length > 0 && (
-            <div className="recap-sub no-print" style={{ marginBottom: 12 }}>
-              Contrôles enregistrés :{" "}
-              {history.map(h => (
-                <button key={h.id} onClick={() => reopen(h)} style={{ marginRight: 6, fontSize: 12, cursor: "pointer" }}>
-                  {h.residence} · {moisLabel(h.mois)} {h.surfactureHT > 0 ? `· ${eur(h.surfactureHT)} en trop` : "· OK"}
-                </button>
-              ))}
+            <div className="resid no-print" style={{ marginBottom: 16 }}>
+              <div className="resid-head"><span className="resid-name">Contrôles enregistrés</span><span className="resid-count">{history.length}</span></div>
+              <div className="tbl-wrap"><table className="tbl">
+                <thead><tr><th>Mois</th><th>Résidence</th><th>N° facture</th><th className="c">Facture HT</th><th className="c">Facturé en trop HT</th><th>Suivi</th><th></th></tr></thead>
+                <tbody>{history.map(h => (
+                  <tr key={h.id} style={result && docId(result.residence, result.mois) === h.id ? { background: "#f4f8fc" } : undefined}>
+                    <td>{moisLabel(h.mois)}</td><td>{h.residence}</td><td>{h.numero || "—"}</td>
+                    <td className="c">{eur(h.factureHT)}</td>
+                    <td className="c" style={{ fontWeight: 700, color: h.surfactureHT > 0 ? "#c0392b" : "#27ae60" }}>{h.surfactureHT > 0 ? eur(h.surfactureHT) : "Rien"}</td>
+                    <td>
+                      <select value={h.suivi || "controle"} onChange={e => majSuivi(h, e.target.value)}>
+                        <option value="controle">Contrôlé</option>
+                        <option value="reclame">Réclamation envoyée</option>
+                        <option value="avoir">Avoir reçu</option>
+                      </select>
+                    </td>
+                    <td style={{ whiteSpace: "nowrap" }}>
+                      <button onClick={() => reopen(h)} style={{ marginRight: 6, cursor: "pointer" }}>Ouvrir</button>
+                      <button onClick={() => supprimer(h)} style={{ cursor: "pointer" }}>Supprimer</button>
+                    </td>
+                  </tr>))}</tbody>
+              </table></div>
             </div>
           )}
 
@@ -270,7 +306,8 @@ export default function FactureMenage() {
 
               {info.length > 0 && (
                 <div className="resid">
-                  <div className="resid-head"><span className="resid-name">À vérifier (pas une surfacturation)</span><span className="resid-count">{info.length}</span></div>
+                  <div className="resid-head"><span className="resid-name">À vérifier de ton côté (rien à réclamer)</span><span className="resid-count">{info.length}</span></div>
+                  <div className="recap-sub" style={{ margin: "6px 0" }}>Écarts sans surfacturation. « Ménage absent de l&apos;annexe » : prévu chez toi, non facturé par le prestataire. « Date différente » : même logement facturé à une autre date que le départ.</div>
                   <div className="tbl-wrap"><table className="tbl">
                     <thead><tr><th>Type</th><th>N°</th><th>Date</th><th>Détail</th></tr></thead>
                     <tbody>{info.map(e => (
