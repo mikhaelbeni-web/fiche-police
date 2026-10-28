@@ -140,7 +140,7 @@ function CommandeLinge() {
         <div className="recap">
           {tab === "position" && <PositionTab fs={fs} stock={stock} orders={orders} receptions={receptions} usage={usage} defects={defects} thresholds={thresholds} setThresholds={setThresholds} setStatus={setStatus} />}
           {tab === "stock" && <StockTab fs={fs} stock={stock} setStock={setStock} orders={orders} receptions={receptions} usage={usage} defects={defects} setStatus={setStatus} />}
-          {tab === "commandes" && <OrdersTab fs={fs} orders={orders} usage={usage} reload={() => loadAll(fs)} setStatus={setStatus} />}
+          {tab === "commandes" && <OrdersTab fs={fs} orders={orders} usage={usage} receptions={receptions} reload={() => loadAll(fs)} setStatus={setStatus} />}
           {tab === "receptions" && <ReceptionsTab fs={fs} orders={orders} receptions={receptions} defects={defects} reload={() => loadAll(fs)} setStatus={setStatus} />}
           {tab === "usage" && <UsageTab fs={fs} usage={usage} reload={() => loadAll(fs)} setStatus={setStatus} />}
           {tab === "defects" && <DefectsTab fs={fs} defects={defects} reload={() => loadAll(fs)} setStatus={setStatus} />}
@@ -240,7 +240,7 @@ function StockTab({ fs, stock, setStock, orders, receptions, usage, defects, set
 }
 
 // ---------- COMMANDES ----------
-function OrdersTab({ fs, orders, usage, reload, setStatus }) {
+function OrdersTab({ fs, orders, usage, receptions, reload, setStatus }) {
   const [date, setDate] = useState(isoDay(new Date()));
   const [q, setQ] = useState(emptyQuantities());
   const [calcInfo, setCalcInfo] = useState("");
@@ -319,17 +319,24 @@ function OrdersTab({ fs, orders, usage, reload, setStatus }) {
   async function preparerMail(order) {
     const to = destinataires.length ? destinataires : demanderDestinataires();
     if (!to || !to.length) return;
+    // Pas de récap de la commande : seulement le linge manquant dans la ou les
+    // réceptions faites le jour de l'envoi du bon (écart négatif).
+    const manque = {};
+    for (const r of receptions.filter(r => r.date === order.date)) {
+      for (const a of LINEN_ARTICLES) {
+        const ec = Number(r.ecart?.[a.key]) || 0;
+        if (ec < 0) manque[a.key] = (manque[a.key] || 0) - ec;
+      }
+    }
     const lignes = LINEN_ARTICLES
-      .filter(a => Number(order.quantities?.[a.key]) > 0)
-      .map(a => `- ${ELIS_INVOICE_ARTICLES.find(x => x.key === a.key)?.label || a.label} : ${order.quantities[a.key]}`);
+      .filter(a => manque[a.key] > 0)
+      .map(a => `- ${ELIS_INVOICE_ARTICLES.find(x => x.key === a.key)?.label || a.label} : ${manque[a.key]}`);
     const body = [
       "Bonjour,",
       "",
       `Vous trouverez ci-joint le bon de ramassage du ${order.type} ${fmtFr(order.date)}.`,
       "",
-      ...(lignes.length ? ["Commande :", ...lignes, ""] : []),
-      `Réception prévue le ${fmtFr(order.expectedReception)}.`,
-      "",
+      ...(lignes.length ? ["Il manque dans la livraison reçue ce jour :", ...lignes, ""] : []),
       "Bien cordialement,",
       "Résidence Le Belleville",
     ].join("\n");
