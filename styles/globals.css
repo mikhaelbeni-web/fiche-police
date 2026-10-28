@@ -774,6 +774,186 @@ body {
   .inc-cout { border: 1px solid #555; background: none; }
 }
 
+/* --- Contrôle de la facture du prestataire (components/FactureMenage.js) --- */
+.facture-menage .fm-toggle { cursor: pointer; user-select: none; }
+.facture-menage .fm-toggle:focus-visible { outline: 2px solid #5b8bd0; outline-offset: 4px; border-radius: 4px; }
+.facture-menage .fm-step { margin-bottom: 24px; }
+.facture-menage .fm-step-title {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 14px; font-weight: 700; margin-bottom: 10px;
+}
+.facture-menage .fm-num {
+  flex: none; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: #fff;
+  font-size: 12px; display: inline-flex; align-items: center; justify-content: center;
+}
+.facture-menage .fm-count { background: #eef3f9; color: var(--accent); border-radius: 999px; padding: 2px 9px; font-size: 12px; }
+.facture-menage .fm-hint {
+  font-size: 13px; color: var(--muted); padding: 16px; border: 1px dashed #cfd6df;
+  border-radius: 8px; background: #fafbfc;
+}
+.facture-menage .fm-note { font-size: 12px; color: var(--muted); margin: 6px 0; }
+
+/* Boutons : un seul principal (fond bleu), le reste discret. Hauteur ≥ 40 px. */
+.facture-menage .fm-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; position: relative;
+  min-height: 40px; padding: 8px 14px; border: 1px solid #c9d1db; border-radius: 6px;
+  background: #fff; color: var(--accent); font: inherit; font-size: 13px; font-weight: 600;
+  cursor: pointer; text-decoration: none; white-space: nowrap;
+}
+.facture-menage .fm-btn:hover { background: #f2f5f9; }
+.facture-menage .fm-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.facture-menage .fm-btn.primary:hover { background: #16304f; }
+.facture-menage .fm-btn:disabled, .facture-menage .fm-btn.disabled { opacity: .5; cursor: not-allowed; }
+.facture-menage .fm-btn:focus-visible, .facture-menage .fm-btn:focus-within { outline: 2px solid #5b8bd0; outline-offset: 2px; }
+.facture-menage .fm-btn-light { border-color: transparent; background: transparent; color: var(--muted); font-weight: 500; text-decoration: underline; }
+.facture-menage .fm-btn-light:hover { background: #f2f5f9; color: var(--accent); }
+.facture-menage .fm-btn-danger { border-color: transparent; background: transparent; color: #b91c1c; font-weight: 500; }
+.facture-menage .fm-btn-danger:hover { background: #fdecea; }
+.facture-menage .fm-file { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; pointer-events: none; }
+.facture-menage .fm-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+
+/* Champs (hors barre bleue : bordure visible) */
+.facture-menage select, .facture-menage .fm-mois input, .facture-menage .fm-mail input, .facture-menage .fm-mail textarea {
+  min-height: 40px; padding: 6px 10px; border: 1px solid #c9d1db; border-radius: 6px;
+  font: inherit; font-size: 13px; background: #fff; color: var(--ink); max-width: 100%;
+}
+
+/* 1. Mois */
+.facture-menage .fm-mois { display: flex; align-items: center; gap: 6px; }
+.facture-menage .fm-mois input { font-size: 15px; font-weight: 600; min-width: 0; }
+.facture-menage .fm-arrow { width: 40px; padding: 0; font-size: 20px; line-height: 1; }
+
+/* 2. Cartes résidence */
+.facture-menage .fm-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.facture-menage .fm-card {
+  display: flex; flex-direction: column; gap: 6px; min-width: 0;
+  border: 1px solid #dde3ea; border-radius: 10px; padding: 12px 14px; background: #fff;
+}
+.facture-menage .fm-card.vide { background: #fafbfc; border-style: dashed; }
+.facture-menage .fm-card.actif { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(31,58,95,.18); }
+.facture-menage .fm-card-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.facture-menage .fm-card-name { font-weight: 700; font-size: 15px; }
+.facture-menage .fm-card-sub { font-size: 12px; color: var(--muted); }
+.facture-menage .fm-card-vide { flex: 1; }
+.facture-menage .fm-card-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; padding-top: 4px; }
+.facture-menage .fm-badge { font-size: 11px; font-weight: 700; border-radius: 999px; padding: 3px 9px; white-space: nowrap; }
+.facture-menage .fm-badge.vide { background: #eceff3; color: #555; }
+.facture-menage .fm-badge.controle { background: #eef3f9; color: var(--accent); }
+.facture-menage .fm-badge.reclame { background: #fff4e0; color: #8a5300; }
+.facture-menage .fm-badge.avoir { background: #e8f6ee; color: #15693a; }
+
+.facture-menage .fm-status {
+  display: flex; align-items: center; gap: 8px; margin-top: 12px; padding: 10px 12px;
+  font-size: 13px; background: #eef3f9; color: var(--accent); border-radius: 8px;
+}
+.facture-menage .fm-status.erreur { background: #fdecea; color: #922b21; }
+.facture-menage .fm-spin {
+  flex: none; width: 14px; height: 14px; border: 2px solid currentColor; border-right-color: transparent;
+  border-radius: 50%; animation: fm-spin .8s linear infinite;
+}
+@keyframes fm-spin { to { transform: rotate(360deg); } }
+
+.facture-menage .fm-warn { margin-top: 12px; padding: 14px; background: #fff8ec; border: 1px solid #f3d29b; border-radius: 8px; }
+.facture-menage .fm-warn-title { font-weight: 700; color: #8a5300; }
+.facture-menage .fm-warn-sub { font-size: 12px; color: var(--muted); margin: 2px 0 10px; }
+.facture-menage .fm-warn-row { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; margin-bottom: 8px; }
+.facture-menage .fm-warn-label { flex: 0 1 220px; font-weight: 600; font-size: 13px; overflow-wrap: anywhere; }
+
+/* Montant net : le chiffre qui compte */
+.facture-menage .fm-net { display: flex; flex-direction: column; gap: 2px; }
+.facture-menage .fm-net.rouge { color: #b91c1c; }
+.facture-menage .fm-net.vert { color: #15803d; }
+.facture-menage .fm-net-l { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; }
+.facture-menage .fm-net-v { font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.facture-menage .fm-net-sub { font-size: 12px; font-weight: 500; color: var(--muted); }
+.facture-menage .fm-net.big { justify-content: center; padding: 16px 18px; border-radius: 10px; min-height: 120px; }
+.facture-menage .fm-net.big.rouge { background: #fdecea; border: 1px solid #f5c2bd; }
+.facture-menage .fm-net.big.vert { background: #e8f6ee; border: 1px solid #b7e0c6; }
+.facture-menage .fm-net.big .fm-net-v { font-size: 28px; line-height: 1.15; }
+.facture-menage .fm-net.big .fm-net-sub { font-size: 13px; }
+
+/* 3. Résultat */
+.facture-menage .fm-resultat { scroll-margin-top: 110px; }
+.facture-menage .fm-res-head { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+.facture-menage .fm-res-title { font-size: 17px; font-weight: 700; }
+.facture-menage .fm-res-grid { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 16px; align-items: start; margin-bottom: 22px; }
+.facture-menage .fm-calc { width: 100%; }
+.facture-menage .fm-calc td { padding: 7px 10px; white-space: normal; }
+.facture-menage .fm-calc tr.sub td { font-weight: 700; background: #f6f8fb; }
+.facture-menage .fm-calc tr.net td { font-weight: 800; font-size: 15px; border-top: 2px solid var(--line); }
+.facture-menage .fm-calc tr.net.rouge td { color: #b91c1c; }
+.facture-menage .fm-calc tr.net.vert td { color: #15803d; }
+.facture-menage .tbl .r { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.facture-menage .tbl td.fm-detail { color: #444; }
+.facture-menage .tbl tr.fm-off td { opacity: .45; }
+.facture-menage .fm-check {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 40px; min-height: 40px; margin: -10px 0; cursor: pointer;
+}
+.facture-menage .fm-check input { width: 20px; height: 20px; cursor: pointer; accent-color: var(--accent); }
+.facture-menage .fm-mail { display: flex; flex-direction: column; gap: 6px; padding-top: 8px; }
+.facture-menage .fm-mail input, .facture-menage .fm-mail textarea { width: 100%; }
+
+/* Historique par mois */
+.facture-menage .fm-groupe { border: 1px solid #dde3ea; border-radius: 8px; margin-bottom: 8px; background: #fff; }
+.facture-menage .fm-groupe > summary {
+  list-style: none; cursor: pointer; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 12px;
+  min-height: 44px; padding: 8px 14px;
+}
+.facture-menage .fm-groupe > summary::-webkit-details-marker { display: none; }
+.facture-menage .fm-groupe > summary:hover { background: #f6f8fb; }
+.facture-menage .fm-groupe[open] > summary { border-bottom: 1px solid #eee; }
+.facture-menage .fm-groupe[open] .fm-sum-fleche { transform: rotate(90deg); }
+.facture-menage .fm-sum-fleche { color: var(--muted); display: inline-block; transition: transform .15s; }
+.facture-menage .fm-sum-mois { font-weight: 700; text-transform: capitalize; }
+.facture-menage .fm-sum-info { font-size: 12px; color: var(--muted); }
+.facture-menage .fm-sum-net { margin-left: auto; font-size: 13px; font-weight: 700; }
+.facture-menage .rouge.fm-sum-net, .facture-menage .tbl td.fm-net-cell.rouge { color: #b91c1c; }
+.facture-menage .vert.fm-sum-net, .facture-menage .tbl td.fm-net-cell.vert { color: #15803d; }
+.facture-menage .tbl td.fm-net-cell { font-weight: 700; }
+.facture-menage .fm-groupe .tbl td { padding-top: 6px; padding-bottom: 6px; vertical-align: middle; }
+.facture-menage .fm-groupe tr.fm-actif td { background: #f4f8fc; }
+.facture-menage .fm-row-actions { white-space: nowrap; text-align: right; }
+.facture-menage .fm-row-actions .fm-btn + .fm-btn { margin-left: 4px; }
+
+@media screen and (max-width: 768px) {
+  .facture-menage .fm-cards { grid-template-columns: 1fr; }
+  .facture-menage .fm-res-grid { grid-template-columns: 1fr; }
+  .facture-menage .fm-net.big { min-height: 0; }
+  .facture-menage .fm-mois input { flex: 1; }
+  .facture-menage .fm-warn-row select { width: 100%; }
+  .facture-menage .fm-calc { width: 100%; min-width: 0; }
+  .facture-menage .fm-calc td { white-space: normal; }
+  .facture-menage .fm-calc td.r { white-space: nowrap; }
+  .facture-menage .tbl td.fm-detail { white-space: normal; min-width: 220px; }
+}
+
+@media print {
+  .facture-menage .fm-res-grid { grid-template-columns: 200px 1fr; }
+  .facture-menage .fm-net.big { min-height: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+@media screen and (max-width: 768px) {
+  /* Historique : chaque contrôle devient une petite fiche, sans défilement horizontal */
+  .facture-menage .fm-hist, .facture-menage .fm-hist tbody, .facture-menage .fm-hist td { display: block; width: 100%; min-width: 0; }
+  .facture-menage .fm-hist thead { display: none; }
+  .facture-menage .fm-hist tr {
+    display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; padding: 10px 12px;
+    grid-template-areas: "nom net" "annexe annexe" "suivi suivi" "act act"; border-bottom: 1px solid #eee;
+  }
+  .facture-menage .fm-hist tr:last-child { border-bottom: none; }
+  .facture-menage .fm-groupe .fm-hist tr.fm-actif { background: #f4f8fc; }
+  .facture-menage .fm-groupe .fm-hist tr.fm-actif td { background: transparent; }
+  .facture-menage .fm-groupe .fm-hist td { padding: 0; border: none; white-space: normal; text-align: left; }
+  .facture-menage .fm-hist .fm-h-nom { grid-area: nom; font-size: 14px; }
+  .facture-menage .fm-hist .fm-h-net { grid-area: net; text-align: right; }
+  .facture-menage .fm-hist .fm-h-annexe { grid-area: annexe; font-size: 12px; color: var(--muted); }
+  .facture-menage .fm-hist .fm-h-annexe::before { content: "Annexe : "; }
+  .facture-menage .fm-hist .fm-h-suivi { grid-area: suivi; }
+  .facture-menage .fm-hist .fm-h-suivi select { width: 100%; }
+  .facture-menage .fm-hist .fm-row-actions { grid-area: act; display: flex; gap: 6px; }
+  .facture-menage .fm-hist .fm-row-actions .fm-btn { flex: 1; }
+  .facture-menage .fm-hist .fm-row-actions .fm-btn + .fm-btn { margin-left: 0; }
+}
 .inc-reserves { background: #fdecea; border: 1px solid #f5b7b1; border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; }
 .inc-reserve { padding: 6px 0; border-top: 1px solid #f0c9c4; font-size: 13px; cursor: pointer; }
 .inc-reserve:first-of-type { border-top: none; }
