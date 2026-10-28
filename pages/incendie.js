@@ -113,76 +113,7 @@ function Incendie({ verrouiller, changerCode }) {
     addFacture: (payload) => run("Enregistrement", () => fs.addDoc(fs.collection(fs.db, COL_FACTURES), { ...payload, createdAt: new Date().toISOString() })),
     deleteFacture: (f) => requestCode(() => run("Suppression", () => fs.deleteDoc(fs.doc(fs.db, COL_FACTURES, f.id)))),
     deleteDocument: (d) => requestCode(() => run("Suppression", () => fs.deleteDoc(fs.doc(fs.db, COL_DOCS, d.id)))),
-    importer: (file) => importer(file),
   };
-
-  async function importer(file) {
-    try {
-      const data = JSON.parse(await file.text());
-      // Remplacement ciblé : on retire d'abord les lignes d'un import précédent (champ source), jamais les saisies manuelles.
-      const sources = new Set(data.supprimerSources || []);
-      const anciens = [
-        ...verifs.filter(v => sources.has(v.source)).map(v => [COL_VERIFS, v.id]),
-        ...docs.filter(d => sources.has(d.source)).map(d => [COL_DOCS, d.id]),
-        ...factures.filter(f => sources.has(f.source)).map(f => [COL_FACTURES, f.id]),
-      ];
-      const retirees = new Set(anciens.map(([c, id]) => c + "/" + id));
-      const nouveau = (col, existants, liste) => {
-        const ex = new Set(existants.filter(x => !retirees.has(col + "/" + x.id)).map(x => x.id));
-        return (liste || []).filter(x => x.id && !ex.has(x.id));
-      };
-      const nt = (data.types || []).filter(t => t.id && !types.some(x => x.id === t.id));
-      const nv = nouveau(COL_VERIFS, verifs, data.verifications);
-      const nd = nouveau(COL_DOCS, docs, data.documents);
-      const nf = nouveau(COL_FACTURES, factures, data.factures);
-      if (!nt.length && !nv.length && !nd.length && !nf.length && !anciens.length) { setStatus("Rien de nouveau à importer."); return; }
-      const msg = `Importer ${nv.length} vérification(s), ${nd.length} document(s), ${nf.length} facture(s)` + (nt.length ? ` et ${nt.length} nouveau(x) contrôle(s)` : "") +
-        (anciens.length ? `, en remplaçant ${anciens.length} ligne(s) d'un import précédent` : "") + " ?";
-      if (!window.confirm(msg)) return;
-      setStatus("Import en cours…");
-      const ops = [
-        ...anciens.map(([col, id]) => ["del", col, id]),
-        ...nt.map(t => ["set", COL_TYPES, t.id, t]),
-        ...nv.map(({ id, ...v }) => ["set", COL_VERIFS, id, v]),
-        ...nd.map(({ id, ...d }) => ["set", COL_DOCS, id, d]),
-        ...nf.map(({ id, ...f }) => ["set", COL_FACTURES, id, f]),
-      ];
-      for (let i = 0; i < ops.length; i += 400) {
-        const batch = fs.writeBatch(fs.db);
-        ops.slice(i, i + 400).forEach(([op, col, id, d]) => {
-          if (op === "del") batch.delete(fs.doc(fs.db, col, id));
-          else batch.set(fs.doc(fs.db, col, id), { ...d, importeLe: new Date().toISOString() });
-        });
-        await batch.commit();
-      }
-      await charger(fs, false);
-      setStatus(`Import terminé : ${nv.length} vérification(s), ${nd.length} document(s), ${nf.length} facture(s).`);
-    } catch (err) { setStatus("Import impossible : " + err.message); }
-  }
-
-  // Envoie les PDF choisis vers Firebase Storage et les rattache, par nom de fichier, aux documents et factures importés.
-  async function associerFichiers(fichiers) {
-    const liste = Array.from(fichiers).filter(f => f.size > 0);
-    const noms = new Set([...docs, ...factures].filter(x => x.nomFichier && !x.fichierUrl).map(x => x.nomFichier));
-    const aEnvoyer = liste.filter(f => noms.has(f.name));
-    const vus = new Set();
-    const uniques = aEnvoyer.filter(f => (vus.has(f.name) ? false : vus.add(f.name)));
-    if (!uniques.length) { setStatus("Aucun fichier à rattacher (noms inconnus ou déjà rattachés)."); return; }
-    if (!window.confirm(`Envoyer ${uniques.length} fichier(s) vers le stockage et les rattacher ?`)) return;
-    try {
-      let n = 0;
-      for (const f of uniques) {
-        setStatus(`Envoi ${++n}/${uniques.length} : ${f.name}`);
-        const { fichierUrl } = await televerser(f, "import");
-        const cibles = [...docs.map(d => [COL_DOCS, d]), ...factures.map(d => [COL_FACTURES, d])].filter(([, d]) => d.nomFichier === f.name);
-        await Promise.all(cibles.map(([col, d]) => fs.updateDoc(fs.doc(fs.db, col, d.id), { fichierUrl })));
-      }
-      await charger(fs, false);
-      setStatus(`${uniques.length} fichier(s) rattaché(s).`);
-    } catch (err) {
-      setStatus("Envoi impossible : " + err.message + " (Firebase Storage est-il activé ?)");
-    }
-  }
 
   if (!ready) return <div className="menage-page"><div className="recap"><div className="empty-state">Chargement…</div></div></div>;
   if (!configured) {
@@ -218,21 +149,6 @@ function Incendie({ verrouiller, changerCode }) {
           <input type="file" multiple accept="application/pdf,image/*" style={{ display: "none" }}
             onChange={e => { const f = e.target.files; if (f && f.length) setImportDoc(Array.from(f)); e.target.value = ""; }} />
         </label>
-        <label className="inc-import">
-          Importer l&apos;historique
-          <input type="file" accept="application/json,.json" style={{ display: "none" }}
-            onChange={e => { const f = e.target.files?.[0]; e.target.value = ""; if (f) actions.importer(f); }} />
-        </label>
-        <label className="inc-import">
-          Rattacher un dossier de PDF
-          <input type="file" webkitdirectory="" directory="" multiple style={{ display: "none" }}
-            onChange={e => { const f = e.target.files; if (f && f.length) associerFichiers(f); e.target.value = ""; }} />
-        </label>
-        <label className="inc-import">
-          Rattacher des PDF
-          <input type="file" multiple accept="application/pdf,image/*" style={{ display: "none" }}
-            onChange={e => { const f = e.target.files; if (f && f.length) associerFichiers(f); e.target.value = ""; }} />
-        </label>
         {changerCode && <button className="ghost" onClick={changerCode}>Changer le code</button>}
         {verrouiller && <button className="ghost" onClick={verrouiller}>Verrouiller</button>}
         <span className="status">{status}</span>
@@ -252,7 +168,7 @@ function Incendie({ verrouiller, changerCode }) {
 
           {vide && (
             <div className="inc-alert inc-alert-info no-print">
-              Aucun historique pour l&apos;instant. Utilise « Importer l&apos;historique » (fichier incendie-import.json) ou ajoute une vérification dans chaque type.
+              Aucun historique pour l&apos;instant. Utilise « Importer un document » ou ajoute une vérification dans chaque type.
             </div>
           )}
 
