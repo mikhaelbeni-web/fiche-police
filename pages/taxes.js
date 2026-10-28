@@ -773,6 +773,7 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
 
       {showRecoverForm && (
         <RecoverForm fs={fs} unrecovered={unrecovered} totalEnCaisse={totalEnCaisse}
+          baseline={baseline} sumClient={sumClient} sumExpense={sumExpense}
           onDone={() => { setShowRecoverForm(false); reload(); }} setStatus={setStatus} requestCode={requestCode} />
       )}
 
@@ -836,7 +837,63 @@ function StartingBalanceForm({ hasRecoveries, onConfirm, onCancel }) {
   );
 }
 
-function RecoverForm({ fs, unrecovered, totalEnCaisse, onDone, setStatus, requestCode }) {
+// Excel de sauvegarde téléchargé juste avant une récupération : l'état de la
+// caisse tel qu'il était avant que les entrées soient rattachées à la récupération.
+// Lève une erreur si le fichier ne peut pas être généré.
+async function downloadRecoveryXLSX({ unrecovered, baseline, sumClient, sumExpense, totalEnCaisse, rec, left, note }) {
+  const ExcelJS = (await import("exceljs")).default;
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet("Espèces");
+  ws.columns = [
+    { header: "Type", key: "type", width: 16 },
+    { header: "Date", key: "date", width: 12 },
+    { header: "Saisi par", key: "saisiPar", width: 16 },
+    { header: "Client", key: "client", width: 26 },
+    { header: "Appartement", key: "appartement", width: 16 },
+    { header: "Date arrivée", key: "arrivalDate", width: 13 },
+    { header: "Fournisseur", key: "fournisseur", width: 20 },
+    { header: "Désignation", key: "designation", width: 30 },
+    { header: "Montant (€)", key: "amount", width: 13 },
+  ];
+  ws.getRow(1).font = { bold: true };
+  const sorted = [...unrecovered].sort((a, b) => String(a.date || "").localeCompare(String(b.date || "")));
+  for (const e of sorted) {
+    ws.addRow({
+      type: e.type === "client" ? "Paiement client" : "Dépense",
+      date: fmtFrShort(e.date), saisiPar: e.saisiPar || "", client: e.client || "", appartement: e.appartement || "",
+      arrivalDate: e.arrivalDate ? fmtFrShort(e.arrivalDate) : "", fournisseur: e.fournisseur || "",
+      designation: e.designation || "", amount: Number(e.amount) || 0,
+    });
+  }
+  ws.addRow([]);
+  const now = new Date();
+  const resume = [
+    ["Reliquat de la dernière récupération", baseline],
+    ["Total paiements clients", sumClient],
+    ["Total dépenses", sumExpense],
+    ["Total en caisse avant récupération", totalEnCaisse],
+    ["Montant récupéré", rec],
+    ["Laissé en caisse", left],
+  ];
+  for (const [label, value] of resume) {
+    const r = ws.addRow({ type: label, amount: Math.round((Number(value) || 0) * 100) / 100 });
+    r.font = { bold: true };
+  }
+  if (note) ws.addRow({ type: "Note", client: note });
+  ws.addRow({ type: "Exporté le", client: now.toLocaleString("fr-FR") });
+  ws.getColumn("amount").numFmt = "#,##0.00";
+
+  const buf = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  const hh = String(now.getHours()).padStart(2, "0"), mm = String(now.getMinutes()).padStart(2, "0");
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = `recuperation_especes_${isoDay(now)}_${hh}h${mm}.xlsx`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+function RecoverForm({ fs, unrecovered, totalEnCaisse, baseline, sumClient, sumExpense, onDone, setStatus, requestCode }) {
   const [amountRecovered, setAmountRecovered] = useState("");
   const [note, setNote] = useState("");
 
@@ -858,6 +915,14 @@ function RecoverForm({ fs, unrecovered, totalEnCaisse, onDone, setStatus, reques
     if (!totalPositif) { setStatus("La caisse est vide ou négative, rien à récupérer."); return; }
     if (!montantValide) { setStatus("Le montant récupéré ne peut pas dépasser le total en caisse."); return; }
     requestCode(async () => {
+      // Sauvegarde Excel d'abord : si elle échoue, rien n'est modifié.
+      try {
+        setStatus("Téléchargement de l'Excel de sauvegarde…");
+        await downloadRecoveryXLSX({ unrecovered, baseline, sumClient, sumExpense, totalEnCaisse, rec, left, note });
+      } catch (err) {
+        setStatus("Récupération annulée : l'Excel de sauvegarde n'a pas pu être généré (" + err.message + "). Rien n'a été modifié.");
+        return;
+      }
       try {
         setStatus("Enregistrement de la récupération…");
         const date = isoDay(new Date());
