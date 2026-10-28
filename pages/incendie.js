@@ -9,6 +9,8 @@ import { useState, useEffect, useMemo } from "react";
 import Head from "next/head";
 import CodeModal from "../components/CodeModal";
 import IncendieAcces from "../components/IncendieAcces";
+import IncendieImport from "../components/IncendieImport";
+import { televerser } from "../lib/incendieFichiers";
 import { useCodeGate } from "../hooks/useCodeGate";
 import {
   COL_TYPES, COL_VERIFS, COL_DOCS, COL_FACTURES, CATEGORIES_FACTURE, TYPES_PAR_DEFAUT, RESULTATS, ETAT_LABEL, ETAT_RANG,
@@ -16,7 +18,6 @@ import {
 } from "../lib/incendie";
 
 const DELETE_PASSWORD = process.env.NEXT_PUBLIC_DELETE_PASSWORD || "2305";
-const MAX_FICHIER = 10 * 1024 * 1024;
 const PERIODES = [6, 12, 24, 36, 48, 60];
 
 function Incendie({ verrouiller, changerCode }) {
@@ -32,6 +33,7 @@ function Incendie({ verrouiller, changerCode }) {
   const [vue, setVue] = useState("verifications"); // verifications | factures
   const [ouvert, setOuvert] = useState(null); // id du type déplié
   const [nouveau, setNouveau] = useState(false);
+  const [importDoc, setImportDoc] = useState(null); // fichiers choisis pour l'import intelligent
   const today = isoDay(new Date());
 
   useEffect(() => {
@@ -212,6 +214,11 @@ function Incendie({ verrouiller, changerCode }) {
         {vue === "verifications" && <button className="primary" onClick={() => setNouveau(n => !n)}>+ Nouveau contrôle</button>}
         <button onClick={() => window.print()}>Imprimer</button>
         <label className="inc-import">
+          Importer un document
+          <input type="file" multiple accept="application/pdf,image/*" style={{ display: "none" }}
+            onChange={e => { const f = e.target.files; if (f && f.length) setImportDoc(Array.from(f)); e.target.value = ""; }} />
+        </label>
+        <label className="inc-import">
           Importer l&apos;historique
           <input type="file" accept="application/json,.json" style={{ display: "none" }}
             onChange={e => { const f = e.target.files?.[0]; e.target.value = ""; if (f) actions.importer(f); }} />
@@ -247,6 +254,12 @@ function Incendie({ verrouiller, changerCode }) {
             <div className="inc-alert inc-alert-info no-print">
               Aucun historique pour l&apos;instant. Utilise « Importer l&apos;historique » (fichier incendie-import.json) ou ajoute une vérification dans chaque type.
             </div>
+          )}
+
+          {importDoc && (
+            <IncendieImport fichiers={importDoc} fs={fs} types={types} verifs={verifs} docs={docs} factures={factures}
+              onCancel={() => setImportDoc(null)}
+              onDone={async msg => { setImportDoc(null); await charger(fs, false); setStatus(msg); }} />
           )}
 
           {nouveau && <TypeForm onCancel={() => setNouveau(false)} onSave={(n, m) => { actions.addType(n, m); setNouveau(false); }} />}
@@ -466,17 +479,6 @@ function DocLine({ d, compact, readOnly, onDelete }) {
       {!readOnly && onDelete && <button className="ghost no-print" style={{ color: "#e74c3c" }} onClick={onDelete}>✕</button>}
     </div>
   );
-}
-
-// ---- Envoi d'un fichier vers Firebase Storage ----
-async function televerser(file, typeId) {
-  if (file.size > MAX_FICHIER) throw new Error("Fichier trop gros (10 Mo maximum).");
-  const { app } = await import("../lib/firebase");
-  const { getStorage, ref, uploadBytes, getDownloadURL } = await import("firebase/storage");
-  const nom = file.name.replace(/[^\w.\-]+/g, "_");
-  const r = ref(getStorage(app), `incendie/${typeId}/${Date.now()}_${nom}`);
-  await uploadBytes(r, file);
-  return { fichierUrl: await getDownloadURL(r), fichierNom: file.name };
 }
 
 function PieceJointe({ typeId, value, onChange, setErr }) {
