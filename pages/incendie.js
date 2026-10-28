@@ -217,7 +217,12 @@ function Incendie({ verrouiller, changerCode }) {
             onChange={e => { const f = e.target.files?.[0]; e.target.value = ""; if (f) actions.importer(f); }} />
         </label>
         <label className="inc-import">
-          Rattacher les PDF
+          Rattacher un dossier de PDF
+          <input type="file" webkitdirectory="" directory="" multiple style={{ display: "none" }}
+            onChange={e => { const f = e.target.files; if (f && f.length) associerFichiers(f); e.target.value = ""; }} />
+        </label>
+        <label className="inc-import">
+          Rattacher des PDF
           <input type="file" multiple accept="application/pdf,image/*" style={{ display: "none" }}
             onChange={e => { const f = e.target.files; if (f && f.length) associerFichiers(f); e.target.value = ""; }} />
         </label>
