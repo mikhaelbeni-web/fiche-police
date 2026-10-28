@@ -7,7 +7,7 @@
 // ouvert dans la messagerie, et ne contient que les surfacturations.
 
 import { useState, useEffect } from "react";
-import { parseAnnexeRows, applyMapping, unitsResidence, buildExpected, controlerFacture, buildReclamation, totauxEcarts, appliquerTotalFacture, TYPES, moisLabel } from "../lib/factureMenage";
+import { parseAnnexeRows, applyMapping, unitsResidence, buildExpected, controlerFacture, buildReclamation, bilanControle, attendusHorsMois, plageHorsMois, TYPES, moisLabel } from "../lib/factureMenage";
 
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
@@ -52,24 +52,15 @@ export default function FactureMenage() {
   const [open, setOpen] = useState(true);
   const [residence, setResidence] = useState("Belleville");
   const [mois, setMois] = useState(defaultMois());
-  const [numero, setNumero] = useState("");
-  const [factureHT, setFactureHT] = useState("");
   const [file, setFile] = useState(null);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
-  const [result, setResult] = useState(null); // { residence, mois, numero, factureHT, lines, ecarts, totaux }
+  const [result, setResult] = useState(null); // { residence, mois, lines, ecarts, totaux }
   const [ignored, setIgnored] = useState([]);
   const [history, setHistory] = useState([]);
   const [copied, setCopied] = useState(false);
   const [pending, setPending] = useState([]); // libellés de l'annexe non rapprochés
   const [choices, setChoices] = useState({});
-  const [editNumero, setEditNumero] = useState("");
-  const [editHT, setEditHT] = useState("");
-  const resultId = result ? docId(result.residence, result.mois) : "";
-  useEffect(() => {
-    setEditNumero(result?.numero || "");
-    setEditHT(result?.factureHT ?? "");
-  }, [resultId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadHistory() {
     try {
@@ -92,7 +83,7 @@ export default function FactureMenage() {
     setBusy(true);
     setResult(null);
     try {
-      if (over.residence) { setResidence(resi); setFile(fichier); if (over.sansTotal) { setNumero(""); setFactureHT(""); } }
+      if (over.residence) { setResidence(resi); setFile(fichier); }
       setStatus("Lecture de l'annexe…");
       const lines = parseAnnexeRows(await readXlsx(fichier));
       if (!lines.length) throw new Error("Aucune ligne trouvée dans l'annexe.");
@@ -121,9 +112,16 @@ export default function FactureMenage() {
 
       setStatus("Chargement des ménages du mois…");
       const from = `${mois}-01`, to = lastDay(mois);
-      const res = await fetch(`/api/departures?from=${from}&to=${to}`, { headers: { "x-hostaway-account": account, "x-hostaway-key": key } });
-      const j = await res.json();
-      if (!res.ok) throw new Error(j.error || "Erreur Hostaway");
+      const departs = async (a, b) => {
+        const res = await fetch(`/api/departures?from=${a}&to=${b}`, { headers: { "x-hostaway-account": account, "x-hostaway-key": key } });
+        const j = await res.json();
+        if (!res.ok) throw new Error(j.error || "Erreur Hostaway");
+        return j.groups;
+      };
+      const groups = await departs(from, to);
+      // Lignes datées d'un autre mois (ménage facturé en retard) : départs de ces jours-là.
+      const plage = plageHorsMois(mapped.lines, mois);
+      const groupsHors = plage ? await departs(plage.from, plage.to) : [];
 
       const { isFirebaseConfigured, db } = await import("../lib/firebase");
       let extras = [], hidden = [];
@@ -132,10 +130,12 @@ export default function FactureMenage() {
         extras = (await getDocs(query(collection(db, "extra_menages"), orderBy("date", "desc")))).docs.map(d => ({ id: d.id, ...d.data() }));
         hidden = (await getDocs(query(collection(db, "menages_masques"), orderBy("date", "desc")))).docs.map(d => ({ id: d.id, ...d.data() }));
       }
-      const expected = buildExpected({ residence: resi, from, to, groups: j.groups, extras, hidden });
-      const ht = over.sansTotal || factureHT === "" ? null : parseFloat(String(factureHT).replace(",", "."));
-      const out = controlerFacture({ lines: mapped.lines, expected, facture: { ht }, mois });
-      const full = { residence: resi, mois, numero: over.sansTotal ? "" : numero.trim(), factureHT: ht, lines: mapped.lines, ecarts: out.ecarts, totaux: out.totaux, surfactureHT: out.netHT, brutHT: out.surfactureHT, compensationHT: out.sousFactureHT, annexeNom: fichier.name };
+      const expected = buildExpected({ residence: resi, from, to, groups, extras, hidden });
+      if (plage) expected.push(...attendusHorsMois({ lines: mapped.lines, mois, expected: buildExpected({ residence: resi, ...plage, groups: groupsHors, extras, hidden }) }));
+      // Annexes déjà contrôlées des autres mois : un ménage facturé en retard peut y figurer déjà.
+      const autresMois = history.filter(h => h.residence === resi && h.mois !== mois).flatMap(h => (h.lines || []).map(l => ({ ...l, mois: h.mois })));
+      const out = controlerFacture({ lines: mapped.lines, expected, mois, autresMois });
+      const full = { residence: resi, mois, lines: mapped.lines, ecarts: out.ecarts, totaux: out.totaux, surfactureHT: out.netHT, brutHT: out.surfactureHT, compensationHT: out.sousFactureHT, annexeNom: fichier.name };
       setResult(full);
       setIgnored([]);
       setStatus("");
@@ -152,28 +152,12 @@ export default function FactureMenage() {
       const { isFirebaseConfigured, db } = await import("../lib/firebase");
       if (!isFirebaseConfigured()) return;
       const { doc, setDoc } = await import("firebase/firestore");
-      const t = totauxEcarts(full.ecarts.map(e => ({ ...e, reclamable: e.reclamable && !ign.includes(ecartKey(e)), compensation: e.compensation && !ign.includes(ecartKey(e)) })));
+      const t = bilanControle(full, ign);
       await setDoc(doc(db, "factures_menage", docId(full.residence, full.mois)), { ...full, surfactureHT: t.netHT, brutHT: t.brutHT, compensationHT: t.compensationHT, ignores: ign, importeLe: new Date().toISOString() }, { merge: true });
       loadHistory();
     } catch (e) {
       setStatus("Contrôle fait, mais sauvegarde impossible : " + e.message);
     }
-  }
-
-  // Numéro et total HT de la facture propres à ce contrôle (une résidence, un mois).
-  async function majFacture() {
-    const ht = editHT === "" ? null : parseFloat(String(editHT).replace(",", "."));
-    if (editHT !== "" && isNaN(ht)) { setStatus("Total facture invalide."); return; }
-    const full = {
-      ...result,
-      numero: editNumero.trim(),
-      factureHT: ht,
-      totaux: { ...result.totaux, factureHT: ht },
-      ecarts: appliquerTotalFacture(result.ecarts, result.totaux.annexeHT, ht),
-    };
-    setResult(full);
-    setStatus("");
-    await sauvegarder(full, ignored);
   }
 
   function toggle(e) {
@@ -204,18 +188,13 @@ export default function FactureMenage() {
   }
 
   function reopen(h) {
-    setResidence(h.residence); setMois(h.mois); setNumero(h.numero || "");
-    setFactureHT(h.factureHT ?? "");
+    setResidence(h.residence); setMois(h.mois);
     setResult(h); setIgnored(h.ignores || []); setStatus("");
   }
 
   // Résultat effectif : les écarts décochés par l'utilisateur ne sont plus réclamés.
-  const effective = result && (() => {
-    const ecarts = result.ecarts.map(e => ({ ...e, reclamable: e.reclamable && !ignored.includes(ecartKey(e)), compensation: e.compensation && !ignored.includes(ecartKey(e)) }));
-    const t = totauxEcarts(ecarts);
-    return { ...result, ecarts, surfactureHT: t.netHT, brutHT: t.brutHT, compensationHT: t.compensationHT };
-  })();
-  const mail = effective && buildReclamation({ residence: result.residence, mois: result.mois, numero: result.numero, resultat: effective });
+  const effective = result && bilanControle(result, ignored);
+  const mail = effective && buildReclamation({ residence: result.residence, mois: result.mois, resultat: effective });
 
   async function copyMail() {
     try { await navigator.clipboard.writeText(`${mail.subject}\n\n${mail.body}`); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch (e) { /* ignoré */ }
@@ -243,8 +222,6 @@ export default function FactureMenage() {
               <select value={residence} onChange={e => setResidence(e.target.value)}>{RESIDENCES.map(r => <option key={r}>{r}</option>)}</select>
             </div>
             <div className="field"><label>Mois</label><input type="month" value={mois} onChange={e => setMois(e.target.value)} /></div>
-            <div className="field"><label>N° facture</label><input value={numero} onChange={e => setNumero(e.target.value)} style={{ width: 90 }} /></div>
-            <div className="field"><label>Total facture HT (€)</label><input inputMode="decimal" value={factureHT} onChange={e => setFactureHT(e.target.value)} style={{ width: 110 }} placeholder="ex. 4465" /></div>
             <div className="field"><label>Annexe (XLSX)</label><input type="file" accept=".xlsx" onChange={e => setFile(e.target.files?.[0] || null)} /></div>
             <button className="primary" onClick={() => controler()} disabled={busy} style={{ padding: "8px 14px" }}>{busy ? "Contrôle…" : "Contrôler la facture"}</button>
           </div>
@@ -269,12 +246,13 @@ export default function FactureMenage() {
           <div className="no-print" style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 14 }}>
             {RESIDENCES.map(r => {
               const h = history.find(x => x.id === docId(r, mois));
+              const net = h && bilanControle(h, h.ignores || []).netHT;
               return (
                 <div key={r} style={{ border: "1px solid #ccc", borderRadius: 6, padding: "8px 12px", minWidth: 190 }}>
                   <div style={{ fontWeight: 700 }}>{r} · {moisLabel(mois)}</div>
                   {h ? (
                     <>
-                      <div style={{ color: h.surfactureHT > 0 ? "#c0392b" : "#27ae60", fontWeight: 600 }}>{h.surfactureHT > 0 ? `${eur(h.surfactureHT)} HT en trop (net)` : "Rien à réclamer"}</div>
+                      <div style={{ color: net > 0 ? "#c0392b" : "#27ae60", fontWeight: 600 }}>{net > 0 ? `${eur(net)} HT en trop (net)` : "Rien à réclamer"}</div>
                       <button onClick={() => reopen(h)} style={{ marginTop: 4, cursor: "pointer" }}>Ouvrir</button>
                     </>
                   ) : (
@@ -282,7 +260,7 @@ export default function FactureMenage() {
                       <div style={{ color: "#888" }}>Annexe non importée</div>
                       <label style={{ display: "inline-block", marginTop: 4, padding: "3px 10px", border: "1px solid #888", borderRadius: 4, cursor: "pointer" }}>
                         Importer l&apos;annexe
-                        <input type="file" accept=".xlsx" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; e.target.value = ""; if (f) controler({}, { residence: r, file: f, sansTotal: true }); }} />
+                        <input type="file" accept=".xlsx" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; e.target.value = ""; if (f) controler({}, { residence: r, file: f }); }} />
                       </label>
                     </>
                   )}
@@ -295,12 +273,12 @@ export default function FactureMenage() {
             <div className="resid no-print" style={{ marginBottom: 16 }}>
               <div className="resid-head"><span className="resid-name">Contrôles enregistrés</span><span className="resid-count">{history.length}</span></div>
               <div className="tbl-wrap"><table className="tbl">
-                <thead><tr><th>Mois</th><th>Résidence</th><th>N° facture</th><th className="c">Facture HT</th><th className="c">Net facturé en trop HT</th><th>Suivi</th><th></th></tr></thead>
-                <tbody>{history.map(h => (
+                <thead><tr><th>Mois</th><th>Résidence</th><th className="c">Annexe HT</th><th className="c">Net facturé en trop HT</th><th>Suivi</th><th></th></tr></thead>
+                <tbody>{history.map(h => { const net = bilanControle(h, h.ignores || []).netHT; return (
                   <tr key={h.id} style={result && docId(result.residence, result.mois) === h.id ? { background: "#f4f8fc" } : undefined}>
-                    <td>{moisLabel(h.mois)}</td><td>{h.residence}</td><td>{h.numero || "—"}</td>
-                    <td className="c">{eur(h.factureHT)}</td>
-                    <td className="c" style={{ fontWeight: 700, color: h.surfactureHT > 0 ? "#c0392b" : "#27ae60" }}>{h.surfactureHT > 0 ? eur(h.surfactureHT) : "Rien"}</td>
+                    <td>{moisLabel(h.mois)}</td><td>{h.residence}</td>
+                    <td className="c">{eur(h.totaux?.annexeHT)}</td>
+                    <td className="c" style={{ fontWeight: 700, color: net > 0 ? "#c0392b" : "#27ae60" }}>{net > 0 ? eur(net) : "Rien"}</td>
                     <td>
                       <select value={h.suivi || "controle"} onChange={e => majSuivi(h, e.target.value)}>
                         <option value="controle">Contrôlé</option>
@@ -312,29 +290,31 @@ export default function FactureMenage() {
                       <button onClick={() => reopen(h)} style={{ marginRight: 6, cursor: "pointer" }}>Ouvrir</button>
                       <button onClick={() => supprimer(h)} style={{ cursor: "pointer" }}>Supprimer</button>
                     </td>
-                  </tr>))}</tbody>
+                  </tr>); })}</tbody>
               </table></div>
             </div>
           )}
 
           {effective && (
             <>
-              <div className="no-print" style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "flex-end", margin: "10px 0 8px", padding: 10, background: "#f7f7f7", borderRadius: 6 }}>
-                <div style={{ fontWeight: 700, alignSelf: "center" }}>{result.residence} · {moisLabel(result.mois)}</div>
-                <div className="field"><label>N° facture</label><input value={editNumero} onChange={e => setEditNumero(e.target.value)} style={{ width: 100 }} /></div>
-                <div className="field"><label>Total facture HT (€)</label><input inputMode="decimal" value={editHT} onChange={e => setEditHT(e.target.value)} style={{ width: 120 }} /></div>
-                <button className="primary" onClick={majFacture} style={{ padding: "6px 12px", cursor: "pointer" }}>Enregistrer la facture</button>
-              </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 18, margin: "10px 0 16px", fontSize: 14 }}>
-                <span>Facture n° {result.numero || "—"} : <b>{eur(result.factureHT)}</b> HT</span>
-                <span>Annexe : <b>{eur(result.totaux.annexeHT)}</b> HT ({result.totaux.nbMenages} ménages{result.totaux.nbCommunes ? ` + ${result.totaux.nbCommunes} partie(s) commune(s)` : ""})</span>
-                <span>Ménages attendus dans le logiciel : <b>{result.totaux.nbAttendus}</b></span>
-                <span>Facturé sans ménage : <b>{eur(effective.brutHT)}</b> HT</span>
-                <span>Ménages effectués non facturés : <b>{eur(effective.compensationHT)}</b> HT</span>
-                <span style={{ color: effective.surfactureHT > 0 ? "#c0392b" : "#27ae60", fontWeight: 700 }}>
-                  {effective.surfactureHT > 0 ? `Net facturé en trop : ${eur(effective.surfactureHT)} HT (${eur(effective.surfactureHT * 1.2)} TTC)` : "Rien à réclamer après compensation"}
-                </span>
-                <button className="no-print" onClick={() => window.print()} style={{ cursor: "pointer" }}>Imprimer (paysage)</button>
+              <div style={{ margin: "10px 0 16px", fontSize: 14 }}>
+                <div style={{ fontWeight: 700, marginBottom: 6 }}>{result.residence} · {moisLabel(result.mois)}{result.annexeNom ? ` · ${result.annexeNom}` : ""}</div>
+                <table className="tbl" style={{ maxWidth: 560 }}>
+                  <tbody>
+                    <tr><td>Facturé dans l&apos;annexe ({result.totaux.nbMenages} ménages{result.totaux.nbCommunes ? ` + ${result.totaux.nbCommunes} partie(s) commune(s)` : ""})</td><td className="c">{eur(effective.annexeHT)}</td></tr>
+                    {effective.prevuHT != null && <tr><td>Prévu d&apos;après le logiciel ({result.totaux.nbAttendus} ménages au tarif convenu{result.totaux.communesHT ? " + parties communes" : ""})</td><td className="c">{eur(effective.prevuHT)}</td></tr>}
+                    {effective.ecartHT != null && <tr><td><b>Écart facturé − prévu</b></td><td className="c"><b>{eur(effective.ecartHT)}</b></td></tr>}
+                    <tr><td>Facturé en trop (sans ménage, doublons, tarifs)</td><td className="c">+ {eur(effective.brutHT)}</td></tr>
+                    <tr><td>Ménages effectués non facturés (déduits)</td><td className="c">− {eur(effective.compensationHT)}</td></tr>
+                    {effective.autresHT ? <tr><td>Autres écarts sans réclamation (tarifs inférieurs, logements sans tarif)</td><td className="c">{eur(effective.autresHT)}</td></tr> : null}
+                    <tr style={{ color: effective.netHT > 0 ? "#c0392b" : "#27ae60", fontWeight: 700 }}>
+                      <td>{effective.netHT > 0 ? "Net facturé en trop, à réclamer" : "Rien à réclamer"}</td>
+                      <td className="c">{effective.netHT > 0 ? `${eur(effective.netHT)} HT (${eur(effective.netHT * 1.2)} TTC)` : eur(effective.netHT)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+                {effective.prevuHT == null && <div className="recap-sub no-print">Contrôle enregistré avant le calcul du « prévu » : réimporte l&apos;annexe pour le détail complet.</div>}
+                <button className="no-print" onClick={() => window.print()} style={{ cursor: "pointer", marginTop: 8 }}>Imprimer (paysage)</button>
               </div>
 
               {reclam.length > 0 && (
@@ -347,7 +327,7 @@ export default function FactureMenage() {
                         <td className="no-print"><input type="checkbox" checked={e.reclamable} onChange={() => toggle(e)} /></td>
                         <td>{TYPES[e.type].label}</td><td className="apt">{e.unit || "—"}</td><td>{fmtFr(e.date)}</td>
                         <td className="c">{eur(e.montantHT)}</td><td>{e.detail}</td>
-                      </tr>))}</tbody>
+                      </tr>); })}</tbody>
                   </table></div>
                   <div className="recap-sub no-print">Décoche une ligne si le ménage a bien eu lieu (ex. ménage fait sans départ) : elle sort de la réclamation.</div>
                 </div>
@@ -362,7 +342,7 @@ export default function FactureMenage() {
                       <tr key={ecartKey(e)} style={e.compensation ? undefined : { opacity: .45 }}>
                         <td className="no-print"><input type="checkbox" checked={e.compensation} onChange={() => toggle(e)} /></td>
                         <td className="apt">{e.unit || "—"}</td><td>{fmtFr(e.date)}</td><td className="c">{eur(e.montantHT)}</td><td>{e.detail}</td>
-                      </tr>))}</tbody>
+                      </tr>); })}</tbody>
                   </table></div>
                   <div className="recap-sub no-print">Décoche un ménage s&apos;il n&apos;a finalement pas eu lieu : il n&apos;est plus déduit.</div>
                 </div>
