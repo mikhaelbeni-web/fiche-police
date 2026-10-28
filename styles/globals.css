@@ -954,3 +954,7 @@ body {
   .facture-menage .fm-hist .fm-row-actions .fm-btn { flex: 1; }
   .facture-menage .fm-hist .fm-row-actions .fm-btn + .fm-btn { margin-left: 0; }
 }
+.inc-reserves { background: #fdecea; border: 1px solid #f5b7b1; border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; }
+.inc-reserve { padding: 6px 0; border-top: 1px solid #f0c9c4; font-size: 13px; cursor: pointer; }
+.inc-reserve:first-of-type { border-top: none; }
+@media print { .inc-reserves { border: 1px solid #000; background: none; } .inc-reserve { cursor: default; } }

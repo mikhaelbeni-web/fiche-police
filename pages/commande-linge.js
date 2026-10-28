@@ -13,6 +13,7 @@ function fmtFr(d) {
   const x = new Date(d + "T12:00:00");
   return isNaN(x) ? d : x.toLocaleDateString("fr-FR");
 }
+const HOTEL_GMAIL = "residencelebelleville@gmail.com";
 function euros(n) {
   if (n == null || isNaN(n)) return "—";
   return Number(n).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
@@ -139,7 +140,7 @@ function CommandeLinge() {
         <div className="recap">
           {tab === "position" && <PositionTab fs={fs} stock={stock} orders={orders} receptions={receptions} usage={usage} defects={defects} thresholds={thresholds} setThresholds={setThresholds} setStatus={setStatus} />}
           {tab === "stock" && <StockTab fs={fs} stock={stock} setStock={setStock} orders={orders} receptions={receptions} usage={usage} defects={defects} setStatus={setStatus} />}
-          {tab === "commandes" && <OrdersTab fs={fs} orders={orders} usage={usage} reload={() => loadAll(fs)} setStatus={setStatus} />}
+          {tab === "commandes" && <OrdersTab fs={fs} orders={orders} usage={usage} receptions={receptions} reload={() => loadAll(fs)} setStatus={setStatus} />}
           {tab === "receptions" && <ReceptionsTab fs={fs} orders={orders} receptions={receptions} defects={defects} reload={() => loadAll(fs)} setStatus={setStatus} />}
           {tab === "usage" && <UsageTab fs={fs} usage={usage} reload={() => loadAll(fs)} setStatus={setStatus} />}
           {tab === "defects" && <DefectsTab fs={fs} defects={defects} reload={() => loadAll(fs)} setStatus={setStatus} />}
@@ -239,7 +240,7 @@ function StockTab({ fs, stock, setStock, orders, receptions, usage, defects, set
 }
 
 // ---------- COMMANDES ----------
-function OrdersTab({ fs, orders, usage, reload, setStatus }) {
+function OrdersTab({ fs, orders, usage, receptions, reload, setStatus }) {
   const [date, setDate] = useState(isoDay(new Date()));
   const [q, setQ] = useState(emptyQuantities());
   const [calcInfo, setCalcInfo] = useState("");
@@ -291,6 +292,63 @@ function OrdersTab({ fs, orders, usage, reload, setStatus }) {
     await reload();
   }
 
+  // Destinataires Elis du mail de bon de ramassage : stockés dans Firestore
+  // (le dépôt est public, on n'y met pas les adresses).
+  const [destinataires, setDestinataires] = useState([]);
+  useEffect(() => {
+    if (!fs) return;
+    fs.getDoc(fs.doc(fs.db, "linen_settings", "belleville"))
+      .then(snap => { if (snap.exists()) setDestinataires(snap.data().bonDestinataires || []); })
+      .catch(() => {});
+  }, [fs]);
+
+  // Demande les adresses (synchrone, pour pouvoir ouvrir Gmail juste après sans
+  // blocage de pop-up) et les enregistre en arrière-plan.
+  function demanderDestinataires() {
+    const v = prompt("Adresses e-mail des destinataires du bon de ramassage (séparées par des virgules) :", destinataires.join(", "));
+    if (v === null) return null;
+    const list = v.split(/[,;\s]+/).map(x => x.trim()).filter(x => x.includes("@"));
+    setDestinataires(list);
+    fs.setDoc(fs.doc(fs.db, "linen_settings", "belleville"), { bonDestinataires: list }, { merge: true })
+      .catch(err => setStatus("Erreur enregistrement destinataires : " + err.message));
+    return list;
+  }
+
+  // Ouvre un mail Gmail pré-rempli (boîte de l'hôtel) et télécharge l'Excel.
+  // Un lien web ne peut pas joindre de fichier : il faut glisser l'Excel téléchargé dans le mail.
+  async function preparerMail(order) {
+    const to = destinataires.length ? destinataires : demanderDestinataires();
+    if (!to || !to.length) return;
+    // Pas de récap de la commande : seulement le linge manquant dans la ou les
+    // réceptions faites le jour de l'envoi du bon (écart négatif).
+    const manque = {};
+    for (const r of receptions.filter(r => r.date === order.date)) {
+      for (const a of LINEN_ARTICLES) {
+        const ec = Number(r.ecart?.[a.key]) || 0;
+        if (ec < 0) manque[a.key] = (manque[a.key] || 0) - ec;
+      }
+    }
+    const lignes = LINEN_ARTICLES
+      .filter(a => manque[a.key] > 0)
+      .map(a => `- ${ELIS_INVOICE_ARTICLES.find(x => x.key === a.key)?.label || a.label} : ${manque[a.key]}`);
+    const body = [
+      "Bonjour,",
+      "",
+      `Vous trouverez ci-joint le bon de ramassage du ${order.type} ${fmtFr(order.date)}.`,
+      "",
+      ...(lignes.length ? ["Il manque dans la livraison reçue ce jour :", ...lignes, ""] : []),
+      "Bien cordialement,",
+      "Résidence Le Belleville",
+    ].join("\n");
+    const url = "https://mail.google.com/mail/?" + new URLSearchParams({
+      authuser: HOTEL_GMAIL, view: "cm", fs: "1",
+      to: to.join(","), su: `Bon de ramassage ${fmtFr(order.date)}`, body,
+    }).toString();
+    window.open(url, "_blank");
+    const fichier = await exportExcel(order);
+    if (fichier) setStatus(`Excel téléchargé (${fichier}) : glisse-le dans le mail Gmail ouvert, relis puis envoie.`);
+  }
+
   // Génère le bon de ramassage via la route serveur (copie fidèle du template Pantin).
   async function exportExcel(order) {
     try {
@@ -311,6 +369,7 @@ function OrdersTab({ fs, orders, usage, reload, setStatus }) {
       a.download = `Bon_de_ramassage_${order.type}_${order.date}.xlsx`;
       a.click();
       URL.revokeObjectURL(url);
+      return a.download;
     } catch (err) { alert("Erreur : " + err.message); }
   }
 
@@ -381,7 +440,8 @@ function OrdersTab({ fs, orders, usage, reload, setStatus }) {
               })()}</td>
               <td>
                 <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-                  <button onClick={() => exportExcel(o)} className="ghost" style={{ color: "#1f7a3f", padding: "4px 6px", fontSize: 12 }}>📥</button>
+                  <button onClick={() => exportExcel(o)} className="ghost" title="Télécharger l'Excel" style={{ color: "#1f7a3f", padding: "4px 6px", fontSize: 12 }}>📥</button>
+                  <button onClick={() => preparerMail(o)} className="ghost" title="Préparer le mail du bon de ramassage à Elis (Gmail) et télécharger l'Excel à joindre" style={{ padding: "4px 6px", fontSize: 12 }}>✉️</button>
                   {o.status === "recue" && (
                     <button onClick={async () => {
                       if (!confirm("Remettre cette commande en 'En attente livraison' ?")) return;
@@ -397,6 +457,11 @@ function OrdersTab({ fs, orders, usage, reload, setStatus }) {
           {orders.length === 0 && <tr><td colSpan={LINEN_ARTICLES.length + 5} className="empty-state">Aucune commande.</td></tr>}
         </tbody>
       </table></div>
+      <p style={{ fontSize: 12, color: "#666", marginTop: 10 }}>
+        ✉️ ouvre le mail du bon de ramassage dans Gmail et télécharge l&apos;Excel : glisse le fichier dans le mail, relis, puis envoie.
+        {" "}Destinataires : {destinataires.length ? destinataires.join(", ") : "aucun"}
+        {" "}<button onClick={demanderDestinataires} className="ghost" style={{ padding: "2px 6px", fontSize: 12 }}>Modifier</button>
+      </p>
     </>
   );
 }
