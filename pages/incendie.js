@@ -117,28 +117,69 @@ function Incendie({ verrouiller, changerCode }) {
   async function importer(file) {
     try {
       const data = JSON.parse(await file.text());
-      const existV = new Set(verifs.map(v => v.id));
-      const existD = new Set(docs.map(d => d.id));
-      const nv = (data.verifications || []).filter(v => v.id && !existV.has(v.id));
-      const existF = new Set(factures.map(f => f.id));
-      const nd = (data.documents || []).filter(d => d.id && !existD.has(d.id));
-      const nf = (data.factures || []).filter(f => f.id && !existF.has(f.id));
-      if (!nv.length && !nd.length && !nf.length) { setStatus("Rien de nouveau à importer."); return; }
-      if (!window.confirm(`Importer ${nv.length} vérification(s), ${nd.length} document(s) et ${nf.length} facture(s) ?`)) return;
+      // Remplacement ciblé : on retire d'abord les lignes d'un import précédent (champ source), jamais les saisies manuelles.
+      const sources = new Set(data.supprimerSources || []);
+      const anciens = [
+        ...verifs.filter(v => sources.has(v.source)).map(v => [COL_VERIFS, v.id]),
+        ...docs.filter(d => sources.has(d.source)).map(d => [COL_DOCS, d.id]),
+        ...factures.filter(f => sources.has(f.source)).map(f => [COL_FACTURES, f.id]),
+      ];
+      const retirees = new Set(anciens.map(([c, id]) => c + "/" + id));
+      const nouveau = (col, existants, liste) => {
+        const ex = new Set(existants.filter(x => !retirees.has(col + "/" + x.id)).map(x => x.id));
+        return (liste || []).filter(x => x.id && !ex.has(x.id));
+      };
+      const nt = (data.types || []).filter(t => t.id && !types.some(x => x.id === t.id));
+      const nv = nouveau(COL_VERIFS, verifs, data.verifications);
+      const nd = nouveau(COL_DOCS, docs, data.documents);
+      const nf = nouveau(COL_FACTURES, factures, data.factures);
+      if (!nt.length && !nv.length && !nd.length && !nf.length && !anciens.length) { setStatus("Rien de nouveau à importer."); return; }
+      const msg = `Importer ${nv.length} vérification(s), ${nd.length} document(s), ${nf.length} facture(s)` + (nt.length ? ` et ${nt.length} nouveau(x) contrôle(s)` : "") +
+        (anciens.length ? `, en remplaçant ${anciens.length} ligne(s) d'un import précédent` : "") + " ?";
+      if (!window.confirm(msg)) return;
       setStatus("Import en cours…");
       const ops = [
-        ...nv.map(({ id, ...v }) => [COL_VERIFS, id, v]),
-        ...nd.map(({ id, ...d }) => [COL_DOCS, id, d]),
-        ...nf.map(({ id, ...f }) => [COL_FACTURES, id, f]),
+        ...anciens.map(([col, id]) => ["del", col, id]),
+        ...nt.map(t => ["set", COL_TYPES, t.id, t]),
+        ...nv.map(({ id, ...v }) => ["set", COL_VERIFS, id, v]),
+        ...nd.map(({ id, ...d }) => ["set", COL_DOCS, id, d]),
+        ...nf.map(({ id, ...f }) => ["set", COL_FACTURES, id, f]),
       ];
       for (let i = 0; i < ops.length; i += 400) {
         const batch = fs.writeBatch(fs.db);
-        ops.slice(i, i + 400).forEach(([col, id, d]) => batch.set(fs.doc(fs.db, col, id), { ...d, importeLe: new Date().toISOString() }));
+        ops.slice(i, i + 400).forEach(([op, col, id, d]) => {
+          if (op === "del") batch.delete(fs.doc(fs.db, col, id));
+          else batch.set(fs.doc(fs.db, col, id), { ...d, importeLe: new Date().toISOString() });
+        });
         await batch.commit();
       }
       await charger(fs, false);
       setStatus(`Import terminé : ${nv.length} vérification(s), ${nd.length} document(s), ${nf.length} facture(s).`);
     } catch (err) { setStatus("Import impossible : " + err.message); }
+  }
+
+  // Envoie les PDF choisis vers Firebase Storage et les rattache, par nom de fichier, aux documents et factures importés.
+  async function associerFichiers(fichiers) {
+    const liste = Array.from(fichiers).filter(f => f.size > 0);
+    const noms = new Set([...docs, ...factures].filter(x => x.nomFichier && !x.fichierUrl).map(x => x.nomFichier));
+    const aEnvoyer = liste.filter(f => noms.has(f.name));
+    const vus = new Set();
+    const uniques = aEnvoyer.filter(f => (vus.has(f.name) ? false : vus.add(f.name)));
+    if (!uniques.length) { setStatus("Aucun fichier à rattacher (noms inconnus ou déjà rattachés)."); return; }
+    if (!window.confirm(`Envoyer ${uniques.length} fichier(s) vers le stockage et les rattacher ?`)) return;
+    try {
+      let n = 0;
+      for (const f of uniques) {
+        setStatus(`Envoi ${++n}/${uniques.length} : ${f.name}`);
+        const { fichierUrl } = await televerser(f, "import");
+        const cibles = [...docs.map(d => [COL_DOCS, d]), ...factures.map(d => [COL_FACTURES, d])].filter(([, d]) => d.nomFichier === f.name);
+        await Promise.all(cibles.map(([col, d]) => fs.updateDoc(fs.doc(fs.db, col, d.id), { fichierUrl })));
+      }
+      await charger(fs, false);
+      setStatus(`${uniques.length} fichier(s) rattaché(s).`);
+    } catch (err) {
+      setStatus("Envoi impossible : " + err.message + " (Firebase Storage est-il activé ?)");
+    }
   }
 
   if (!ready) return <div className="menage-page"><div className="recap"><div className="empty-state">Chargement…</div></div></div>;
@@ -175,6 +216,11 @@ function Incendie({ verrouiller, changerCode }) {
           <input type="file" accept="application/json,.json" style={{ display: "none" }}
             onChange={e => { const f = e.target.files?.[0]; e.target.value = ""; if (f) actions.importer(f); }} />
         </label>
+        <label className="inc-import">
+          Rattacher les PDF
+          <input type="file" multiple accept="application/pdf,image/*" style={{ display: "none" }}
+            onChange={e => { const f = e.target.files; if (f && f.length) associerFichiers(f); e.target.value = ""; }} />
+        </label>
         {changerCode && <button className="ghost" onClick={changerCode}>Changer le code</button>}
         {verrouiller && <button className="ghost" onClick={verrouiller}>Verrouiller</button>}
         <span className="status">{status}</span>
@@ -201,6 +247,7 @@ function Incendie({ verrouiller, changerCode }) {
           {nouveau && <TypeForm onCancel={() => setNouveau(false)} onSave={(n, m) => { actions.addType(n, m); setNouveau(false); }} />}
 
           <Bandeau alertes={alertes} onOpen={setOuvert} />
+          <ReservesOuvertes lignes={lignes} onOpen={setOuvert} />
 
           <div className="tbl-wrap">
             <table className="tbl inc-tbl">
@@ -255,6 +302,23 @@ function TypeForm({ onSave, onCancel }) {
       {err && <div style={{ fontSize: 12, color: "#c0392b", marginBottom: 8 }}>{err}</div>}
       <button onClick={() => nom.trim() ? onSave(nom.trim(), mois || null) : setErr("Le nom est obligatoire.")} style={{ background: "#1f3a5f", color: "#fff", border: "none", padding: "8px 16px", borderRadius: 5, cursor: "pointer" }}>Créer le contrôle</button>
       <button onClick={onCancel} className="ghost" style={{ marginLeft: 8 }}>Annuler</button>
+    </div>
+  );
+}
+
+// ---- Réserves à lever : ce que l'équipe doit faire corriger ----
+function ReservesOuvertes({ lignes, onOpen }) {
+  const items = lignes.flatMap(l => l.st.ouvertes.map(v => ({ l, v })));
+  if (!items.length) return null;
+  return (
+    <div className="inc-reserves">
+      <div className="inc-h" style={{ marginTop: 0 }}>Réserves à lever ({items.length})</div>
+      {items.map(({ l, v }) => (
+        <div key={v.id} className="inc-reserve" onClick={() => onOpen(l.type.id)}>
+          <strong>{l.type.nom}</strong> · {fmtFr(v.date)}{v.organisme ? " · " + v.organisme : ""}
+          <div className="inc-sub">{v.reserves}</div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -369,7 +433,7 @@ function HistoriqueTable({ l, actions, readOnly }) {
               <td data-label="Organisme">{v.organisme || "—"}</td>
               <td data-label="Résultat">
                 <span className={`inc-badge ${v.resultat === "sans_reserve" ? "inc-conforme" : ouverte ? "inc-non_conforme" : "inc-bientot"}`}>
-                  {RESULTATS[v.resultat]}{v.resultat === "avec_reserves" && (ouverte ? " – non levées" : " – levées")}
+                  {v.compteEcheance === false ? "Intervention corrective – réserves levées" : RESULTATS[v.resultat]}{v.resultat === "avec_reserves" && (ouverte ? " – non levées" : " – levées")}
                 </span>
                 {v.reserves && <div className="inc-sub">{v.reserves}</div>}
                 {v.contreVisiteDe && byId[v.contreVisiteDe] && <div className="inc-sub">Contre-visite des réserves du {fmtFr(byId[v.contreVisiteDe].date)}</div>}
@@ -389,6 +453,7 @@ function DocLine({ d, compact, readOnly, onDelete }) {
   return (
     <div className="inc-doc">
       <span>{!compact && d.date && fmtFr(d.date) + " · "}<strong>{d.nature || "Document"}</strong>{d.reference && d.reference !== "—" ? " " + d.reference : ""}</span>
+      {d.montantTTC != null && d.montantTTC !== "" && <span className="inc-sub"> · {euros(d.montantTTC)} TTC</span>}
       {d.objet && !compact && <span className="inc-sub"> — {d.objet}</span>}
       {d.fichierUrl && <a className="inc-link no-print" href={d.fichierUrl} target="_blank" rel="noreferrer">Fichier</a>}
       {d.lienGmail && <a className="inc-link no-print" href={d.lienGmail} target="_blank" rel="noreferrer">Ouvrir le mail</a>}
@@ -442,6 +507,7 @@ function VerifForm({ type, ouvertes, onSave, onCancel }) {
   const [reserves, setReserves] = useState("");
   const [contre, setContre] = useState(ouvertes[0]?.id || "");
   const [note, setNote] = useState("");
+  const [corrective, setCorrective] = useState(false);
   const [pj, setPj] = useState({});
   const [err, setErr] = useState("");
 
@@ -454,6 +520,7 @@ function VerifForm({ type, ouvertes, onSave, onCancel }) {
       typeId: type.id, date, organisme: organisme.trim(), resultat,
       reserves: resultat === "avec_reserves" ? reserves.trim() : "",
       contreVisiteDe: resultat === "sans_reserve" && contre ? contre : null,
+      compteEcheance: !(resultat === "sans_reserve" && contre && corrective),
       note: note.trim(),
       doc: temoin ? { lien: pj.lien || "", fichierUrl: pj.fichierUrl || "", fichierNom: pj.fichierNom || "", nature: "Rapport de vérification" } : null,
     });
@@ -490,6 +557,11 @@ function VerifForm({ type, ouvertes, onSave, onCancel }) {
               <option value="">Aucune (vérification indépendante)</option>
             </select>
           </label>
+          {contre && (
+            <label className="inc-radio"><input type="checkbox" checked={corrective} onChange={e => setCorrective(e.target.checked)} />
+              Simple intervention corrective (la visite d&apos;origine reste la référence de la périodicité)
+            </label>
+          )}
         </div>
       )}
       <div className="linen-form-row">
