@@ -17,6 +17,38 @@ const eur = n => n == null ? "—" : n.toLocaleString("fr-FR", { minimumFraction
 const fmtFr = d => d ? d.split("-").reverse().join("/") : "";
 const ecartKey = e => `${e.type}|${e.unit}|${e.date}|${e.ligne}`;
 const docId = (residence, mois) => `${residence}_${mois}`;
+const SUIVI = { controle: "Contrôlé", reclame: "Réclamation envoyée", avoir: "Avoir reçu" };
+const suiviDe = h => (SUIVI[h.suivi] ? h.suivi : "controle");
+
+function moisDecale(mois, n) {
+  const [y, m] = mois.split("-").map(Number);
+  const d = new Date(y, m - 1 + n, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function scrollResultat() {
+  setTimeout(() => { const el = document.getElementById("fm-resultat"); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }, 60);
+}
+
+// Montant net : jamais « −X € à réclamer ». Net ≤ 0 → « Rien à réclamer », et si le
+// prestataire a oublié de facturer plus qu'il n'a facturé en trop, on le dit en petit.
+function NetResume({ net, big }) {
+  if (net > 0) {
+    return (
+      <div className={`fm-net rouge${big ? " big" : ""}`}>
+        <span className="fm-net-l">À réclamer</span>
+        <span className="fm-net-v">{eur(net)} HT</span>
+        {big && <span className="fm-net-sub">soit {eur(net * 1.2)} TTC</span>}
+      </div>
+    );
+  }
+  return (
+    <div className={`fm-net vert${big ? " big" : ""}`}>
+      <span className="fm-net-v">Rien à réclamer</span>
+      {net < 0 && <span className="fm-net-sub">Le prestataire a oublié de facturer {eur(-net)} HT net.</span>}
+    </div>
+  );
+}
 
 function defaultMois() {
   const d = new Date();
@@ -200,189 +232,243 @@ export default function FactureMenage() {
     try { await navigator.clipboard.writeText(`${mail.subject}\n\n${mail.body}`); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch (e) { /* ignoré */ }
   }
 
+  function ouvrir(h) {
+    if (!(result && docId(result.residence, result.mois) === h.id)) reopen(h);
+    scrollResultat();
+  }
+
   const communes = result ? result.lines.filter(l => l.commune) : [];
   const info = effective ? effective.ecarts.filter(e => !TYPES[e.type].reclamable && e.type !== "manquant") : [];
   const compens = effective ? effective.ecarts.filter(e => e.type === "manquant") : [];
   const reclam = effective ? effective.ecarts.filter(e => TYPES[e.type].reclamable) : [];
+  const resultId = result ? docId(result.residence, result.mois) : null;
+  const statusErreur = /Erreur|impossible|manquants|non enregistré|Choisis/.test(status);
+
+  // Historique regroupé par mois (déjà trié du plus récent au plus ancien).
+  const parMois = [];
+  for (const h of history) {
+    const g = parMois.find(x => x.mois === h.mois);
+    if (g) g.items.push(h); else parMois.push({ mois: h.mois, items: [h] });
+  }
 
   return (
     <div className="recap facture-menage" style={{ marginBottom: 20 }}>
       <style>{`@media print { @page { size: landscape; margin: 10mm; } .facture-menage .no-print { display: none !important; } .facture-menage tr { page-break-inside: avoid; } .facture-menage td { padding-top: 10px !important; padding-bottom: 10px !important; } }`}</style>
-      <div className="recap-head no-print" style={{ cursor: "pointer" }} onClick={() => setOpen(!open)}>
+      <div className="recap-head no-print fm-toggle" role="button" tabIndex={0} aria-expanded={open} onClick={() => setOpen(!open)} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen(!open); } }}>
         <div>
           <div className="recap-title">{open ? "▾" : "▸"} Contrôle de la facture du prestataire</div>
-          <div className="recap-sub">Importer l&apos;annexe du mois : les ménages facturés en trop ressortent automatiquement.</div>
+          <div className="recap-sub">Choisis le mois, puis importe l&apos;annexe de chaque résidence : le contrôle se fait tout seul.</div>
         </div>
       </div>
 
       {open && (
         <div>
-          <div className="no-print" style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "flex-end", margin: "8px 0 14px" }}>
-            <div className="field"><label>Résidence</label>
-              <select value={residence} onChange={e => setResidence(e.target.value)}>{RESIDENCES.map(r => <option key={r}>{r}</option>)}</select>
+          <div className="fm-step no-print">
+            <div className="fm-step-title"><span className="fm-num">1</span>Mois de la facture</div>
+            <div className="fm-mois">
+              <button type="button" className="fm-btn fm-arrow" onClick={() => setMois(moisDecale(mois, -1))} aria-label="Mois précédent">‹</button>
+              <input type="month" value={mois} onChange={e => { if (e.target.value) setMois(e.target.value); }} aria-label="Mois de la facture" />
+              <button type="button" className="fm-btn fm-arrow" onClick={() => setMois(moisDecale(mois, 1))} aria-label="Mois suivant">›</button>
             </div>
-            <div className="field"><label>Mois</label><input type="month" value={mois} onChange={e => setMois(e.target.value)} /></div>
-            <div className="field"><label>Annexe (XLSX)</label><input type="file" accept=".xlsx" onChange={e => setFile(e.target.files?.[0] || null)} /></div>
-            <button className="primary" onClick={() => controler()} disabled={busy} style={{ padding: "8px 14px" }}>{busy ? "Contrôle…" : "Contrôler la facture"}</button>
           </div>
-          {status && <div className="recap-sub" style={{ marginBottom: 10 }}>{status}</div>}
 
-          {pending.length > 0 && (
-            <div className="no-print" style={{ border: "1px solid #e67e22", borderRadius: 6, padding: 12, marginBottom: 14 }}>
-              <div style={{ fontWeight: 700, marginBottom: 6 }}>Ces libellés de l&apos;annexe ne correspondent à aucun appartement : choisis lesquels (mémorisé pour les mois suivants)</div>
-              {pending.map(label => (
-                <div key={label} style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 6 }}>
-                  <span style={{ minWidth: 160, fontWeight: 600 }}>{label}</span>
-                  <select value={choices[label] || ""} onChange={e => setChoices({ ...choices, [label]: e.target.value })}>
-                    <option value="">— choisir —</option>
-                    {unitsResidence(residence).map(u => <option key={u} value={u}>{u}</option>)}
-                  </select>
-                </div>
-              ))}
-              <button className="primary" disabled={busy || pending.some(l => !choices[l])} onClick={() => controler(choices)} style={{ padding: "6px 12px", cursor: "pointer" }}>Enregistrer et contrôler</button>
-            </div>
-          )}
-
-          <div className="no-print" style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 14 }}>
-            {RESIDENCES.map(r => {
-              const h = history.find(x => x.id === docId(r, mois));
-              const net = h && bilanControle(h, h.ignores || []).netHT;
-              return (
-                <div key={r} style={{ border: "1px solid #ccc", borderRadius: 6, padding: "8px 12px", minWidth: 190 }}>
-                  <div style={{ fontWeight: 700 }}>{r} · {moisLabel(mois)}</div>
-                  {h ? (
-                    <>
-                      <div style={{ color: net > 0 ? "#c0392b" : "#27ae60", fontWeight: 600 }}>{net > 0 ? `${eur(net)} HT en trop (net)` : "Rien à réclamer"}</div>
-                      <button onClick={() => reopen(h)} style={{ marginTop: 4, cursor: "pointer" }}>Ouvrir</button>
-                    </>
-                  ) : (
-                    <>
-                      <div style={{ color: "#888" }}>Annexe non importée</div>
-                      <label style={{ display: "inline-block", marginTop: 4, padding: "3px 10px", border: "1px solid #888", borderRadius: 4, cursor: "pointer" }}>
-                        Importer l&apos;annexe
-                        <input type="file" accept=".xlsx" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; e.target.value = ""; if (f) controler({}, { residence: r, file: f }); }} />
+          <div className="fm-step no-print">
+            <div className="fm-step-title"><span className="fm-num">2</span>Annexe de chaque résidence · {moisLabel(mois)}</div>
+            <div className="fm-cards">
+              {RESIDENCES.map(r => {
+                const h = history.find(x => x.id === docId(r, mois));
+                const net = h ? bilanControle(h, h.ignores || []).netHT : null;
+                const actif = h && h.id === resultId;
+                return (
+                  <div key={r} className={`fm-card${h ? "" : " vide"}${actif ? " actif" : ""}`}>
+                    <div className="fm-card-head">
+                      <span className="fm-card-name">{r}</span>
+                      <span className={`fm-badge ${h ? suiviDe(h) : "vide"}`}>{h ? SUIVI[suiviDe(h)] : "À importer"}</span>
+                    </div>
+                    {h ? (
+                      <>
+                        <NetResume net={net} />
+                        <div className="fm-card-sub">Annexe : {eur(h.totaux?.annexeHT)} HT</div>
+                      </>
+                    ) : (
+                      <div className="fm-card-sub fm-card-vide">Annexe pas encore importée pour ce mois.</div>
+                    )}
+                    <div className="fm-card-actions">
+                      {h && <button type="button" className="fm-btn" onClick={() => ouvrir(h)}>Voir le détail</button>}
+                      <label className={`fm-btn${h ? " fm-btn-light" : " primary"}${busy ? " disabled" : ""}`}>
+                        {h ? "Réimporter" : "Importer l'annexe"}
+                        <input type="file" accept=".xlsx" className="fm-file" disabled={busy} onChange={e => { const f = e.target.files?.[0]; e.target.value = ""; if (f) controler({}, { residence: r, file: f }); }} />
                       </label>
-                    </>
-                  )}
-                </div>
-              );
-            })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {status && <div className={`fm-status${statusErreur ? " erreur" : ""}`} role="status">{busy && <span className="fm-spin" aria-hidden="true" />}{status}</div>}
+
+            {pending.length > 0 && (
+              <div className="fm-warn">
+                <div className="fm-warn-title">{residence} : {pending.length} libellé(s) de l&apos;annexe à rattacher à un appartement</div>
+                <div className="fm-warn-sub">Choisis l&apos;appartement pour chaque libellé. C&apos;est mémorisé pour les mois suivants.</div>
+                {pending.map(label => (
+                  <label key={label} className="fm-warn-row">
+                    <span className="fm-warn-label">{label}</span>
+                    <select value={choices[label] || ""} onChange={e => setChoices({ ...choices, [label]: e.target.value })}>
+                      <option value="">— choisir l&apos;appartement —</option>
+                      {unitsResidence(residence).map(u => <option key={u} value={u}>{u}</option>)}
+                    </select>
+                  </label>
+                ))}
+                <button type="button" className="fm-btn primary" disabled={busy || pending.some(l => !choices[l])} onClick={() => controler(choices)}>Enregistrer et contrôler</button>
+              </div>
+            )}
           </div>
 
-          {history.length > 0 && (
-            <div className="resid no-print" style={{ marginBottom: 16 }}>
-              <div className="resid-head"><span className="resid-name">Contrôles enregistrés</span><span className="resid-count">{history.length}</span></div>
-              <div className="tbl-wrap"><table className="tbl">
-                <thead><tr><th>Mois</th><th>Résidence</th><th className="c">Annexe HT</th><th className="c">Net facturé en trop HT</th><th>Suivi</th><th></th></tr></thead>
-                <tbody>{history.map(h => { const net = bilanControle(h, h.ignores || []).netHT; return (
-                  <tr key={h.id} style={result && docId(result.residence, result.mois) === h.id ? { background: "#f4f8fc" } : undefined}>
-                    <td>{moisLabel(h.mois)}</td><td>{h.residence}</td>
-                    <td className="c">{eur(h.totaux?.annexeHT)}</td>
-                    <td className="c" style={{ fontWeight: 700, color: net > 0 ? "#c0392b" : "#27ae60" }}>{net > 0 ? eur(net) : "Rien"}</td>
-                    <td>
-                      <select value={h.suivi || "controle"} onChange={e => majSuivi(h, e.target.value)}>
-                        <option value="controle">Contrôlé</option>
-                        <option value="reclame">Réclamation envoyée</option>
-                        <option value="avoir">Avoir reçu</option>
-                      </select>
-                    </td>
-                    <td style={{ whiteSpace: "nowrap" }}>
-                      <button onClick={() => reopen(h)} style={{ marginRight: 6, cursor: "pointer" }}>Ouvrir</button>
-                      <button onClick={() => supprimer(h)} style={{ cursor: "pointer" }}>Supprimer</button>
-                    </td>
-                  </tr>); })}</tbody>
-              </table></div>
-            </div>
-          )}
-
-          {effective && (
-            <>
-              <div style={{ margin: "10px 0 16px", fontSize: 14 }}>
-                <div style={{ fontWeight: 700, marginBottom: 6 }}>{result.residence} · {moisLabel(result.mois)}{result.annexeNom ? ` · ${result.annexeNom}` : ""}</div>
-                <table className="tbl" style={{ maxWidth: 560 }}>
-                  <tbody>
-                    <tr><td>Facturé dans l&apos;annexe ({result.totaux.nbMenages} ménages{result.totaux.nbCommunes ? ` + ${result.totaux.nbCommunes} partie(s) commune(s)` : ""})</td><td className="c">{eur(effective.annexeHT)}</td></tr>
-                    {effective.prevuHT != null && <tr><td>Prévu d&apos;après le logiciel ({result.totaux.nbAttendus} ménages au tarif convenu{result.totaux.communesHT ? " + parties communes" : ""})</td><td className="c">{eur(effective.prevuHT)}</td></tr>}
-                    {effective.ecartHT != null && <tr><td><b>Écart facturé − prévu</b></td><td className="c"><b>{eur(effective.ecartHT)}</b></td></tr>}
-                    <tr><td>Facturé en trop (sans ménage, doublons, tarifs)</td><td className="c">+ {eur(effective.brutHT)}</td></tr>
-                    <tr><td>Ménages effectués non facturés (déduits)</td><td className="c">− {eur(effective.compensationHT)}</td></tr>
-                    {effective.autresHT ? <tr><td>Autres écarts sans réclamation (tarifs inférieurs, logements sans tarif)</td><td className="c">{eur(effective.autresHT)}</td></tr> : null}
-                    <tr style={{ color: effective.netHT > 0 ? "#c0392b" : "#27ae60", fontWeight: 700 }}>
-                      <td>{effective.netHT > 0 ? "Net facturé en trop, à réclamer" : "Rien à réclamer"}</td>
-                      <td className="c">{effective.netHT > 0 ? `${eur(effective.netHT)} HT (${eur(effective.netHT * 1.2)} TTC)` : eur(effective.netHT)}</td>
-                    </tr>
-                  </tbody>
-                </table>
-                {effective.prevuHT == null && <div className="recap-sub no-print">Contrôle enregistré avant le calcul du « prévu » : réimporte l&apos;annexe pour le détail complet.</div>}
-                <button className="no-print" onClick={() => window.print()} style={{ cursor: "pointer", marginTop: 8 }}>Imprimer (paysage)</button>
-              </div>
-
-              {reclam.length > 0 && (
-                <div className="resid">
-                  <div className="resid-head"><span className="resid-name">Facturé en trop</span><span className="resid-count">{reclam.filter(e => e.reclamable).length} ligne(s) réclamée(s)</span></div>
-                  <div className="tbl-wrap"><table className="tbl">
-                    <thead><tr><th className="no-print">Réclamer</th><th>Type</th><th>N°</th><th>Date</th><th className="c">Montant HT</th><th>Détail</th></tr></thead>
-                    <tbody>{reclam.map(e => (
-                      <tr key={ecartKey(e)} style={e.reclamable ? undefined : { opacity: .45 }}>
-                        <td className="no-print"><input type="checkbox" checked={e.reclamable} onChange={() => toggle(e)} /></td>
-                        <td>{TYPES[e.type].label}</td><td className="apt">{e.unit || "—"}</td><td>{fmtFr(e.date)}</td>
-                        <td className="c">{eur(e.montantHT)}</td><td>{e.detail}</td>
-                      </tr>); })}</tbody>
-                  </table></div>
-                  <div className="recap-sub no-print">Décoche une ligne si le ménage a bien eu lieu (ex. ménage fait sans départ) : elle sort de la réclamation.</div>
+          <div className="fm-step fm-resultat" id="fm-resultat">
+            <div className="fm-step-title no-print"><span className="fm-num">3</span>Résultat du contrôle</div>
+            {!effective ? (
+              <div className="fm-hint no-print">Importe une annexe ou clique sur « Voir le détail » d&apos;une résidence : le résultat s&apos;affiche ici.</div>
+            ) : (
+              <>
+                <div className="fm-res-head">
+                  <div>
+                    <div className="fm-res-title">{result.residence} · {moisLabel(result.mois)}</div>
+                    <div className="recap-sub">Contrôle de la facture ménage{result.annexeNom ? ` · annexe ${result.annexeNom}` : ""}</div>
+                  </div>
+                  <button type="button" className="fm-btn no-print" onClick={() => window.print()}>Imprimer (paysage)</button>
                 </div>
-              )}
 
-              {compens.length > 0 && (
-                <div className="resid">
-                  <div className="resid-head"><span className="resid-name">Ménages effectués mais non facturés (déduits de la réclamation)</span><span className="resid-count">{eur(effective.compensationHT)} HT</span></div>
-                  <div className="tbl-wrap"><table className="tbl">
-                    <thead><tr><th className="no-print">Compenser</th><th>N°</th><th>Date</th><th className="c">Valeur HT</th><th>Détail</th></tr></thead>
-                    <tbody>{compens.map(e => (
-                      <tr key={ecartKey(e)} style={e.compensation ? undefined : { opacity: .45 }}>
-                        <td className="no-print"><input type="checkbox" checked={e.compensation} onChange={() => toggle(e)} /></td>
-                        <td className="apt">{e.unit || "—"}</td><td>{fmtFr(e.date)}</td><td className="c">{eur(e.montantHT)}</td><td>{e.detail}</td>
-                      </tr>); })}</tbody>
-                  </table></div>
-                  <div className="recap-sub no-print">Décoche un ménage s&apos;il n&apos;a finalement pas eu lieu : il n&apos;est plus déduit.</div>
-                </div>
-              )}
-
-              {communes.length > 0 && (
-                <div className="resid">
-                  <div className="resid-head"><span className="resid-name">Parties communes</span><span className="resid-count">{eur(result.totaux.communesHT)} HT · incluses dans le total contrôlé</span></div>
-                  <div className="tbl-wrap"><table className="tbl">
-                    <thead><tr><th>Date</th><th>Description</th><th className="c">HT</th><th className="c">TVA</th><th className="c">TTC</th></tr></thead>
-                    <tbody>{communes.map(l => (
-                      <tr key={l.ligne}><td>{fmtFr(l.date)}</td><td>{l.desc}</td><td className="c">{eur(l.ht)}</td><td className="c">{eur(l.tva)}</td><td className="c">{eur(l.ttc)}</td></tr>))}</tbody>
-                  </table></div>
-                </div>
-              )}
-
-              {info.length > 0 && (
-                <div className="resid">
-                  <div className="resid-head"><span className="resid-name">À vérifier de ton côté (rien à réclamer)</span><span className="resid-count">{info.length}</span></div>
-                  <div className="recap-sub" style={{ margin: "6px 0" }}>Écarts sans impact sur le montant. « Date différente » : même logement facturé à une autre date que le départ (rapproché, rien à réclamer).</div>
-                  <div className="tbl-wrap"><table className="tbl">
-                    <thead><tr><th>Type</th><th>N°</th><th>Date</th><th>Détail</th></tr></thead>
-                    <tbody>{info.map(e => (
-                      <tr key={ecartKey(e)}><td>{TYPES[e.type].label}</td><td className="apt">{e.unit || "—"}</td><td>{fmtFr(e.date)}</td><td>{e.detail}</td></tr>))}</tbody>
-                  </table></div>
-                </div>
-              )}
-
-              {mail && (
-                <div className="resid no-print">
-                  <div className="resid-head"><span className="resid-name">Mail de réclamation (montant net après compensation)</span></div>
-                  <input readOnly value={mail.subject} style={{ width: "100%", marginTop: 8, padding: 6 }} />
-                  <textarea readOnly value={mail.body} rows={Math.min(24, mail.body.split("\n").length + 1)} style={{ width: "100%", marginTop: 6, padding: 6, fontFamily: "inherit" }} />
-                  <div style={{ marginTop: 6, display: "flex", gap: 8 }}>
-                    <button className="primary" onClick={copyMail} style={{ padding: "6px 12px", cursor: "pointer" }}>{copied ? "Copié ✓" : "Copier le mail"}</button>
-                    <a href={`mailto:?subject=${encodeURIComponent(mail.subject)}&body=${encodeURIComponent(mail.body)}`}><button style={{ padding: "6px 12px", cursor: "pointer" }}>Ouvrir dans la messagerie</button></a>
+                <div className="fm-res-grid">
+                  <NetResume net={effective.netHT} big />
+                  <div>
+                    <table className="tbl fm-calc">
+                      <tbody>
+                        <tr><td>Facturé dans l&apos;annexe ({result.totaux.nbMenages} ménages{result.totaux.nbCommunes ? ` + ${result.totaux.nbCommunes} partie(s) commune(s)` : ""})</td><td className="r">{eur(effective.annexeHT)}</td></tr>
+                        {effective.prevuHT != null && <tr><td>Prévu d&apos;après le logiciel ({result.totaux.nbAttendus} ménages au tarif convenu{result.totaux.communesHT ? " + parties communes" : ""})</td><td className="r">{eur(effective.prevuHT)}</td></tr>}
+                        {effective.ecartHT != null && <tr className="sub"><td>Écart (facturé − prévu)</td><td className="r">{eur(effective.ecartHT)}</td></tr>}
+                        <tr><td>Facturé en trop (sans ménage, doublons, tarifs)</td><td className="r">+ {eur(effective.brutHT)}</td></tr>
+                        <tr><td>Ménages effectués non facturés (déduits)</td><td className="r">− {eur(effective.compensationHT)}</td></tr>
+                        {effective.autresHT ? <tr><td>Autres écarts, sans réclamation (tarifs inférieurs, logements sans tarif)</td><td className="r">{eur(effective.autresHT)}</td></tr> : null}
+                        <tr className={`net ${effective.netHT > 0 ? "rouge" : "vert"}`}>
+                          <td>Net à réclamer</td>
+                          <td className="r">{effective.netHT > 0 ? `${eur(effective.netHT)} HT` : "Rien"}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    {effective.prevuHT == null && <div className="recap-sub no-print">Contrôle enregistré avant le calcul du « prévu » : réimporte l&apos;annexe pour le détail complet.</div>}
                   </div>
                 </div>
-              )}
-            </>
+
+                {reclam.length > 0 && (
+                  <div className="resid">
+                    <div className="resid-head"><span className="resid-name">Facturé en trop</span><span className="resid-count">{reclam.filter(e => e.reclamable).length} ligne(s) réclamée(s) · {eur(effective.brutHT)} HT</span></div>
+                    <div className="tbl-wrap"><table className="tbl">
+                      <thead><tr><th className="no-print c">Réclamer</th><th>Type</th><th>N°</th><th>Date</th><th className="r">Montant HT</th><th>Détail</th></tr></thead>
+                      <tbody>{reclam.map(e => (
+                        <tr key={ecartKey(e)} className={e.reclamable ? undefined : "fm-off"}>
+                          <td className="no-print c"><label className="fm-check"><input type="checkbox" checked={e.reclamable} onChange={() => toggle(e)} aria-label="Réclamer cette ligne" /></label></td>
+                          <td>{TYPES[e.type].label}</td><td className="apt">{e.unit || "—"}</td><td>{fmtFr(e.date)}</td>
+                          <td className="r">{eur(e.montantHT)}</td><td className="fm-detail">{e.detail}</td>
+                        </tr>))}</tbody>
+                    </table></div>
+                    <div className="fm-note no-print">Décoche une ligne si le ménage a bien eu lieu (ex. ménage fait sans départ) : elle sort de la réclamation.</div>
+                  </div>
+                )}
+
+                {compens.length > 0 && (
+                  <div className="resid">
+                    <div className="resid-head"><span className="resid-name">Ménages effectués non facturés (déduits)</span><span className="resid-count">{eur(effective.compensationHT)} HT</span></div>
+                    <div className="tbl-wrap"><table className="tbl">
+                      <thead><tr><th className="no-print c">Déduire</th><th>N°</th><th>Date</th><th className="r">Valeur HT</th><th>Détail</th></tr></thead>
+                      <tbody>{compens.map(e => (
+                        <tr key={ecartKey(e)} className={e.compensation ? undefined : "fm-off"}>
+                          <td className="no-print c"><label className="fm-check"><input type="checkbox" checked={e.compensation} onChange={() => toggle(e)} aria-label="Déduire ce ménage" /></label></td>
+                          <td className="apt">{e.unit || "—"}</td><td>{fmtFr(e.date)}</td><td className="r">{eur(e.montantHT)}</td><td className="fm-detail">{e.detail}</td>
+                        </tr>))}</tbody>
+                    </table></div>
+                    <div className="fm-note no-print">Décoche un ménage s&apos;il n&apos;a finalement pas eu lieu : il n&apos;est plus déduit.</div>
+                  </div>
+                )}
+
+                {communes.length > 0 && (
+                  <div className="resid">
+                    <div className="resid-head"><span className="resid-name">Parties communes</span><span className="resid-count">{eur(result.totaux.communesHT)} HT · comprises dans le total</span></div>
+                    <div className="tbl-wrap"><table className="tbl">
+                      <thead><tr><th>Date</th><th>Description</th><th className="r">HT</th><th className="r">TVA</th><th className="r">TTC</th></tr></thead>
+                      <tbody>{communes.map(l => (
+                        <tr key={l.ligne}><td>{fmtFr(l.date)}</td><td className="fm-detail">{l.desc}</td><td className="r">{eur(l.ht)}</td><td className="r">{eur(l.tva)}</td><td className="r">{eur(l.ttc)}</td></tr>))}</tbody>
+                    </table></div>
+                  </div>
+                )}
+
+                {info.length > 0 && (
+                  <div className="resid">
+                    <div className="resid-head"><span className="resid-name">À vérifier de ton côté (rien à réclamer)</span><span className="resid-count">{info.length} ligne(s)</span></div>
+                    <div className="fm-note">Sans effet sur le montant. « Date différente » : même logement facturé à une autre date que le départ.</div>
+                    <div className="tbl-wrap"><table className="tbl">
+                      <thead><tr><th>Type</th><th>N°</th><th>Date</th><th>Détail</th></tr></thead>
+                      <tbody>{info.map(e => (
+                        <tr key={ecartKey(e)}><td>{TYPES[e.type].label}</td><td className="apt">{e.unit || "—"}</td><td>{fmtFr(e.date)}</td><td className="fm-detail">{e.detail}</td></tr>))}</tbody>
+                    </table></div>
+                  </div>
+                )}
+
+                {mail && (
+                  <div className="resid no-print">
+                    <div className="resid-head"><span className="resid-name">Mail de réclamation</span><span className="resid-count">montant net, après déduction</span></div>
+                    <div className="fm-mail">
+                      <input readOnly value={mail.subject} aria-label="Objet du mail" />
+                      <textarea readOnly value={mail.body} rows={Math.min(24, mail.body.split("\n").length + 1)} aria-label="Texte du mail" />
+                      <div className="fm-actions">
+                        <button type="button" className="fm-btn primary" onClick={copyMail}>{copied ? "Copié ✓" : "Copier le mail"}</button>
+                        <a className="fm-btn" href={`mailto:?subject=${encodeURIComponent(mail.subject)}&body=${encodeURIComponent(mail.body)}`}>Ouvrir dans la messagerie</a>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          {parMois.length > 0 && (
+            <div className="fm-step no-print">
+              <div className="fm-step-title">Contrôles enregistrés <span className="fm-count">{history.length}</span></div>
+              {parMois.map((g, i) => {
+                const lignes = g.items.map(h => ({ h, net: bilanControle(h, h.ignores || []).netHT }));
+                const aReclamer = lignes.reduce((s, x) => s + (x.net > 0 ? x.net : 0), 0);
+                return (
+                  <details key={g.mois} className="fm-groupe" open={i === 0 || g.mois === mois}>
+                    <summary>
+                      <span className="fm-sum-fleche" aria-hidden="true">▸</span>
+                      <span className="fm-sum-mois">{moisLabel(g.mois)}</span>
+                      <span className="fm-sum-info">{g.items.length}/{RESIDENCES.length} résidence(s)</span>
+                      <span className={`fm-sum-net ${aReclamer > 0 ? "rouge" : "vert"}`}>{aReclamer > 0 ? `${eur(aReclamer)} à réclamer` : "Rien à réclamer"}</span>
+                    </summary>
+                    <div className="tbl-wrap"><table className="tbl fm-hist">
+                      <thead><tr><th>Résidence</th><th className="r">Annexe HT</th><th className="r">Net à réclamer</th><th>Suivi</th><th></th></tr></thead>
+                      <tbody>{lignes.map(({ h, net }) => (
+                        <tr key={h.id} className={h.id === resultId ? "fm-actif" : undefined}>
+                          <td className="apt fm-h-nom">{h.residence}</td>
+                          <td className="r fm-h-annexe">{eur(h.totaux?.annexeHT)}</td>
+                          <td className={`r fm-net-cell fm-h-net ${net > 0 ? "rouge" : "vert"}`}>{net > 0 ? eur(net) : "Rien"}</td>
+                          <td className="fm-h-suivi">
+                            <select value={suiviDe(h)} onChange={e => majSuivi(h, e.target.value)} aria-label={`Suivi ${h.residence} ${moisLabel(h.mois)}`}>
+                              <option value="controle">Contrôlé</option>
+                              <option value="reclame">Réclamation envoyée</option>
+                              <option value="avoir">Avoir reçu</option>
+                            </select>
+                          </td>
+                          <td className="fm-row-actions">
+                            <button type="button" className="fm-btn" onClick={() => ouvrir(h)}>Voir</button>
+                            <button type="button" className="fm-btn fm-btn-danger" onClick={() => supprimer(h)}>Supprimer</button>
+                          </td>
+                        </tr>))}</tbody>
+                    </table></div>
+                  </details>
+                );
+              })}
+            </div>
           )}
         </div>
       )}
