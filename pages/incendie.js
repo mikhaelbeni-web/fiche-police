@@ -20,7 +20,7 @@ import {
 const DELETE_PASSWORD = process.env.NEXT_PUBLIC_DELETE_PASSWORD || "2305";
 const PERIODES = [6, 12, 24, 36, 48, 60];
 
-function Incendie({ verrouiller, changerCode }) {
+function Incendie({ verrouiller, changerCode, importRapide, finImport }) {
   const { requestCode, codeModalProps } = useCodeGate(DELETE_PASSWORD, "Code requis pour cette suppression");
   const [ready, setReady] = useState(false);
   const [configured, setConfigured] = useState(true);
@@ -33,7 +33,7 @@ function Incendie({ verrouiller, changerCode }) {
   const [vue, setVue] = useState("verifications"); // verifications | factures
   const [ouvert, setOuvert] = useState(null); // id du type déplié
   const [nouveau, setNouveau] = useState(false);
-  const [importDoc, setImportDoc] = useState(null); // fichiers choisis pour l'import intelligent
+  const [importDoc, setImportDoc] = useState(importRapide || null); // fichiers choisis pour l'import intelligent
   const today = isoDay(new Date());
 
   useEffect(() => {
@@ -124,6 +124,22 @@ function Incendie({ verrouiller, changerCode }) {
           <div className="recap-title">Configuration Firebase requise</div>
           <p style={{ color: "#666", fontSize: 14 }}>Voir README-FIREBASE.md pour activer cet onglet.</p>
         </div></div>
+      </>
+    );
+  }
+
+  // Import rapide depuis l'écran du code : uniquement le formulaire, puis retour au verrou.
+  if (importRapide) {
+    return (
+      <>
+        <Head><title>Sécurité incendie</title></Head>
+        <div className="toolbar"><h1>Sécurité incendie</h1><span className="status">Import sans ouvrir le suivi</span></div>
+        <div className="menage-page">
+          <div className="recap inc-page">
+            <IncendieImport fichiers={importRapide} fs={fs} types={types} verifs={verifs} docs={docs} factures={factures}
+              onCancel={() => finImport("")} onDone={msg => finImport(msg)} />
+          </div>
+        </div>
       </>
     );
   }
