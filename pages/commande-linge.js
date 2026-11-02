@@ -19,6 +19,13 @@ function euros(n) {
   return Number(n).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
 }
 
+// Prix unitaire : Elis facture au millième (ex. 1,804 €), donc jusqu'à 3
+// décimales. Les montants et totaux restent arrondis au centime via euros().
+function prixUnitaire(n) {
+  if (n == null || isNaN(n)) return "—";
+  return Number(n).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 3 }) + " €";
+}
+
 function CommandeLinge() {
   const [tab, setTab] = useState("position");
   const [ready, setReady] = useState(false);
@@ -1168,7 +1175,7 @@ function CostTab({ fs, invoices, receptions, prices, setPrices, reload, setStatu
                       ? <input type="number" min="0" step="0.001" value={draftPrices[a.key] ?? 0}
                           onChange={e => setDraftPrices({ ...draftPrices, [a.key]: e.target.value })}
                           style={{ width: 80, textAlign: "center" }} />
-                      : `${euros(prix)}`}
+                      : prixUnitaire(prix)}
                   </td>
                   <td className="c" style={{ fontWeight: 600 }}>{euros(montant)}</td>
                 </tr>
