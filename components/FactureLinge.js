@@ -184,8 +184,11 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
               <label>Date de la facture <input type="date" value={form.dateFacture} onChange={e => setChamp("dateFacture", e.target.value)} /></label>
             </div>
             <div className="linen-form-row">
-              <label>Mois facturé : du <input type="date" value={form.periodFrom} onChange={e => setChamp("periodFrom", e.target.value)} /></label>
+              <label>Linge livré du <input type="date" value={form.periodFrom} onChange={e => setChamp("periodFrom", e.target.value)} /></label>
               <label>au <input type="date" value={form.periodTo} onChange={e => setChamp("periodTo", e.target.value)} /></label>
+            </div>
+            <div className="fm-note">
+              La date de la facture sert seulement à la retrouver. Le comparatif utilise les dates du linge (le « Mois de … » de la facture) : ce sont les réceptions de ces jours-là qui sont comparées.
             </div>
 
             <div className="tbl-wrap"><table className="tbl fl-tbl">
