@@ -114,7 +114,7 @@ function Sinistres() {
         <div className="toolbar"><h1>Sinistres</h1></div>
         <div className="menage-page"><div className="recap">
           <div className="recap-title">Configuration Firebase requise</div>
-          <p style={{ color: "#666", fontSize: 14 }}>Voir README-FIREBASE.md pour activer cet onglet.</p>
+          <p style={{ color: "var(--muted)", fontSize: 14 }}>Voir README-FIREBASE.md pour activer cet onglet.</p>
         </div></div>
       </>
     );
@@ -125,7 +125,7 @@ function Sinistres() {
       <Head><title>Sinistres</title></Head>
       <div className="toolbar">
         <h1>Sinistres</h1>
-        <div className="quick">
+        <div className="quick tabs">
           <button onClick={() => setVue("sinistres")} className={vue === "sinistres" ? "primary" : ""}>Sinistres</button>
           <button onClick={() => setVue("gmail")} className={vue === "gmail" ? "primary" : ""}>
             Réclamations Gmail{aTraiter > 0 ? ` (${aTraiter})` : ""}
@@ -133,7 +133,7 @@ function Sinistres() {
         </div>
         {vue === "sinistres" && (
           <>
-            <div className="quick">
+            <div className="quick tabs">
               <button onClick={() => setFilterStatut("tous")} className={filterStatut === "tous" ? "primary" : ""}>Tous</button>
               <button onClick={() => setFilterStatut("ouverts")} className={filterStatut === "ouverts" ? "primary" : ""}>Non réglés</button>
               <button onClick={() => setFilterStatut("regles")} className={filterStatut === "regles" ? "primary" : ""}>Réglés</button>
@@ -255,7 +255,7 @@ function SinistreForm({ onSave, onCancel }) {
           <label style={{ minWidth: 320, position: "relative" }}>Nom du client
             <input type="text" value={picked ? picked.client : query} onChange={e => runSearch(e.target.value)}
               placeholder="Tape au moins 2 lettres du nom…" style={{ width: "100%" }} />
-            {searching && <span style={{ fontSize: 11, color: "#666" }}>Recherche…</span>}
+            {searching && <span style={{ fontSize: 11, color: "var(--muted)" }}>Recherche…</span>}
             {!picked && results.length > 0 && (
               <div style={{ border: "1px solid #ddd", borderRadius: 6, marginTop: 4, maxHeight: 220, overflowY: "auto", background: "#fff", position: "relative", zIndex: 5 }}>
                 {results.map((r, i) => (
@@ -268,13 +268,13 @@ function SinistreForm({ onSave, onCancel }) {
                   }}
                     style={{ padding: "8px 10px", cursor: "pointer", borderBottom: "1px solid #f0f0f0", fontSize: 13 }}>
                     <strong>{r.client}</strong> — {r.residence} {r.appartement} ({r.unitNumber})
-                    <div style={{ fontSize: 11, color: "#888" }}>{fmtFr(r.arrivee)} → {fmtFr(r.depart)} · {r.channel}</div>
+                    <div style={{ fontSize: 11, color: "var(--muted)" }}>{fmtFr(r.arrivee)} → {fmtFr(r.depart)} · {r.channel}</div>
                   </div>
                 ))}
               </div>
             )}
             {picked && (
-              <div style={{ fontSize: 11, color: "#1f7a3f", marginTop: 4 }}>
+              <div style={{ fontSize: 11, color: "var(--ok)", marginTop: 4 }}>
                 {picked.residence} {picked.appartement} · {fmtFr(picked.arrivee)} → {fmtFr(picked.depart)}
                 {" "}<button type="button" onClick={() => { setPicked(null); setQuery(""); }} className="ghost" style={{ fontSize: 11 }}>changer</button>
               </div>
@@ -333,7 +333,7 @@ function SinistreForm({ onSave, onCancel }) {
         <label style={{ flex: 1 }}>Note (optionnel) <input type="text" value={note} onChange={e => setNote(e.target.value)} style={{ width: "100%" }} /></label>
       </div>
 
-      {formStatus && <div style={{ fontSize: 12, color: "#e67e22", marginBottom: 8 }}>{formStatus}</div>}
+      {formStatus && <div style={{ fontSize: 12, color: "var(--warn)", marginBottom: 8 }}>{formStatus}</div>}
       <button className="primary" onClick={submit}>Enregistrer le sinistre</button>
       <button onClick={onCancel} className="ghost" style={{ marginLeft: 8 }}>Annuler</button>
     </div>
@@ -354,20 +354,20 @@ function SinistreRow({ s, onUpdate, onDelete }) {
       <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
         <div>
           <strong>{s.client}</strong>{" "}
-          {s.residence && <span style={{ fontSize: 12, color: "#666" }}>· {s.residence} {s.appartement}</span>}
-          <span style={{ fontSize: 12, color: "#888" }}> · {fmtFr(s.date)}</span>
+          {s.residence && <span style={{ fontSize: 12, color: "var(--muted)" }}>· {s.residence} {s.appartement}</span>}
+          <span style={{ fontSize: 12, color: "var(--muted)" }}> · {fmtFr(s.date)}</span>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <span style={{ fontSize: 12, fontWeight: 600, color: isDirect ? "#8e44ad" : "#2980b9" }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: isDirect ? "#8e44ad" : "var(--info)" }}>
             {isDirect ? "En direct" : (CANAL_LABEL[canal] || "Plateforme")}
           </span>
-          <button onClick={onDelete} className="ghost" style={{ color: "#e74c3c" }}>✕</button>
+          <button onClick={onDelete} className="ghost" style={{ color: "var(--bad)" }}>✕</button>
         </div>
       </div>
 
       <div style={{ fontSize: 14, margin: "6px 0" }}>{s.motif}</div>
-      {s.montant != null && <div style={{ fontSize: 13, color: "#e74c3c" }}>Montant : {euros(s.montant)}</div>}
-      {s.note && <div style={{ fontSize: 12, color: "#666", fontStyle: "italic" }}>{s.note}</div>}
+      {s.montant != null && <div style={{ fontSize: 13, color: "var(--bad)" }}>Montant : {euros(s.montant)}</div>}
+      {s.note && <div style={{ fontSize: 12, color: "var(--muted)", fontStyle: "italic" }}>{s.note}</div>}
 
       <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginTop: 10, alignItems: "center" }}>
         <label style={{ fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}>

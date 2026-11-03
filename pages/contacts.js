@@ -102,7 +102,7 @@ function Contacts() {
         <div className="toolbar"><h1>Contacts</h1></div>
         <div className="menage-page"><div className="recap">
           <div className="recap-title">Configuration Firebase requise</div>
-          <p style={{ color: "#666", fontSize: 14 }}>Voir README-FIREBASE.md pour activer cet onglet.</p>
+          <p style={{ color: "var(--muted)", fontSize: 14 }}>Voir README-FIREBASE.md pour activer cet onglet.</p>
         </div></div>
       </>
     );
@@ -145,10 +145,10 @@ function Contacts() {
                 {form.telephones.map((t, i) => (
                   <div key={i} className="phone-row" style={{ display: "flex", gap: 6, marginBottom: 6 }}>
                     <input type="text" value={t} onChange={e => updatePhone(i, e.target.value)} placeholder="06 12 34 56 78" style={{ width: 180, padding: "7px 9px", border: "1px solid #ccc", borderRadius: 5 }} />
-                    <button onClick={() => removePhoneField(i)} className="ghost" style={{ color: "#e74c3c" }}>✕</button>
+                    <button onClick={() => removePhoneField(i)} className="ghost" style={{ color: "var(--bad)" }}>✕</button>
                   </div>
                 ))}
-                <button onClick={addPhoneField} className="ghost" style={{ color: "#1f7a3f", fontSize: 12 }}>+ Ajouter un numéro</button>
+                <button onClick={addPhoneField} className="ghost" style={{ color: "var(--ok)", fontSize: 12 }}>+ Ajouter un numéro</button>
               </div>
               <div style={{ display: "flex", gap: 8 }}>
                 <button className="primary" onClick={save}>Enregistrer</button>
@@ -168,8 +168,8 @@ function Contacts() {
                   <td>{c.societe || "—"}</td>
                   <td>{(c.telephones || []).length ? c.telephones.join(" · ") : "—"}</td>
                   <td style={{ whiteSpace: "nowrap" }}>
-                    <button onClick={() => openEdit(c)} className="ghost" style={{ color: "#2980b9" }}>Modifier</button>
-                    <button onClick={() => del(c.id)} className="ghost" style={{ color: "#e74c3c" }}>✕</button>
+                    <button onClick={() => openEdit(c)} className="ghost" style={{ color: "var(--info)" }}>Modifier</button>
+                    <button onClick={() => del(c.id)} className="ghost" style={{ color: "var(--bad)" }}>✕</button>
                   </td>
                 </tr>
               ))}

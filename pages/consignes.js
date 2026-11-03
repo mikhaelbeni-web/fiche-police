@@ -87,7 +87,7 @@ function Consignes() {
         <div className="toolbar"><h1>Consignes à bagages</h1></div>
         <div className="menage-page"><div className="recap">
           <div className="recap-title">Configuration Firebase requise</div>
-          <p style={{ color: "#666", fontSize: 14 }}>Voir README-FIREBASE.md pour activer cet onglet.</p>
+          <p style={{ color: "var(--muted)", fontSize: 14 }}>Voir README-FIREBASE.md pour activer cet onglet.</p>
         </div></div>
       </>
     );
@@ -201,7 +201,7 @@ function Consignes() {
                   <td>{b.appartement || "—"}</td>
                   <td>{b.client || "—"}</td>
                   <td>{b.code || "—"}</td>
-                  <td><button onClick={() => delBooking(b.id)} className="ghost" style={{ color: "#e74c3c" }}>✕</button></td>
+                  <td><button onClick={() => delBooking(b.id)} className="ghost" style={{ color: "var(--bad)" }}>✕</button></td>
                 </tr>
               ))}
               {activeAndFuture.length === 0 && <tr><td colSpan={8} className="empty-state">Aucune réservation en cours ou à venir.</td></tr>}
@@ -209,7 +209,7 @@ function Consignes() {
           </table></div>
 
           {past.length > 0 && (
-            <p style={{ fontSize: 12, color: "#999", marginTop: 10 }}>
+            <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 10 }}>
               {past.length} réservation(s) passée(s), libérées automatiquement (non affichées ci-dessus).
             </p>
           )}

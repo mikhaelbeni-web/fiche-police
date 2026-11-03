@@ -73,7 +73,7 @@ export default function ReclamationsGmail({ fs, items, onReload, onStatus }) {
             Repérées automatiquement dans Gmail chaque jour · total remboursé : {euros(totalRembourse)}
           </div>
         </div>
-        <div className="quick">
+        <div className="quick tabs">
           <button onClick={() => setFiltre("a_traiter")} className={filtre === "a_traiter" ? "primary" : ""}>À traiter</button>
           <button onClick={() => setFiltre("traitees")} className={filtre === "traitees" ? "primary" : ""}>Traitées</button>
           <button onClick={() => setFiltre("toutes")} className={filtre === "toutes" ? "primary" : ""}>Toutes</button>
@@ -132,22 +132,22 @@ function ReclamationRow({ r, onSave }) {
       <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
         <div>
           <strong>{r.client || "Client inconnu"}</strong>{" "}
-          {r.logement && <span style={{ fontSize: 12, color: "#666" }}>· {r.logement}</span>}
-          {r.reservation && <span style={{ fontSize: 12, color: "#888" }}> · résa {r.reservation}</span>}
-          <span style={{ fontSize: 12, color: "#888" }}> · reçu le {fmtFr(r.dateRecu)}</span>
+          {r.logement && <span style={{ fontSize: 12, color: "var(--muted)" }}>· {r.logement}</span>}
+          {r.reservation && <span style={{ fontSize: 12, color: "var(--muted)" }}> · résa {r.reservation}</span>}
+          <span style={{ fontSize: 12, color: "var(--muted)" }}> · reçu le {fmtFr(r.dateRecu)}</span>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          {r.type && <span style={{ fontSize: 11, fontWeight: 600, color: "#c0392b" }}>{TYPE_LABEL[r.type] || r.type}</span>}
-          <span style={{ fontSize: 12, fontWeight: 600, color: "#2980b9" }}>{PLATEFORME_LABEL[r.plateforme] || r.plateforme || "—"}</span>
+          {r.type && <span style={{ fontSize: 11, fontWeight: 600, color: "var(--bad)" }}>{TYPE_LABEL[r.type] || r.type}</span>}
+          <span style={{ fontSize: 12, fontWeight: 600, color: "var(--info)" }}>{PLATEFORME_LABEL[r.plateforme] || r.plateforme || "—"}</span>
           {r.gmailUrl && <a href={r.gmailUrl} target="_blank" rel="noreferrer" style={{ fontSize: 12 }}>Ouvrir le mail</a>}
         </div>
       </div>
 
       {r.resume && <div style={{ fontSize: 14, margin: "6px 0" }}>{r.resume}</div>}
-      {r.citation && <div style={{ fontSize: 12, color: "#666", fontStyle: "italic" }}>« {r.citation} »</div>}
-      {r.montantDemande != null && <div style={{ fontSize: 12, color: "#e67e22" }}>Montant demandé : {euros(r.montantDemande)}</div>}
+      {r.citation && <div style={{ fontSize: 12, color: "var(--muted)", fontStyle: "italic" }}>« {r.citation} »</div>}
+      {r.montantDemande != null && <div style={{ fontSize: 12, color: "var(--warn)" }}>Montant demandé : {euros(r.montantDemande)}</div>}
       {r.traite && (
-        <div style={{ fontSize: 12, color: "#1f7a3f", marginTop: 4 }}>
+        <div style={{ fontSize: 12, color: "var(--ok)", marginTop: 4 }}>
           Traité{r.traitePar ? ` par ${r.traitePar}` : ""}{r.traiteLe ? ` le ${fmtFr(r.traiteLe)}` : ""}
           {r.rembourse === "oui" ? ` · remboursé ${euros(r.montantRembourse)} via ${PLATEFORME_LABEL[r.plateformeRemboursement] || r.plateformeRemboursement}` : r.rembourse === "non" ? " · non remboursé" : ""}
         </div>
@@ -185,7 +185,7 @@ function ReclamationRow({ r, onSave }) {
         </label>
         <button className="primary" onClick={submit}>Enregistrer</button>
       </div>
-      {err && <div style={{ fontSize: 12, color: "#e67e22", marginTop: 6 }}>{err}</div>}
+      {err && <div style={{ fontSize: 12, color: "var(--warn)", marginTop: 6 }}>{err}</div>}
     </div>
   );
 }

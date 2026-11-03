@@ -96,7 +96,7 @@ export default function IncendieAcces({ children }) {
               <button type="button" className="ghost" onClick={() => setFichiers(null)} style={{ marginLeft: 8 }}>Retirer</button>
             </div>
           )}
-          <p style={{ color: "#666", fontSize: 13 }}>
+          <p style={{ color: "var(--muted)", fontSize: 13 }}>
             {creation ? "Choisis le code qui sera demandé pour ouvrir cet onglet."
               : fichiers ? "Saisis le code : seul le formulaire d'import s'ouvrira, puis l'onglet se reverrouillera."
               : "Saisis le code pour ouvrir le suivi de sécurité incendie, ou « Importer un document » en haut pour ajouter un fichier sans ouvrir le suivi."}
@@ -108,7 +108,7 @@ export default function IncendieAcces({ children }) {
               <input type="password" value={code2} onChange={e => setCode2(e.target.value)} placeholder="Confirmer le code"
                 style={{ width: "100%", padding: 10, border: "1px solid #ccc", borderRadius: 6, fontSize: 16, marginBottom: 10 }} />
             )}
-            {err && <div style={{ fontSize: 12, color: "#c0392b", marginBottom: 8 }}>{err}</div>}
+            {err && <div style={{ fontSize: 12, color: "var(--bad)", marginBottom: 8 }}>{err}</div>}
             <button type="submit" style={{ background: "#1f3a5f", color: "#fff", border: "none", padding: "10px 18px", borderRadius: 6, cursor: "pointer", fontWeight: 600 }}>
               {creation ? "Enregistrer le code" : fichiers ? "Importer" : "Ouvrir"}
             </button>

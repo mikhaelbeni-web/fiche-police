@@ -254,10 +254,10 @@ function Couts() {
                       <span className="motif">
                         {e.type === "decale" ? (
                           <>
-                            <span style={{ color: "#2980b9", fontWeight: 600 }}>Ménage décalé</span> — {e.motif}
+                            <span style={{ color: "var(--info)", fontWeight: 600 }}>Ménage décalé</span> — {e.motif}
                             {e.datePrevue && <> · prévu le {fmtFr(e.datePrevue)}, fait le {fmtFr(e.date)}</>}
                             {e.mergedDecale && (
-                              <span style={{ color: "#c0392b", fontWeight: 700 }} title="Ce décalé tombe sur une date/appartement qui avait déjà un départ naturel — son coût n'a pas été rajouté une seconde fois.">
+                              <span style={{ color: "var(--bad)", fontWeight: 700 }} title="Ce décalé tombe sur une date/appartement qui avait déjà un départ naturel — son coût n'a pas été rajouté une seconde fois.">
                                 {" "}· ⚠ doublon évité (coût non recompté)
                               </span>
                             )}

@@ -127,7 +127,7 @@ function Taches() {
           )}
 
           {unresolved.length > 0 && (
-            <p style={{ fontSize: 11, color: "#999", marginTop: 14 }}>
+            <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 14 }}>
               {unresolved.length} tâche(s) non rattachée(s) à un appartement connu (listing non résolu) — pas affichées ci-dessus.
             </p>
           )}

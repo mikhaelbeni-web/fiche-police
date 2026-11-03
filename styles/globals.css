@@ -150,8 +150,8 @@ body {
   width: 100%; padding: 12px; font-size: 20px; text-align: center; letter-spacing: 6px;
   border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box;
 }
-.gate-box input.err { border-color: #e74c3c; }
-.gate-err { color: #e74c3c; font-size: 12px; margin-top: 8px; }
+.gate-box input.err { border-color: var(--bad); }
+.gate-err { color: var(--bad); font-size: 12px; margin-top: 8px; }
 .gate-box button {
   margin-top: 16px; width: 100%; padding: 12px; font-size: 14px; font-weight: 600;
   background: var(--accent); color: #fff; border: none; border-radius: 8px; cursor: pointer;
@@ -257,7 +257,7 @@ body {
 
 .linge-tbl th.noshow-cell { background: #fff; padding: 3px 2px; }
 .noshow-btn {
-  font-size: 10px; line-height: 1.2; border: 1px solid #e74c3c; color: #e74c3c;
+  font-size: 10px; line-height: 1.2; border: 1px solid var(--bad); color: var(--bad);
   background: #fff; border-radius: 4px; padding: 2px 6px; cursor: pointer;
 }
 .noshow-btn:hover { background: #fdecea; }
@@ -509,7 +509,7 @@ body {
 .locker-card.fixed { background: #f0f0f0; border-color: #ddd; }
 .locker-card-title { font-weight: 700; font-size: 13px; margin-bottom: 6px; }
 .locker-status { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; margin-bottom: 4px; }
-.locker-status.free { color: #1f7a3f; }
+.locker-status.free { color: var(--ok); }
 .locker-status.occ { color: #d35400; }
 .locker-status.fixed { color: #888; }
 .locker-detail { font-size: 12px; color: var(--ink); }
@@ -607,8 +607,8 @@ body {
 .task-check:disabled { cursor: not-allowed; opacity: .5; }
 .task-check.checked { background: #2ecc71; border-color: #1f9c56; }
 .task-row.task-done .task-text { color: var(--muted); text-decoration: line-through; }
-.task-row.task-overdue:not(.task-done) .task-text { color: #c0392b; font-weight: 600; }
-.task-row.task-overdue:not(.task-done) .task-time { color: #c0392b; }
+.task-row.task-overdue:not(.task-done) .task-text { color: var(--bad); font-weight: 600; }
+.task-row.task-overdue:not(.task-done) .task-time { color: var(--bad); }
 
 .lunch-sep {
   text-align: center; font-size: 13px; font-weight: 600; color: var(--muted);
@@ -638,9 +638,9 @@ body {
   font-size: 12px; line-height: 1; cursor: pointer; color: var(--muted);
 }
 .task-admin-btn:hover { background: #ddd; }
-.task-admin-btn.del { color: #e74c3c; }
+.task-admin-btn.del { color: var(--bad); }
 .task-admin-btn.del:hover { background: #fbdede; }
-.admin-add { display: block; margin-top: 8px; color: #1f7a3f; border-style: dashed; }
+.admin-add { display: block; margin-top: 8px; color: var(--ok); border-style: dashed; }
 
 /* --- Ligne téléphone (Contacts) : empile sur mobile --- */
 @media screen and (max-width: 768px) {
@@ -690,7 +690,7 @@ body {
   flex: 1; width: 100%; box-sizing: border-box; resize: none; border: 1px solid #ddd;
   border-radius: 8px; padding: 10px; font-size: 14px; font-family: inherit; line-height: 1.5;
 }
-.notes-panel-status { font-size: 11px; color: #1f7a3f; height: 16px; margin-top: 6px; }
+.notes-panel-status { font-size: 11px; color: var(--ok); height: 16px; margin-top: 6px; }
 
 @media screen and (max-width: 768px) {
   .notes-fab { bottom: 16px; right: 16px; width: 42px; height: 42px; font-size: 18px; }
@@ -1095,4 +1095,21 @@ body {
   /* iPhone zoome dans tout champ écrit en moins de 16 px : on l'évite. */
   body :is(input:not([type=checkbox], [type=radio], [type=file], [type=range], [type=color]), select, textarea):not(.gate *):not(.code-modal-input) { font-size: 16px; }
   :where(button:not([class]), button[class=""], button.primary, button.ghost):where(:not(.toolbar *, .main-nav *, .staffbar *, .gate *)) { min-height: 40px; }
+}
+
+/* Sous-onglets (.quick.tabs) : un sélecteur segmenté. L'onglet actif est
+   blanc ; il ne se confond plus avec les boutons d'action verts. */
+@media screen {
+  .toolbar .tabs { background: rgba(0, 0, 0, .2); border-radius: 8px; padding: 3px; gap: 2px; }
+  .toolbar .tabs button { background: transparent; color: rgba(255, 255, 255, .85); }
+  .toolbar .tabs button:hover:not(:disabled) { background: rgba(255, 255, 255, .12); color: #fff; }
+  .toolbar .tabs button.primary { background: #fff; color: var(--accent); box-shadow: 0 1px 2px rgba(0, 0, 0, .25); }
+  .tabs:not(.toolbar *) { display: inline-flex; flex-wrap: wrap; background: #eef1f5; border-radius: 8px; padding: 3px; gap: 2px; }
+  .tabs:not(.toolbar *) button { background: transparent; border-color: transparent; min-height: 32px; }
+  .tabs:not(.toolbar *) button.primary { background: #fff; color: var(--accent); border-color: var(--border); box-shadow: 0 1px 2px rgba(15, 23, 42, .12); }
+}
+/* Taxes : bande d'onglets suivie de la barre de l'onglet. Seule la seconde
+   reste collée en haut ; les deux forment une seule bande. */
+@media screen {
+  .toolbar:has(+ .toolbar) { position: static; box-shadow: none; }
 }

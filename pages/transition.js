@@ -104,7 +104,7 @@ function Transition() {
         <div className="toolbar"><h1>Rapport de transition</h1></div>
         <div className="menage-page"><div className="recap">
           <div className="recap-title">Configuration Firebase requise</div>
-          <p style={{ color: "#666", fontSize: 14 }}>Voir README-FIREBASE.md pour activer cet onglet.</p>
+          <p style={{ color: "var(--muted)", fontSize: 14 }}>Voir README-FIREBASE.md pour activer cet onglet.</p>
         </div></div>
       </>
     );
@@ -115,7 +115,7 @@ function Transition() {
       <Head><title>Rapport de transition</title></Head>
       <div className="toolbar">
         <h1>Rapport de transition</h1>
-        <div className="quick">
+        <div className="quick tabs">
           <button onClick={() => openTab("jour")} className={tab === "jour" ? "primary" : ""}>Aujourd&apos;hui</button>
           <button onClick={() => openTab("hier")} className={tab === "hier" ? "primary" : ""}>Rapport d&apos;hier</button>
           <button onClick={() => openTab("historique")} className={tab === "historique" ? "primary" : ""}>Historique</button>
@@ -235,8 +235,8 @@ function HistoriqueList({ reports, onSelect, onDelete }) {
               <td>{r.author || "—"}</td>
               <td className="c">{hasAlert(r) ? "🔴" : "🟢"}</td>
               <td style={{ whiteSpace: "nowrap" }}>
-                <button onClick={() => onSelect(r)} className="ghost" style={{ color: "#2980b9" }}>Consulter</button>
-                <button onClick={() => onDelete(r)} className="ghost" style={{ color: "#e74c3c" }}>✕</button>
+                <button onClick={() => onSelect(r)} className="ghost" style={{ color: "var(--info)" }}>Consulter</button>
+                <button onClick={() => onDelete(r)} className="ghost" style={{ color: "var(--bad)" }}>✕</button>
               </td>
             </tr>
           ))}

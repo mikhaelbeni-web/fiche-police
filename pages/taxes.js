@@ -39,16 +39,16 @@ function ControleExclusions({ data }) {
       <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
         <strong>Contrôle :</strong>
         <span>{data.scanned} réservation(s) analysée(s) sur la période</span>
-        <span>→ <strong style={{ color: "#1f7a3f" }}>{data.total} retenue(s)</strong></span>
+        <span>→ <strong style={{ color: "var(--ok)" }}>{data.total} retenue(s)</strong></span>
         <span>· {totalExclus} écartée(s)</span>
         {detail.length > 0 && (
-          <button onClick={() => setOuvert(o => !o)} className="ghost" style={{ fontSize: 11, color: "#2980b9" }}>
+          <button onClick={() => setOuvert(o => !o)} className="ghost" style={{ fontSize: 11, color: "var(--info)" }}>
             {ouvert ? "Masquer" : `Voir les ${detail.length} cas à vérifier`}
           </button>
         )}
       </div>
 
-      <div style={{ marginTop: 6, color: "#666" }}>
+      <div style={{ marginTop: 6, color: "var(--muted)" }}>
         Motifs d&apos;exclusion : {ex.horsBooking || 0} hors Booking.com · {ex.dejaPaye || 0} déjà payées · {ex.sansLigneTaxe || 0} sans ligne de taxe · {ex.pasEncoreArrive || 0} pas encore arrivées · {ex.horsPeriode || 0} hors période.
       </div>
 
@@ -283,7 +283,7 @@ function TaxesImpayees() {
                       <td className="c">{euros(it.taxeSejour)}</td>
                       <td className="c"><span className="box" /></td>
                       <td>
-                        <button onClick={() => maskTax(it)} className="ghost" style={{ fontSize: 11, color: "#999" }}
+                        <button onClick={() => maskTax(it)} className="ghost" style={{ fontSize: 11, color: "var(--muted)" }}
                           title="Déjà réglée en réalité (désynchro Hostaway) — la masquer définitivement de cette liste">
                           Masquer
                         </button>
@@ -296,7 +296,7 @@ function TaxesImpayees() {
           ))}
 
           {!loading && !data && status.startsWith("Erreur") && (
-            <div className="empty-state" style={{ color: "#e74c3c", fontWeight: 600 }}>
+            <div className="empty-state" style={{ color: "var(--bad)", fontWeight: 600 }}>
               ⚠ Impossible de vérifier — la connexion à Hostaway a échoué ({status.replace("Erreur : ", "")}).
               Ceci n&apos;est PAS un résultat « aucune taxe due », c&apos;est une vérification qui n&apos;a pas pu se faire. Réessaie avec ↻ avant de conclure quoi que ce soit.
             </div>
@@ -314,7 +314,7 @@ function TaxesImpayees() {
 
           {masked.length > 0 && (
             <div style={{ marginTop: 20 }}>
-              <button onClick={() => setShowMasked(s => !s)} className="ghost" style={{ fontSize: 12, color: "#888" }}>
+              <button onClick={() => setShowMasked(s => !s)} className="ghost" style={{ fontSize: 12, color: "var(--muted)" }}>
                 {showMasked ? "Masquer" : `Voir les ${masked.length} taxe(s) masquée(s) manuellement`}
               </button>
               {showMasked && (
@@ -330,7 +330,7 @@ function TaxesImpayees() {
                         <td>{fmtFr(m.arrivee)}</td>
                         <td className="c">{euros(m.taxeSejour)}</td>
                         <td>{fmtFr((m.maskedAt || "").slice(0, 10))}</td>
-                        <td><button onClick={() => unmaskTax(m)} className="ghost" style={{ fontSize: 11, color: "#2980b9" }}>Réafficher</button></td>
+                        <td><button onClick={() => unmaskTax(m)} className="ghost" style={{ fontSize: 11, color: "var(--info)" }}>Réafficher</button></td>
                       </tr>
                     ))}
                   </tbody>
@@ -388,7 +388,7 @@ function CashManagement() {
     return (
       <div className="menage-page"><div className="recap">
         <div className="recap-title">Configuration Firebase requise</div>
-        <p style={{ color: "#666", fontSize: 14 }}>Voir README-FIREBASE.md pour activer cet onglet.</p>
+        <p style={{ color: "var(--muted)", fontSize: 14 }}>Voir README-FIREBASE.md pour activer cet onglet.</p>
       </div></div>
     );
   }
@@ -625,7 +625,7 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
       </div>
 
       <div style={{ marginBottom: 14 }}>
-        <button onClick={() => setShowStartForm(!showStartForm)} className="ghost" style={{ fontSize: 12, color: "#2980b9" }}>
+        <button onClick={() => setShowStartForm(!showStartForm)} className="ghost" style={{ fontSize: 12, color: "var(--info)" }}>
           {showStartForm ? "Annuler" : (recoveries.length ? "Redéfinir le solde de départ" : "Définir un solde de départ")}
         </button>
       </div>
@@ -642,8 +642,8 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
               {staffList.map(name => <option key={name} value={name}>{name}</option>)}
             </select>
           </label>
-          {!saisiPar && <span style={{ fontSize: 12, color: "#e67e22", alignSelf: "center" }}>À renseigner avant toute saisie</span>}
-          <button type="button" onClick={toggleStaffAdmin} className="ghost" style={{ fontSize: 11, color: staffAdmin ? "#1f7a3f" : "#999", marginLeft: "auto" }}>
+          {!saisiPar && <span style={{ fontSize: 12, color: "var(--warn)", alignSelf: "center" }}>À renseigner avant toute saisie</span>}
+          <button type="button" onClick={toggleStaffAdmin} className="ghost" style={{ fontSize: 11, color: staffAdmin ? "var(--ok)" : "var(--muted)", marginLeft: "auto" }}>
             {staffAdmin ? "✓ Édition liste active" : "Gérer la liste"}
           </button>
         </div>
@@ -654,10 +654,10 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
               {staffList.map(name => (
                 <span key={name} style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "#fff", border: "1px solid #cde", borderRadius: 999, padding: "3px 4px 3px 10px", fontSize: 12 }}>
                   {name}
-                  <button type="button" onClick={() => removeStaffName(name)} style={{ background: "transparent", border: "none", color: "#e74c3c", cursor: "pointer", fontSize: 13, lineHeight: 1, padding: "0 6px" }}>✕</button>
+                  <button type="button" onClick={() => removeStaffName(name)} style={{ background: "transparent", border: "none", color: "var(--bad)", cursor: "pointer", fontSize: 13, lineHeight: 1, padding: "0 6px" }}>✕</button>
                 </span>
               ))}
-              {staffList.length === 0 && <span style={{ fontSize: 12, color: "#888" }}>Aucun nom pour l&apos;instant.</span>}
+              {staffList.length === 0 && <span style={{ fontSize: 12, color: "var(--muted)" }}>Aucun nom pour l&apos;instant.</span>}
             </div>
             <div style={{ display: "flex", gap: 6 }}>
               <input type="text" value={newStaffName} onChange={e => setNewStaffName(e.target.value)}
@@ -713,14 +713,14 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
                     ))}
                   </select>
                   {taxeClients.length === 0 && (
-                    <span style={{ fontSize: 11, color: "#e67e22" }}>Aucun client taxe Belleville chargé (vérifie les identifiants Hostaway sur Fiches, ou utilise « Autre client »).</span>
+                    <span style={{ fontSize: 11, color: "var(--warn)" }}>Aucun client taxe Belleville chargé (vérifie les identifiants Hostaway sur Fiches, ou utilise « Autre client »).</span>
                   )}
                 </label>
               ) : clientMode === "recherche" ? (
                 <label style={{ minWidth: 320, position: "relative" }}>Nom du client
                   <input type="text" value={client || searchQuery} onChange={e => runClientSearch(e.target.value)}
                     placeholder="Tape au moins 2 lettres du nom…" style={{ width: "100%" }} />
-                  {searching && <span style={{ fontSize: 11, color: "#666" }}>Recherche…</span>}
+                  {searching && <span style={{ fontSize: 11, color: "var(--muted)" }}>Recherche…</span>}
                   {!client && searchResults.length > 0 && (
                     <div style={{ border: "1px solid #ddd", borderRadius: 6, marginTop: 4, maxHeight: 220, overflowY: "auto", background: "#fff", position: "absolute", width: "100%", zIndex: 5 }}>
                       {searchResults.map((r, i) => (
@@ -729,13 +729,13 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
                           setDesignation("Taxe de séjour"); setSearchResults([]);
                         }} style={{ padding: "8px 10px", cursor: "pointer", borderBottom: "1px solid #f0f0f0", fontSize: 13 }}>
                           <strong>{r.client}</strong> — {r.residence} {r.appartement} ({r.unitNumber})
-                          <div style={{ fontSize: 11, color: "#888" }}>{fmtFr(r.arrivee)} → {fmtFr(r.depart)} · {r.channel}</div>
+                          <div style={{ fontSize: 11, color: "var(--muted)" }}>{fmtFr(r.arrivee)} → {fmtFr(r.depart)} · {r.channel}</div>
                         </div>
                       ))}
                     </div>
                   )}
                   {client && (
-                    <div style={{ fontSize: 11, color: "#1f7a3f", marginTop: 4 }}>
+                    <div style={{ fontSize: 11, color: "var(--ok)", marginTop: 4 }}>
                       {appartement} · {fmtFr(arrivalDate)}
                       {" "}<button type="button" onClick={() => { setClient(""); setSearchQuery(""); }} className="ghost" style={{ fontSize: 11 }}>changer</button>
                     </div>
@@ -788,22 +788,22 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
           {unrecovered.map(e => (
             <tr key={e.id}>
               <td>{fmtFrShort(e.date)}</td>
-              <td>{e.type === "client" ? "Client" : <span style={{ color: "#e74c3c" }}>Dépense</span>}</td>
+              <td>{e.type === "client" ? "Client" : <span style={{ color: "var(--bad)" }}>Dépense</span>}</td>
               <td>{e.saisiPar || "—"}</td>
               <td>{e.client || "—"}</td>
               <td>{e.appartement || "—"}</td>
               <td>{e.fournisseur || "—"}</td>
               <td>{e.designation || "—"}</td>
-              <td className="c" style={{ color: e.type === "expense" ? "#e74c3c" : "#1f7a3f", fontWeight: 600 }}>
+              <td className="c" style={{ color: e.type === "expense" ? "var(--bad)" : "var(--ok)", fontWeight: 600 }}>
                 {e.type === "expense" ? "−" : "+"}{euros2(e.amount)}
               </td>
-              <td><button onClick={() => delEntry(e)} className="ghost" style={{ color: "#e74c3c" }}>✕</button></td>
+              <td><button onClick={() => delEntry(e)} className="ghost" style={{ color: "var(--bad)" }}>✕</button></td>
             </tr>
           ))}
           {unrecovered.length === 0 && <tr><td colSpan={9} className="empty-state">Rien depuis la dernière récupération.</td></tr>}
         </tbody>
       </table></div>
-      <p style={{ fontSize: 12, color: "#666", marginTop: 10 }}>
+      <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 10 }}>
         Total en caisse = reliquat laissé à la dernière récupération ({euros2(baseline)}) + paiements clients ({euros2(sumClient)}) − dépenses ({euros2(sumExpense)}).
       </p>
     </>
@@ -819,7 +819,7 @@ function StartingBalanceForm({ hasRecoveries, onConfirm, onCancel }) {
   return (
     <div className="linen-form" style={{ background: "#eef5fb", borderColor: "#b8d4ec", marginBottom: 14 }}>
       {hasRecoveries && (
-        <div style={{ color: "#e67e22", fontSize: 12, marginBottom: 8 }}>
+        <div style={{ color: "var(--warn)", fontSize: 12, marginBottom: 8 }}>
           Attention : des récupérations existent déjà. Ce solde de départ créera une nouvelle entrée de base
           (la plus récente prévaut dans les calculs) — vérifie que c&apos;est bien ce que tu veux plutôt que de
           corriger une récupération existante.
@@ -954,7 +954,7 @@ function RecoverForm({ fs, unrecovered, totalEnCaisse, baseline, sumClient, sumE
         </label>
         <label style={{ flex: 1 }}>Note <input type="text" value={note} onChange={e => setNote(e.target.value)} style={{ width: "100%" }} /></label>
       </div>
-      {!montantValide && <div style={{ color: "#e74c3c", fontSize: 12, marginBottom: 8 }}>Le montant récupéré ne peut pas dépasser le total en caisse ({euros2(totalEnCaisse)}).</div>}
+      {!montantValide && <div style={{ color: "var(--bad)", fontSize: 12, marginBottom: 8 }}>Le montant récupéré ne peut pas dépasser le total en caisse ({euros2(totalEnCaisse)}).</div>}
       <button className="primary" onClick={confirmRecovery} disabled={!peutValider}>Confirmer la récupération</button>
     </div>
   );
@@ -1024,12 +1024,12 @@ function CashHistory({ recoveries, entries, fs, reload, setStatus, requestCode }
             <tr key={r.id}>
               <td>{fmtFrShort(r.date)}</td>
               <td className="c">{euros2(r.totalAvant)}</td>
-              <td className="c" style={{ fontWeight: 700, color: "#1f7a3f" }}>{euros2(r.amountRecovered)}</td>
+              <td className="c" style={{ fontWeight: 700, color: "var(--ok)" }}>{euros2(r.amountRecovered)}</td>
               <td className="c">{euros2(r.amountLeftInBox)}</td>
               <td>{r.note || "—"}</td>
               <td style={{ whiteSpace: "nowrap" }}>
-                <button onClick={() => exportRecoveryCSV(r)} className="ghost" style={{ color: "#1f7a3f" }}>📥 Excel</button>
-                <button onClick={() => delRecovery(r)} className="ghost" style={{ color: "#e74c3c" }}>✕</button>
+                <button onClick={() => exportRecoveryCSV(r)} className="ghost" style={{ color: "var(--ok)" }}>📥 Excel</button>
+                <button onClick={() => delRecovery(r)} className="ghost" style={{ color: "var(--bad)" }}>✕</button>
               </td>
             </tr>
           ))}
@@ -1045,7 +1045,7 @@ export default function TaxesPage() {
   return (
     <>
       <div className="toolbar" style={{ paddingBottom: 0 }}>
-        <div className="quick">
+        <div className="quick tabs">
           <button onClick={() => setSubtab("impayees")} className={subtab === "impayees" ? "primary" : ""}>Taxes impayées</button>
           <button onClick={() => setSubtab("especes")} className={subtab === "especes" ? "primary" : ""}>Gestion des espèces</button>
         </div>
