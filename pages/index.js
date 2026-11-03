@@ -1,5 +1,5 @@
 // pages/index.js
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Head from "next/head";
 
 const HOTEL = {
@@ -21,11 +21,39 @@ function customMap(r) {
   return m;
 }
 
-function Cell({ lbl, value, full }) {
+// Valeur forcée sur une seule ligne : la police rétrécit jusqu'à ce que le texte
+// tienne dans la case (utilisé pour l'e-mail du client).
+function OneLineVal({ value }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const fit = () => {
+      el.style.fontSize = "";
+      let size = parseFloat(getComputedStyle(el).fontSize) || 21;
+      while (el.scrollWidth > el.clientWidth && size > 8) {
+        size -= 0.5;
+        el.style.fontSize = size + "px";
+      }
+    };
+    fit();
+    window.addEventListener("resize", fit);
+    window.addEventListener("beforeprint", fit);
+    return () => {
+      window.removeEventListener("resize", fit);
+      window.removeEventListener("beforeprint", fit);
+    };
+  }, [value]);
+  return <div ref={ref} className="val one-line">{value}</div>;
+}
+
+function Cell({ lbl, value, full, oneLine }) {
   return (
     <div className={"cell" + (full ? " full" : "")}>
       <div className="lbl">{lbl}</div>
-      {value ? <div className="val">{value}</div> : <div className="val blank" />}
+      {!value ? <div className="val blank" />
+        : oneLine ? <OneLineVal value={value} />
+        : <div className="val">{value}</div>}
     </div>
   );
 }
@@ -75,7 +103,7 @@ function Sheet({ r }) {
         <Cell lbl="Ville / Code postal — City / Postcode" value={esc(ville)} />
         <Cell lbl="Domicile habituel / Permanent address" value={esc(adresse)} full />
         <Cell lbl="Téléphone mobile / Mobile phone" value={esc(r.phone)} />
-        <Cell lbl="Adresse e-mail / E-mail address" value={esc(r.guestEmail)} />
+        <Cell lbl="Adresse e-mail / E-mail address" value={esc(r.guestEmail)} oneLine />
 
         <div className="section-label">Enfants de moins de 15 ans accompagnants / Accompanying children under 15</div>
         <div className="cell full" style={{ minHeight: 38 }}>
