@@ -4,6 +4,16 @@
   --muted: #666;
   --bg: #f0f2f5;
   --accent: #1f3a5f;
+  /* Base commune (voir fin de fichier) : une seule teinte par sens. */
+  --accent-2: #284a74;   /* barre d'outils, un cran plus clair que les onglets */
+  --accent-hover: #16304f;
+  --ok: #15803d;   --ok-bg: #e8f6ee;   --ok-line: #b7e0c6;
+  --bad: #b91c1c;  --bad-bg: #fdecea;  --bad-line: #f5b7b1;
+  --warn: #b45309; --warn-bg: #fff4e0; --warn-line: #f3d29b;
+  --info: #1d63b8; --info-bg: #eef3f9; --info-line: #cfdbea;
+  --border: #dde3ea;
+  --field-border: #c3ccd7;
+  --nav-h: 47px;
 }
 * { box-sizing: border-box; }
 html { overflow-x: hidden; width: 100%; }
@@ -150,8 +160,8 @@ body {
   width: 100%; padding: 12px; font-size: 20px; text-align: center; letter-spacing: 6px;
   border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box;
 }
-.gate-box input.err { border-color: #e74c3c; }
-.gate-err { color: #e74c3c; font-size: 12px; margin-top: 8px; }
+.gate-box input.err { border-color: var(--bad); }
+.gate-err { color: var(--bad); font-size: 12px; margin-top: 8px; }
 .gate-box button {
   margin-top: 16px; width: 100%; padding: 12px; font-size: 14px; font-weight: 600;
   background: var(--accent); color: #fff; border: none; border-radius: 8px; cursor: pointer;
@@ -257,7 +267,7 @@ body {
 
 .linge-tbl th.noshow-cell { background: #fff; padding: 3px 2px; }
 .noshow-btn {
-  font-size: 10px; line-height: 1.2; border: 1px solid #e74c3c; color: #e74c3c;
+  font-size: 10px; line-height: 1.2; border: 1px solid var(--bad); color: var(--bad);
   background: #fff; border-radius: 4px; padding: 2px 6px; cursor: pointer;
 }
 .noshow-btn:hover { background: #fdecea; }
@@ -509,7 +519,7 @@ body {
 .locker-card.fixed { background: #f0f0f0; border-color: #ddd; }
 .locker-card-title { font-weight: 700; font-size: 13px; margin-bottom: 6px; }
 .locker-status { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; margin-bottom: 4px; }
-.locker-status.free { color: #1f7a3f; }
+.locker-status.free { color: var(--ok); }
 .locker-status.occ { color: #d35400; }
 .locker-status.fixed { color: #888; }
 .locker-detail { font-size: 12px; color: var(--ink); }
@@ -607,8 +617,8 @@ body {
 .task-check:disabled { cursor: not-allowed; opacity: .5; }
 .task-check.checked { background: #2ecc71; border-color: #1f9c56; }
 .task-row.task-done .task-text { color: var(--muted); text-decoration: line-through; }
-.task-row.task-overdue:not(.task-done) .task-text { color: #c0392b; font-weight: 600; }
-.task-row.task-overdue:not(.task-done) .task-time { color: #c0392b; }
+.task-row.task-overdue:not(.task-done) .task-text { color: var(--bad); font-weight: 600; }
+.task-row.task-overdue:not(.task-done) .task-time { color: var(--bad); }
 
 .lunch-sep {
   text-align: center; font-size: 13px; font-weight: 600; color: var(--muted);
@@ -638,9 +648,9 @@ body {
   font-size: 12px; line-height: 1; cursor: pointer; color: var(--muted);
 }
 .task-admin-btn:hover { background: #ddd; }
-.task-admin-btn.del { color: #e74c3c; }
+.task-admin-btn.del { color: var(--bad); }
 .task-admin-btn.del:hover { background: #fbdede; }
-.admin-add { display: block; margin-top: 8px; color: #1f7a3f; border-style: dashed; }
+.admin-add { display: block; margin-top: 8px; color: var(--ok); border-style: dashed; }
 
 /* --- Ligne téléphone (Contacts) : empile sur mobile --- */
 @media screen and (max-width: 768px) {
@@ -690,7 +700,7 @@ body {
   flex: 1; width: 100%; box-sizing: border-box; resize: none; border: 1px solid #ddd;
   border-radius: 8px; padding: 10px; font-size: 14px; font-family: inherit; line-height: 1.5;
 }
-.notes-panel-status { font-size: 11px; color: #1f7a3f; height: 16px; margin-top: 6px; }
+.notes-panel-status { font-size: 11px; color: var(--ok); height: 16px; margin-top: 6px; }
 
 @media screen and (max-width: 768px) {
   .notes-fab { bottom: 16px; right: 16px; width: 42px; height: 42px; font-size: 18px; }
@@ -1024,6 +1034,172 @@ body {
   .facture-linge .fm-calc td:first-child { white-space: normal; }
   .facture-linge .fl-cards { grid-template-columns: 1fr; }
 }
+
+/* ============================================================
+   BASE COMMUNE — écran seulement (@media screen) : l'impression
+   (fiches A4, Arrivées et Ménages en paysage) n'est pas touchée.
+   Toutes les règles passent par :where() (spécificité nulle) : toute
+   règle déjà écrite pour un composant garde la main.
+   ============================================================ */
+@media screen {
+  /* Onglets à hauteur fixe pour que la barre d'outils colle juste dessous. */
+  .main-nav { height: var(--nav-h); }
+  .main-nav-item { line-height: 18px; }
+
+  /* La barre d'outils passait SOUS les onglets au défilement (les deux
+     collaient à top:0) : elle colle maintenant juste en dessous. */
+  .toolbar { top: var(--nav-h); background: var(--accent-2); box-shadow: 0 2px 6px rgba(15, 23, 42, .12); }
+
+  /* Boutons hors barre d'outils : jusqu'ici aucun style (gris du navigateur).
+     Secondaire = blanc bordé ; .primary = bleu plein ; .ghost = discret. */
+  :where(button:not([class]), button[class=""], button.primary, button.ghost):where(:not(.toolbar *, .main-nav *, .staffbar *, .gate *)) {
+    font: inherit; font-size: 13px; font-weight: 600; line-height: 1.2;
+    min-height: 36px; padding: 7px 14px; border-radius: 6px; cursor: pointer;
+    border: 1px solid var(--field-border); background: #fff; color: var(--accent);
+    transition: background .12s, border-color .12s;
+  }
+  :where(button:not([class]), button[class=""]):where(:not(.toolbar *, .main-nav *, .staffbar *, .gate *)):hover:not(:disabled) {
+    background: #f4f7fb; border-color: #9fb0c4;
+  }
+  :where(button.primary):where(:not(.toolbar *)) { background: var(--accent); border-color: var(--accent); color: #fff; }
+  :where(button.primary):where(:not(.toolbar *)):hover:not(:disabled) { background: var(--accent-hover); }
+  :where(button.ghost):where(:not(.toolbar *, .staffbar *)) { background: transparent; border-color: transparent; padding-left: 10px; padding-right: 10px; }
+  :where(button.ghost):where(:not(.toolbar *, .staffbar *)):hover:not(:disabled) { background: rgba(31, 58, 95, .07); }
+  :where(button):disabled { cursor: not-allowed; opacity: .5; }
+  .admin-add { border: 1px dashed #9cc9ab; }
+
+  /* Champs hors barre d'outils : même hauteur et même bordure partout. */
+  :where(input:not([type=checkbox], [type=radio], [type=file], [type=range], [type=color]), select, textarea):where(:not(.toolbar *, .gate *, .staffbar *)) {
+    font: inherit; font-size: 14px; color: var(--ink);
+    min-height: 36px; padding: 6px 8px; border: 1px solid var(--field-border); border-radius: 6px; background: #fff;
+  }
+  :where(textarea) { line-height: 1.45; }
+  :where(input, select, textarea):disabled { background: #f2f4f7; color: #555; }
+  :where(input[type=checkbox], input[type=radio]) { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
+
+  /* Repère clavier visible partout. */
+  :where(button, input, select, textarea, a, [role=button], summary):focus-visible {
+    outline: 2px solid var(--info); outline-offset: 2px;
+  }
+
+  /* Textes trop petits à l'écran (l'impression garde ses tailles). */
+  .tbl th { font-size: 11px; }
+  .recap-sub { font-size: 12px; }
+  .linen-form-row label { font-size: 12.5px; }
+  .linen-form { border-color: var(--border); }
+
+  /* Couleurs d'état unifiées. */
+  .alert-banner { background: var(--bad-bg); border-color: var(--bad-line); color: var(--bad); }
+  .alert-banner.admin-banner { background: var(--info-bg); color: var(--accent); border-color: var(--info-line); }
+  .gate-err, .task-admin-btn.del { color: var(--bad); }
+  .gate-box input.err { border-color: var(--bad); }
+  .notes-panel-status { color: var(--ok); }
+}
+
+@media screen and (max-width: 768px) {
+  .main-nav { --nav-h: 41px; }
+  .main-nav-item { line-height: 16px; }
+  /* Sur téléphone, une barre d'outils collante mange la moitié de l'écran :
+     elle défile avec la page. */
+  .toolbar { position: static; }
+  /* iPhone zoome dans tout champ écrit en moins de 16 px : on l'évite. */
+  body :is(input:not([type=checkbox], [type=radio], [type=file], [type=range], [type=color]), select, textarea):not(.gate *):not(.code-modal-input) { font-size: 16px; }
+  :where(button:not([class]), button[class=""], button.primary, button.ghost):where(:not(.toolbar *, .main-nav *, .staffbar *, .gate *)) { min-height: 40px; }
+}
+
+/* Sous-onglets (.quick.tabs) : un sélecteur segmenté. L'onglet actif est
+   blanc ; il ne se confond plus avec les boutons d'action verts. */
+@media screen {
+  .toolbar .tabs { background: rgba(0, 0, 0, .2); border-radius: 8px; padding: 3px; gap: 2px; }
+  .toolbar .tabs button { background: transparent; color: rgba(255, 255, 255, .85); }
+  .toolbar .tabs button:hover:not(:disabled) { background: rgba(255, 255, 255, .12); color: #fff; }
+  .toolbar .tabs button.primary { background: #fff; color: var(--accent); box-shadow: 0 1px 2px rgba(0, 0, 0, .25); }
+  .tabs:not(.toolbar *) { display: inline-flex; flex-wrap: wrap; background: #eef1f5; border-radius: 8px; padding: 3px; gap: 2px; }
+  .tabs:not(.toolbar *) button { background: transparent; border-color: transparent; min-height: 32px; }
+  .tabs:not(.toolbar *) button.primary { background: #fff; color: var(--accent); border-color: var(--border); box-shadow: 0 1px 2px rgba(15, 23, 42, .12); }
+}
+/* Taxes : bande d'onglets suivie de la barre de l'onglet. Seule la seconde
+   reste collée en haut ; les deux forment une seule bande. */
+@media screen {
+  .toolbar:has(+ .toolbar) { position: static; box-shadow: none; }
+}
+
+/* Petits éléments communs : aide, messages, pastilles de statut, actions. */
+.note { font-size: 12.5px; color: var(--muted); margin: 10px 0 0; line-height: 1.5; }
+.msg { font-size: 13px; line-height: 1.45; padding: 8px 12px; border-radius: 6px; margin-bottom: 10px; border: 1px solid; }
+.msg.ok { color: var(--ok); background: var(--ok-bg); border-color: var(--ok-line); }
+.msg.bad { color: var(--bad); background: var(--bad-bg); border-color: var(--bad-line); }
+.msg.warn { color: var(--warn); background: var(--warn-bg); border-color: var(--warn-line); }
+.msg.info { color: var(--accent); background: var(--info-bg); border-color: var(--info-line); }
+.pill {
+  display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 999px;
+  font-size: 12px; font-weight: 600; white-space: nowrap; background: #eef1f5; color: var(--muted);
+}
+.pill.ok { background: var(--ok-bg); color: var(--ok); }
+.pill.bad { background: var(--bad-bg); color: var(--bad); }
+.pill.warn { background: var(--warn-bg); color: var(--warn); }
+.pill.info { background: var(--info-bg); color: var(--accent); }
+.row-actions { display: flex; gap: 2px; align-items: center; }
+@media screen {
+  button.danger { color: var(--bad); }
+  button.ghost.danger:hover:not(:disabled) { background: var(--bad-bg); }
+  button.icon-btn { min-width: 36px; padding-left: 6px; padding-right: 6px; font-size: 15px; }
+}
+@media print {
+  .pill { background: none; padding: 0; color: #000; }
+  .msg { background: none; color: #000; }
+}
+.panel { background: #f7f9fc; border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; font-size: 13px; }
+.panel-title { font-size: 12.5px; font-weight: 700; margin-bottom: 8px; }
+.panel-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.panel-row + .panel-row { margin-top: 8px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 2px; background: #fff; border: 1px solid var(--border);
+  border-radius: 999px; padding: 2px 2px 2px 12px; font-size: 13px;
+}
+.chip-del { background: transparent; border: none; color: var(--bad); cursor: pointer; font-size: 13px; line-height: 1; min-width: 28px; min-height: 28px; border-radius: 999px; }
+.chip-del:hover { background: var(--bad-bg); }
+.t-strong { font-weight: 700; }
+.push-right { margin-left: auto; }
+.linen-form.tone-info { background: var(--info-bg); border-color: var(--info-line); margin-bottom: 14px; }
+.linen-form.tone-ok { background: var(--ok-bg); border-color: var(--ok-line); }
+.recep-row.a-remplir { background: var(--warn-bg); padding: 8px; border-radius: 6px; margin-bottom: 10px; }
+
+/* Fiches en carte (Sinistres, Réclamations Gmail) : bord gauche = état. */
+.card { background: #fff; border: 1px solid var(--border); border-left: 4px solid var(--border); border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; }
+.card.card-ok { border-left-color: var(--ok); }
+.card.card-warn { border-left-color: var(--warn); }
+.card.card-bad { border-left-color: var(--bad); }
+.card-head { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px; }
+.card-meta { font-size: 12.5px; color: var(--muted); }
+.card-body { font-size: 14px; margin: 8px 0 4px; line-height: 1.45; }
+.card-quote { font-size: 13px; color: var(--muted); font-style: italic; }
+.card-montant { font-size: 13px; font-weight: 600; margin-top: 2px; }
+.card-link { font-size: 13px; font-weight: 600; color: var(--info); }
+.card-controls { display: flex; gap: 10px 16px; flex-wrap: wrap; align-items: flex-end; margin-top: 12px; padding-top: 10px; border-top: 1px solid #eef0f3; }
+.card-controls + .card-controls { border-top: none; padding-top: 0; margin-top: 8px; }
+.check { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; min-height: 36px; }
+.inline-field { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--muted); font-weight: 600; }
+.inline-field.grow { flex: 1; min-width: 200px; }
+.inline-field.grow input { width: 100%; }
+.pick-ok { font-size: 12.5px; color: var(--ok); margin-top: 4px; }
+.t-bad { color: var(--bad); }
+.t-warn { color: var(--warn); }
+.pill.violet { background: #f3ecfa; color: #7a3d99; }
+@media print { .card { border-left-width: 1px; } }
+
+/* Check-list : la barre du personnel prolonge la barre d'outils au lieu
+   d'ajouter une troisième nuance de bleu ; boutons d'admin plus grands. */
+@media screen {
+  .staffbar { background: var(--accent-2); border-top: 1px solid rgba(255, 255, 255, .1); }
+  .resid-head button.ghost { color: #fff; min-height: 30px; }
+  .resid-head button.ghost:hover:not(:disabled) { background: rgba(255, 255, 255, .15); }
+  .task-admin-btn { width: 30px; height: 30px; font-size: 13px; }
+  .lunch-sep { color: var(--muted); }
+}
+.form-title { font-size: 15px; font-weight: 700; margin-bottom: 12px; }
+.form-title.section-gap { margin-top: 24px; }
+.t-muted { color: var(--muted); }
 
 /* --- Coût linge : fenêtre « Voir la facture » (PDF affiché dans la page) --- */
 .fl-voir { margin-top: 8px; }

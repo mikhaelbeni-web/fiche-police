@@ -73,7 +73,7 @@ export default function ReclamationsGmail({ fs, items, onReload, onStatus }) {
             Repérées automatiquement dans Gmail chaque jour · total remboursé : {euros(totalRembourse)}
           </div>
         </div>
-        <div className="quick">
+        <div className="quick tabs">
           <button onClick={() => setFiltre("a_traiter")} className={filtre === "a_traiter" ? "primary" : ""}>À traiter</button>
           <button onClick={() => setFiltre("traitees")} className={filtre === "traitees" ? "primary" : ""}>Traitées</button>
           <button onClick={() => setFiltre("toutes")} className={filtre === "toutes" ? "primary" : ""}>Toutes</button>
@@ -128,37 +128,37 @@ function ReclamationRow({ r, onSave }) {
   }
 
   return (
-    <div className="resid" style={{ padding: "12px 14px", background: r.traite ? "#f4faf4" : "#fdf3f0", borderRadius: 8, marginBottom: 10, border: "1px solid #eee" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+    <div className={`resid card ${r.traite ? "card-ok" : "card-bad"}`}>
+      <div className="card-head">
         <div>
           <strong>{r.client || "Client inconnu"}</strong>{" "}
-          {r.logement && <span style={{ fontSize: 12, color: "#666" }}>· {r.logement}</span>}
-          {r.reservation && <span style={{ fontSize: 12, color: "#888" }}> · résa {r.reservation}</span>}
-          <span style={{ fontSize: 12, color: "#888" }}> · reçu le {fmtFr(r.dateRecu)}</span>
+          {r.logement && <span className="card-meta">· {r.logement}</span>}
+          {r.reservation && <span className="card-meta"> · résa {r.reservation}</span>}
+          <span className="card-meta"> · reçu le {fmtFr(r.dateRecu)}</span>
         </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          {r.type && <span style={{ fontSize: 11, fontWeight: 600, color: "#c0392b" }}>{TYPE_LABEL[r.type] || r.type}</span>}
-          <span style={{ fontSize: 12, fontWeight: 600, color: "#2980b9" }}>{PLATEFORME_LABEL[r.plateforme] || r.plateforme || "—"}</span>
-          {r.gmailUrl && <a href={r.gmailUrl} target="_blank" rel="noreferrer" style={{ fontSize: 12 }}>Ouvrir le mail</a>}
+        <div className="row-actions">
+          {r.type && <span className="pill bad">{TYPE_LABEL[r.type] || r.type}</span>}
+          <span className="pill info">{PLATEFORME_LABEL[r.plateforme] || r.plateforme || "—"}</span>
+          {r.gmailUrl && <a href={r.gmailUrl} target="_blank" rel="noreferrer" className="card-link">Ouvrir le mail</a>}
         </div>
       </div>
 
-      {r.resume && <div style={{ fontSize: 14, margin: "6px 0" }}>{r.resume}</div>}
-      {r.citation && <div style={{ fontSize: 12, color: "#666", fontStyle: "italic" }}>« {r.citation} »</div>}
-      {r.montantDemande != null && <div style={{ fontSize: 12, color: "#e67e22" }}>Montant demandé : {euros(r.montantDemande)}</div>}
+      {r.resume && <div className="card-body">{r.resume}</div>}
+      {r.citation && <div className="card-quote">« {r.citation} »</div>}
+      {r.montantDemande != null && <div className="card-montant t-warn">Montant demandé : {euros(r.montantDemande)}</div>}
       {r.traite && (
-        <div style={{ fontSize: 12, color: "#1f7a3f", marginTop: 4 }}>
+        <div className="pick-ok">
           Traité{r.traitePar ? ` par ${r.traitePar}` : ""}{r.traiteLe ? ` le ${fmtFr(r.traiteLe)}` : ""}
           {r.rembourse === "oui" ? ` · remboursé ${euros(r.montantRembourse)} via ${PLATEFORME_LABEL[r.plateformeRemboursement] || r.plateformeRemboursement}` : r.rembourse === "non" ? " · non remboursé" : ""}
         </div>
       )}
 
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 10, alignItems: "flex-end" }}>
-        <label style={{ fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}>
+      <div className="card-controls">
+        <label className="check">
           <input type="checkbox" checked={traite} onChange={e => setTraite(e.target.checked)} />
           Traité
         </label>
-        <label style={{ fontSize: 12 }}>Remboursé{" "}
+        <label className="inline-field">Remboursé{" "}
           <select value={rembourse} onChange={e => setRembourse(e.target.value)}>
             <option value="">—</option>
             <option value="oui">Oui</option>
@@ -166,26 +166,26 @@ function ReclamationRow({ r, onSave }) {
           </select>
         </label>
         {rembourse === "oui" && (
-          <label style={{ fontSize: 12 }}>Montant €{" "}
+          <label className="inline-field">Montant €{" "}
             <input type="number" min="0" step="0.01" value={montant} onChange={e => setMontant(e.target.value)} style={{ width: 90 }} />
           </label>
         )}
-        <label style={{ fontSize: 12 }}>Plateforme{" "}
+        <label className="inline-field">Plateforme{" "}
           <select value={plateforme} onChange={e => setPlateforme(e.target.value)}>
             {PLATEFORMES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         </label>
-        <label style={{ fontSize: 12, flex: 1, minWidth: 200 }}>Motif
+        <label className="inline-field grow">Motif
           <input type="text" value={motif} onChange={e => setMotif(e.target.value)} placeholder="ex. TV en panne, ménage insuffisant…" style={{ width: "100%" }} />
         </label>
       </div>
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 8, alignItems: "flex-end" }}>
-        <label style={{ fontSize: 12, flex: 1, minWidth: 200 }}>Note (optionnel)
+      <div className="card-controls">
+        <label className="inline-field grow">Note (optionnel)
           <input type="text" value={note} onChange={e => setNote(e.target.value)} style={{ width: "100%" }} />
         </label>
         <button className="primary" onClick={submit}>Enregistrer</button>
       </div>
-      {err && <div style={{ fontSize: 12, color: "#e67e22", marginTop: 6 }}>{err}</div>}
+      {err && <div className="msg warn">{err}</div>}
     </div>
   );
 }

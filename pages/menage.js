@@ -279,11 +279,11 @@ function Menage() {
                         {it.client}
                         {it.extra && (
                           it.extraType === "decale"
-                            ? <span style={{ color: "#2980b9", fontWeight: 700, fontSize: 12, marginLeft: it.client ? 6 : 0 }}>DÉCALÉ</span>
-                            : <span style={{ color: "#b8860b", fontWeight: 700, fontSize: 12, marginLeft: it.client ? 6 : 0 }}>SUPPLÉMENTAIRE</span>
+                            ? <span style={{ color: "var(--info)", fontWeight: 700, fontSize: 12, marginLeft: it.client ? 6 : 0 }}>DÉCALÉ</span>
+                            : <span style={{ color: "var(--warn)", fontWeight: 700, fontSize: 12, marginLeft: it.client ? 6 : 0 }}>SUPPLÉMENTAIRE</span>
                         )}
                         {it.mergedDecale && (
-                          <span style={{ color: "#c0392b", fontWeight: 700, fontSize: 11, marginLeft: 6 }} title="Un doublon a été évité ici : ce départ avait aussi un ménage décalé sur la même date/appartement.">
+                          <span style={{ color: "var(--bad)", fontWeight: 700, fontSize: 11, marginLeft: 6 }} title="Un doublon a été évité ici : ce départ avait aussi un ménage décalé sur la même date/appartement.">
                             ⚠ doublon évité
                           </span>
                         )}

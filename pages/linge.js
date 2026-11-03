@@ -280,7 +280,7 @@ function Linge() {
       <div className="linge-page">
         {fbConfigured && (
           <div className="linen-form" style={{ marginBottom: 18 }}>
-            <div className="recap-title" style={{ fontSize: 15, marginBottom: 10 }}>Ajouter un ménage supplémentaire</div>
+            <div className="form-title">Ajouter un ménage supplémentaire</div>
             <div className="linen-form-row">
               <label>Type
                 <select value={extraType} onChange={e => setExtraType(e.target.value)}>
@@ -312,7 +312,7 @@ function Linge() {
               </label>
             </div>
             {extraType === "decale" && (
-              <p style={{ fontSize: 12, color: "#2980b9", marginTop: -6, marginBottom: 10 }}>
+              <p style={{ fontSize: 12, color: "var(--info)", marginTop: -6, marginBottom: 10 }}>
                 Le ménage est <strong>déplacé</strong> — dans un sens ou dans l&apos;autre (avancé ou reporté) : il disparaît du planning de la date normalement prévue et n&apos;apparaît qu&apos;à la date où il sera réellement fait. Une seule facturation, comptée à cette date réelle.
               </p>
             )}
@@ -322,17 +322,17 @@ function Linge() {
                 <div style={{ fontSize: 13, marginBottom: 6 }}>
                   <strong>{oldDecales.length} ancien(s) ménage(s) décalé(s)</strong> enregistré(s) avant ce correctif, toujours à 0 € et sans masquer leur départ d&apos;origine.
                 </div>
-                <button onClick={migrateOldDecales} className="ghost" style={{ fontSize: 12, color: "#b8860b" }}>
+                <button onClick={migrateOldDecales} className="ghost" style={{ fontSize: 12, color: "var(--warn)" }}>
                   Reprendre ces {oldDecales.length} ancien(s) décalé(s) (code requis)
                 </button>
-                <div style={{ fontSize: 11, color: "#888", marginTop: 4 }}>
+                <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 4 }}>
                   Sûr à recliquer : une fois repris, un décalé ne réapparaît plus jamais dans cette liste.
                 </div>
               </div>
             )}
 
             <button className="primary" onClick={addExtraMenage}>Ajouter</button>
-            {extraStatus && <span style={{ marginLeft: 10, fontSize: 12, color: "#666" }}>{extraStatus}</span>}
+            {extraStatus && <span style={{ marginLeft: 10, fontSize: 12, color: "var(--muted)" }}>{extraStatus}</span>}
 
             {extraMenages.length > 0 && (
               <div className="tbl-wrap"><table className="tbl" style={{ marginTop: 14 }}>
@@ -348,12 +348,12 @@ function Linge() {
                       <td>
                         {e.motif}
                         {e.type === "decale" && e.datePrevue && (
-                          <div style={{ fontSize: 11, color: "#2980b9" }}>Prévu le {fmtFr(e.datePrevue)}</div>
+                          <div style={{ fontSize: 11, color: "var(--info)" }}>Prévu le {fmtFr(e.datePrevue)}</div>
                         )}
                       </td>
-                      <td>{e.type === "decale" ? <span style={{ color: "#2980b9" }}>Décalé</span> : "Supplément"}</td>
+                      <td>{e.type === "decale" ? <span style={{ color: "var(--info)" }}>Décalé</span> : "Supplément"}</td>
                       <td className="c">{euros((e.menageHT || 0) + (e.amenitiesHT || 0))}</td>
-                      <td><button onClick={() => delExtraMenage(e.id)} className="ghost" style={{ color: "#e74c3c" }}>✕</button></td>
+                      <td><button onClick={() => delExtraMenage(e.id)} className="ghost danger" title="Supprimer" aria-label="Supprimer">✕</button></td>
                     </tr>
                   ))}
                 </tbody>
@@ -401,7 +401,7 @@ function Linge() {
                     return (
                       <th key={i} className="pax">
                         {it.extra
-                          ? <span style={{ color: it.extraType === "decale" ? "#2980b9" : "#b8860b" }}>{it.extraType === "decale" ? "DÉCALÉ" : "SUPPL."}</span>
+                          ? <span style={{ color: it.extraType === "decale" ? "var(--info)" : "var(--warn)" }}>{it.extraType === "decale" ? "DÉCALÉ" : "SUPPL."}</span>
                           : (affiche != null ? `${affiche}P` : "—")}
                       </th>
                     );

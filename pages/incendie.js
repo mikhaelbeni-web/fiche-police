@@ -122,7 +122,7 @@ function Incendie({ verrouiller, changerCode, importRapide, finImport }) {
         <div className="toolbar"><h1>Sécurité incendie</h1></div>
         <div className="menage-page"><div className="recap">
           <div className="recap-title">Configuration Firebase requise</div>
-          <p style={{ color: "#666", fontSize: 14 }}>Voir README-FIREBASE.md pour activer cet onglet.</p>
+          <p style={{ color: "var(--muted)", fontSize: 14 }}>Voir README-FIREBASE.md pour activer cet onglet.</p>
         </div></div>
       </>
     );
@@ -154,7 +154,7 @@ function Incendie({ verrouiller, changerCode, importRapide, finImport }) {
       </Head>
       <div className="toolbar">
         <h1>Sécurité incendie</h1>
-        <div className="quick">
+        <div className="quick tabs">
           <button onClick={() => setVue("verifications")} className={vue === "verifications" ? "primary" : ""}>Vérification</button>
           <button onClick={() => setVue("factures")} className={vue === "factures" ? "primary" : ""}>Factures et coûts</button>
         </div>
@@ -249,7 +249,7 @@ function TypeForm({ onSave, onCancel }) {
           </select>
         </label>
       </div>
-      {err && <div style={{ fontSize: 12, color: "#c0392b", marginBottom: 8 }}>{err}</div>}
+      {err && <div className="msg bad">{err}</div>}
       <button onClick={() => nom.trim() ? onSave(nom.trim(), mois || null) : setErr("Le nom est obligatoire.")} style={{ background: "#1f3a5f", color: "#fff", border: "none", padding: "8px 16px", borderRadius: 5, cursor: "pointer" }}>Créer le contrôle</button>
       <button onClick={onCancel} className="ghost" style={{ marginLeft: 8 }}>Annuler</button>
     </div>
@@ -390,7 +390,7 @@ function HistoriqueTable({ l, actions, readOnly }) {
                 {v.note && <div className="inc-sub">{v.note}</div>}
               </td>
               <td data-label="Documents">{ds.length ? ds.map(d => <DocLine key={d.id} d={d} compact readOnly={readOnly} onDelete={() => actions?.deleteDocument(d)} />) : "—"}</td>
-              {!readOnly && <td className="no-print"><button className="ghost" style={{ color: "#e74c3c" }} onClick={() => actions.deleteVerif(v)}>✕</button></td>}
+              {!readOnly && <td className="no-print"><button className="ghost" style={{ color: "var(--bad)" }} onClick={() => actions.deleteVerif(v)}>✕</button></td>}
             </tr>
           );
         })}
@@ -408,7 +408,7 @@ function DocLine({ d, compact, readOnly, onDelete }) {
       {d.fichierUrl && <a className="inc-link no-print" href={d.fichierUrl} target="_blank" rel="noreferrer">Fichier</a>}
       {d.lienGmail && <a className="inc-link no-print" href={d.lienGmail} target="_blank" rel="noreferrer">Ouvrir le mail</a>}
       {d.lien && <a className="inc-link no-print" href={d.lien} target="_blank" rel="noreferrer">Ouvrir</a>}
-      {!readOnly && onDelete && <button className="ghost no-print" style={{ color: "#e74c3c" }} onClick={onDelete}>✕</button>}
+      {!readOnly && onDelete && <button className="ghost no-print" style={{ color: "var(--bad)" }} onClick={onDelete}>✕</button>}
     </div>
   );
 }
@@ -506,7 +506,7 @@ function VerifForm({ type, ouvertes, onSave, onCancel }) {
       <div className="linen-form-row">
         <label style={{ flex: 1 }}>Note (optionnel) <input type="text" value={note} onChange={e => setNote(e.target.value)} style={{ width: "100%" }} /></label>
       </div>
-      {err && <div style={{ fontSize: 12, color: "#c0392b", marginBottom: 8 }}>{err}</div>}
+      {err && <div className="msg bad">{err}</div>}
       <button className="primary" onClick={submit} style={{ background: "#1f3a5f", color: "#fff", border: "none", padding: "8px 16px", borderRadius: 5, cursor: "pointer" }}>Enregistrer la vérification</button>
       <button onClick={onCancel} className="ghost" style={{ marginLeft: 8 }}>Annuler</button>
     </div>
@@ -537,7 +537,7 @@ function DocForm({ type, onSave, onCancel }) {
       </div>
       <div className="linen-form-row"><label style={{ flex: 1 }}>Objet <input type="text" value={objet} onChange={e => setObjet(e.target.value)} style={{ width: "100%" }} /></label></div>
       <div className="linen-form-row"><PieceJointe typeId={type.id} value={pj} onChange={setPj} setErr={setErr} /></div>
-      {err && <div style={{ fontSize: 12, color: "#c0392b", marginBottom: 8 }}>{err}</div>}
+      {err && <div className="msg bad">{err}</div>}
       <button onClick={submit} style={{ background: "#1f3a5f", color: "#fff", border: "none", padding: "8px 16px", borderRadius: 5, cursor: "pointer" }}>Enregistrer le document</button>
       <button onClick={onCancel} className="ghost" style={{ marginLeft: 8 }}>Annuler</button>
     </div>
@@ -611,7 +611,7 @@ function Factures({ factures, types, actions, today }) {
                 </td>
                 <td data-label="HT">{f.montantHT != null && f.montantHT !== "" ? euros(f.montantHT) : "—"}</td>
                 <td data-label="TTC"><strong>{euros(f.montantTTC)}</strong></td>
-                <td className="no-print"><button className="ghost" style={{ color: "#e74c3c" }} onClick={() => actions.deleteFacture(f)}>✕</button></td>
+                <td className="no-print"><button className="ghost" style={{ color: "var(--bad)" }} onClick={() => actions.deleteFacture(f)}>✕</button></td>
               </tr>
             ))}
           </tbody>
@@ -679,7 +679,7 @@ function FactureForm({ types, onSave, onCancel }) {
         <label>Montant HT € <input type="number" min="0" step="0.01" value={ht} onChange={e => setHt(e.target.value)} style={{ width: 120 }} /></label>
       </div>
       <div className="linen-form-row"><PieceJointe typeId="factures" value={pj} onChange={setPj} setErr={setErr} /></div>
-      {err && <div style={{ fontSize: 12, color: "#c0392b", marginBottom: 8 }}>{err}</div>}
+      {err && <div className="msg bad">{err}</div>}
       <button onClick={submit} style={{ background: "#1f3a5f", color: "#fff", border: "none", padding: "8px 16px", borderRadius: 5, cursor: "pointer" }}>Enregistrer la facture</button>
       <button onClick={onCancel} className="ghost" style={{ marginLeft: 8 }}>Annuler</button>
     </div>

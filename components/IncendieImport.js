@@ -171,7 +171,7 @@ export default function IncendieImport({ fichiers, fs, types, verifs, docs, fact
                     );
                   })}
                 </div>
-                {!it.typeIds.length && it.nature !== "Facture" && <div className="inc-sub" style={{ color: "#c0392b" }}>Aucun contrôle reconnu : coche le bon.</div>}
+                {!it.typeIds.length && it.nature !== "Facture" && <div className="inc-sub" style={{ color: "var(--bad)" }}>Aucun contrôle reconnu : coche le bon.</div>}
 
                 {it.nature === "Facture" && (
                   <div className="linen-form-row">
@@ -231,13 +231,13 @@ export default function IncendieImport({ fichiers, fs, types, verifs, docs, fact
                     </div>
                   );
                 })}
-                {err1 && <div className="inc-sub" style={{ color: "#c0392b", marginTop: 6 }}>{err1}</div>}
+                {err1 && <div className="inc-sub" style={{ color: "var(--bad)", marginTop: 6 }}>{err1}</div>}
               </>
             )}
           </div>
         );
       })}
-      {err && <div style={{ fontSize: 12, color: "#c0392b", marginBottom: 8 }}>{err}</div>}
+      {err && <div className="msg bad">{err}</div>}
       <button className="primary" disabled={busy} onClick={enregistrer} style={{ background: "#1f3a5f", color: "#fff", border: "none", padding: "8px 16px", borderRadius: 5, cursor: "pointer" }}>
         {busy ? "Import…" : "Enregistrer et mettre à jour"}
       </button>

@@ -104,7 +104,7 @@ function Transition() {
         <div className="toolbar"><h1>Rapport de transition</h1></div>
         <div className="menage-page"><div className="recap">
           <div className="recap-title">Configuration Firebase requise</div>
-          <p style={{ color: "#666", fontSize: 14 }}>Voir README-FIREBASE.md pour activer cet onglet.</p>
+          <p style={{ color: "var(--muted)", fontSize: 14 }}>Voir README-FIREBASE.md pour activer cet onglet.</p>
         </div></div>
       </>
     );
@@ -115,7 +115,7 @@ function Transition() {
       <Head><title>Rapport de transition</title></Head>
       <div className="toolbar">
         <h1>Rapport de transition</h1>
-        <div className="quick">
+        <div className="quick tabs">
           <button onClick={() => openTab("jour")} className={tab === "jour" ? "primary" : ""}>Aujourd&apos;hui</button>
           <button onClick={() => openTab("hier")} className={tab === "hier" ? "primary" : ""}>Rapport d&apos;hier</button>
           <button onClick={() => openTab("historique")} className={tab === "historique" ? "primary" : ""}>Historique</button>
@@ -187,14 +187,14 @@ function ReportForm({ report, onSave, locked }) {
               <div key={q.key} style={{ marginBottom: 12 }}>
                 <div style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)", marginBottom: 4 }}>{q.label}</div>
                 {locked ? (
-                  <div style={{ fontSize: 14, padding: "4px 0" }}>{draft.residences[res]?.[q.key] || <span style={{ color: "#ccc" }}>—</span>}</div>
+                  <div style={{ fontSize: 14, padding: "4px 0" }}>{draft.residences[res]?.[q.key] || <span className="t-muted">—</span>}</div>
                 ) : (
                   <div style={{ display: "flex", gap: 6, alignItems: "flex-start" }}>
                     <textarea
                       value={draft.residences[res]?.[q.key] || ""}
                       onChange={e => setField(res, q.key, e.target.value)}
                       rows={1}
-                      style={{ flex: 1, padding: "7px 9px", border: "1px solid #ccc", borderRadius: 5, fontSize: 13, fontFamily: "inherit", resize: "vertical" }}
+                      style={{ flex: 1, resize: "vertical" }}
                     />
                     {q.quickNon && (
                       <button onClick={() => setField(res, q.key, "Non")} type="button" style={{ fontSize: 12 }}>Non</button>
@@ -235,8 +235,8 @@ function HistoriqueList({ reports, onSelect, onDelete }) {
               <td>{r.author || "—"}</td>
               <td className="c">{hasAlert(r) ? "🔴" : "🟢"}</td>
               <td style={{ whiteSpace: "nowrap" }}>
-                <button onClick={() => onSelect(r)} className="ghost" style={{ color: "#2980b9" }}>Consulter</button>
-                <button onClick={() => onDelete(r)} className="ghost" style={{ color: "#e74c3c" }}>✕</button>
+                <button onClick={() => onSelect(r)} className="ghost">Consulter</button>
+                <button onClick={() => onDelete(r)} className="ghost danger" title="Supprimer" aria-label="Supprimer">✕</button>
               </td>
             </tr>
           ))}

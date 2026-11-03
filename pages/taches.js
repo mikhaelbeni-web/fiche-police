@@ -115,7 +115,7 @@ function Taches() {
                     <td className="apt">{t.residence} {t.appartement}{t.unitNumber ? ` (${t.unitNumber})` : ""}</td>
                     <td>
                       {t.titre}
-                      {t.description && <div style={{ fontSize: 11, color: "var(--muted)" }}>{t.description}</div>}
+                      {t.description && <div className="card-meta">{t.description}</div>}
                     </td>
                     <td>{t.assigne || "—"}</td>
                     <td>{fmtFr(t.echeance) || "—"}</td>
@@ -127,7 +127,7 @@ function Taches() {
           )}
 
           {unresolved.length > 0 && (
-            <p style={{ fontSize: 11, color: "#999", marginTop: 14 }}>
+            <p className="note">
               {unresolved.length} tâche(s) non rattachée(s) à un appartement connu (listing non résolu) — pas affichées ci-dessus.
             </p>
           )}
