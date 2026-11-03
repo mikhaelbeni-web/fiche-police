@@ -134,7 +134,7 @@ function Codes() {
         <div className="recap">
           {showForm && (
             <div className="linen-form" style={{ marginBottom: 18 }}>
-              <div className="recap-title" style={{ fontSize: 15, marginBottom: 10 }}>
+              <div className="form-title">
                 {editId ? "Modifier le code" : "Nouveau code"}
               </div>
               <div className="linen-form-row">
@@ -168,7 +168,7 @@ function Codes() {
                       <td>{c.emplacement}</td>
                       <td style={{ fontWeight: 700, fontFamily: "monospace", fontSize: 14 }}>{c.code}</td>
                       <td style={{ whiteSpace: "nowrap" }}>
-                        <button onClick={() => openEdit(c)} className="ghost" style={{ color: "var(--info)" }}>Modifier</button>
+                        <button onClick={() => openEdit(c)} className="ghost">Modifier</button>
                         <button onClick={() => del(c.id)} className="ghost danger" title="Supprimer" aria-label="Supprimer">✕</button>
                       </td>
                     </tr>

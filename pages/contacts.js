@@ -133,7 +133,7 @@ function Contacts() {
         <div className="recap">
           {showForm && (
             <div className="linen-form" style={{ marginBottom: 18 }}>
-              <div className="recap-title" style={{ fontSize: 15, marginBottom: 10 }}>
+              <div className="form-title">
                 {editId ? "Modifier le contact" : "Nouveau contact"}
               </div>
               <div className="linen-form-row">
@@ -141,14 +141,14 @@ function Contacts() {
                 <label>Société <input type="text" value={form.societe} onChange={e => setForm({ ...form, societe: e.target.value })} style={{ width: 220 }} /></label>
               </div>
               <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 12, color: "var(--muted)", fontWeight: 600, marginBottom: 6 }}>Numéros de téléphone</div>
+                <div className="panel-title">Numéros de téléphone</div>
                 {form.telephones.map((t, i) => (
                   <div key={i} className="phone-row" style={{ display: "flex", gap: 6, marginBottom: 6 }}>
-                    <input type="text" value={t} onChange={e => updatePhone(i, e.target.value)} placeholder="06 12 34 56 78" style={{ width: 180, padding: "7px 9px", border: "1px solid #ccc", borderRadius: 5 }} />
+                    <input type="text" value={t} onChange={e => updatePhone(i, e.target.value)} placeholder="06 12 34 56 78" style={{ width: 180 }} />
                     <button onClick={() => removePhoneField(i)} className="ghost danger" title="Supprimer" aria-label="Supprimer">✕</button>
                   </div>
                 ))}
-                <button onClick={addPhoneField} className="ghost" style={{ color: "var(--ok)", fontSize: 12 }}>+ Ajouter un numéro</button>
+                <button onClick={addPhoneField} className="ghost">+ Ajouter un numéro</button>
               </div>
               <div style={{ display: "flex", gap: 8 }}>
                 <button className="primary" onClick={save}>Enregistrer</button>
@@ -168,7 +168,7 @@ function Contacts() {
                   <td>{c.societe || "—"}</td>
                   <td>{(c.telephones || []).length ? c.telephones.join(" · ") : "—"}</td>
                   <td style={{ whiteSpace: "nowrap" }}>
-                    <button onClick={() => openEdit(c)} className="ghost" style={{ color: "var(--info)" }}>Modifier</button>
+                    <button onClick={() => openEdit(c)} className="ghost">Modifier</button>
                     <button onClick={() => del(c.id)} className="ghost danger" title="Supprimer" aria-label="Supprimer">✕</button>
                   </td>
                 </tr>

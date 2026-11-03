@@ -280,7 +280,7 @@ function Linge() {
       <div className="linge-page">
         {fbConfigured && (
           <div className="linen-form" style={{ marginBottom: 18 }}>
-            <div className="recap-title" style={{ fontSize: 15, marginBottom: 10 }}>Ajouter un ménage supplémentaire</div>
+            <div className="form-title">Ajouter un ménage supplémentaire</div>
             <div className="linen-form-row">
               <label>Type
                 <select value={extraType} onChange={e => setExtraType(e.target.value)}>
