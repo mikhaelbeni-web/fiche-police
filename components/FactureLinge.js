@@ -102,6 +102,34 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
     allerAuResultat();
   }
 
+  // « Voir la facture » sur une facture enregistrée : affiche le PDF gardé, ou
+  // (facture enregistrée avant cette fonction) propose de joindre son PDF.
+  const joindreRef = useRef(null);
+  const [joindreId, setJoindreId] = useState(null);
+  function voirOuJoindrePdf(inv) {
+    if (inv.fichierUrl) { setApercuPdf({ url: inv.fichierUrl, titre: `Facture ${inv.numFacture}` }); return; }
+    if (!confirm(`Le PDF de la facture ${inv.numFacture} n'a pas été gardé (elle a été enregistrée avant). Voulez-vous le joindre maintenant ?`)) return;
+    setJoindreId(inv.id);
+    joindreRef.current?.click();
+  }
+  async function joindrePdf(e) {
+    const f = e.target.files?.[0];
+    e.target.value = "";
+    const inv = invoices.find(i => i.id === joindreId);
+    setJoindreId(null);
+    if (!f || !inv) return;
+    setApercuPdf({ url: URL.createObjectURL(f), titre: `Facture ${inv.numFacture}` });
+    try {
+      setStatus("Envoi du PDF…");
+      const url = await envoyerPdf(f);
+      await fs.updateDoc(fs.doc(fs.db, "linen_invoices", inv.id), { fichierUrl: url, fichierNom: f.name });
+      await reload();
+      setStatus("PDF joint à la facture.");
+    } catch (err) {
+      setStatus("Le PDF s'affiche, mais n'a pas pu être gardé : " + err.message);
+    }
+  }
+
   function setChamp(k, v) { setForm(f => ({ ...f, [k]: v })); }
   function setLigne(id, k, v) { setForm(f => ({ ...f, lines: { ...f.lines, [id]: { ...f.lines[id], [k]: v } } })); }
 
@@ -167,6 +195,7 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
           <input ref={fichierRef} type="file" accept="application/pdf,.pdf" onChange={importerPdf} className="fm-file" tabIndex={-1} aria-hidden="true" />
           <button type="button" className="fm-btn primary" onClick={() => fichierRef.current?.click()}>Choisir le PDF de la facture</button>
           {!form && <button type="button" className="fm-btn" onClick={ouvrirManuel}>Saisir à la main</button>}
+          {form?.fichierLocal && <button type="button" className="fm-btn" onClick={() => setApercuPdf({ url: form.fichierLocal, titre: form.fichierNom })}>Voir la facture</button>}
         </div>
 
         {lecture && (
@@ -295,11 +324,12 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
             {invoices.map(inv => (
               <CarteFacture key={inv.id} inv={inv} receptions={receptions} actif={sel?.id === inv.id}
                 onVoir={() => voirFacture(inv.id)} onDelete={() => supprimer(inv.id)}
-                onPdf={inv.fichierUrl ? () => setApercuPdf({ url: inv.fichierUrl, titre: `Facture ${inv.numFacture}` }) : null} />
+                onPdf={() => voirOuJoindrePdf(inv)} />
             ))}
           </div>
         )}
       </div>
+      <input ref={joindreRef} type="file" accept="application/pdf,.pdf" onChange={joindrePdf} className="fm-file" tabIndex={-1} aria-hidden="true" />
       {apercuPdf && <FenetrePdf url={apercuPdf.url} titre={apercuPdf.titre} onClose={() => setApercuPdf(null)} />}
     </>
   );
@@ -353,7 +383,7 @@ function CarteFacture({ inv, receptions, actif, onVoir, onDelete, onPdf }) {
       <div className="fl-card-net">Net à payer : <strong>{eur(inv.netAPayer)}</strong></div>
       <div className="fm-card-actions">
         <button type="button" className="fm-btn" onClick={onVoir}>{actif ? "Affiché ci-dessus" : "Voir le résultat"}</button>
-        {onPdf && <button type="button" className="fm-btn" onClick={onPdf}>Voir la facture</button>}
+        <button type="button" className="fm-btn" onClick={onPdf}>{inv.fichierUrl ? "Voir la facture" : "Voir la facture (joindre le PDF)"}</button>
         <button type="button" className="fm-btn fm-btn-danger" onClick={onDelete}>Supprimer</button>
       </div>
     </div>
