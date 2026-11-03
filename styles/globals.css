@@ -98,6 +98,7 @@ body {
 .cell .lbl { font-size: 12px; text-transform: uppercase; letter-spacing: .3px; color: #444; }
 .cell { min-width: 0; }
 .cell .val { font-size: 21px; font-weight: 600; margin-top: 5px; min-height: 24px; line-height: 1.25; overflow-wrap: anywhere; }
+.cell .val.one-line { white-space: nowrap; overflow: hidden; overflow-wrap: normal; }
 .cell .val.blank { border-bottom: 1px dotted #999; height: 26px; }
 
 .section-label {
