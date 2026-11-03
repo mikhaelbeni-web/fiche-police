@@ -78,46 +78,52 @@ body {
   display: flex; justify-content: space-between; align-items: flex-start;
   border-bottom: 2px solid var(--line); padding-bottom: 10px; margin-bottom: 4px;
 }
-.sheet-head .hotel { font-size: 15px; font-weight: 700; }
-.sheet-head .hotel small { display: block; font-weight: 400; font-size: 11px; color: var(--muted); margin-top: 2px; }
+.sheet-head .hotel { font-size: 20px; font-weight: 700; }
+.sheet-head .hotel small { display: block; font-weight: 400; font-size: 14px; color: var(--muted); margin-top: 3px; }
 .sheet-head .doc-title { text-align: right; }
-.sheet-head .doc-title .t1 { font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
-.sheet-head .doc-title .t2 { font-size: 10px; color: var(--muted); }
+.sheet-head .doc-title .t1 { font-size: 22px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+.sheet-head .doc-title .t2 { font-size: 12px; color: var(--muted); }
 
-.legal { font-size: 9px; color: var(--muted); text-align: center; margin: 6px 0 12px; line-height: 1.4; }
+.legal { font-size: 12px; color: var(--muted); text-align: center; margin: 8px 0 12px; line-height: 1.4; }
 
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid var(--line); }
-.cell { padding: 8px 10px; border-right: 1px solid #ccc; border-bottom: 1px solid #ccc; min-height: 42px; }
+/* La grille prend toute la hauteur libre de la page : les cases s'agrandissent
+   au lieu de laisser un grand vide avant la signature. */
+.grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid var(--line);
+  flex: 1 1 auto;
+}
+.cell { padding: 10px 12px; border-right: 1px solid #ccc; border-bottom: 1px solid #ccc; min-height: 58px; }
 .cell.full { grid-column: 1 / -1; }
 .cell:nth-child(2n) { border-right: none; }
-.cell .lbl { font-size: 8.5px; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); }
-.cell .val { font-size: 13px; font-weight: 500; margin-top: 3px; min-height: 16px; }
-.cell .val.blank { border-bottom: 1px dotted #999; height: 18px; }
+.cell .lbl { font-size: 12px; text-transform: uppercase; letter-spacing: .3px; color: #444; }
+.cell { min-width: 0; }
+.cell .val { font-size: 21px; font-weight: 600; margin-top: 5px; min-height: 24px; line-height: 1.25; overflow-wrap: anywhere; }
+.cell .val.blank { border-bottom: 1px dotted #999; height: 26px; }
 
 .section-label {
   grid-column: 1 / -1; background: var(--accent); color: #fff;
-  font-size: 10px; text-transform: uppercase; letter-spacing: .6px;
-  padding: 5px 10px; font-weight: 600;
+  font-size: 14px; text-transform: uppercase; letter-spacing: .6px;
+  padding: 7px 12px; font-weight: 700; align-self: end;
 }
 
 .rgpd {
-  font-size: 8px; color: var(--muted); line-height: 1.4;
-  margin-top: 12px; padding: 6px 8px; border: 1px solid #ddd; background: #fafafa;
+  font-size: 10.5px; color: var(--muted); line-height: 1.4;
+  margin-top: 10px; padding: 6px 8px; border: 1px solid #ddd; background: #fafafa;
 }
 
-.footer-block { margin-top: auto; padding-top: 14px; display: flex; justify-content: space-between; gap: 24px; }
+.footer-block { margin-top: 14px; display: flex; justify-content: space-between; gap: 24px; }
 .sig { flex: 1; }
-.sig .lbl { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+.sig .lbl { font-size: 16px; color: var(--ink); margin-bottom: 8px; }
 .sig .box {
-  border: 2px solid var(--ink); border-radius: 6px; height: 90px;
-  display: flex; align-items: flex-start; justify-content: flex-start; padding: 8px 10px;
+  border: 2px solid var(--ink); border-radius: 6px; height: 130px;
+  display: flex; align-items: flex-start; justify-content: flex-start; padding: 8px 12px;
   position: relative;
 }
 .sig .box .word {
-  font-size: 15px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
+  font-size: 18px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
   color: var(--muted);
 }
-.sig .hint { font-size: 9px; color: #999; margin-top: 4px; }
+.sig .hint { font-size: 13px; color: #666; margin-top: 4px; }
 
 .empty-state { color: var(--muted); text-align: center; padding: 60px 20px; max-width: 480px; }
 
@@ -131,7 +137,11 @@ body {
   .toolbar { display: none; }
   body { background: #fff; }
   .sheets { padding: 0; gap: 0; }
-  .sheet { box-shadow: none; width: 100%; page-break-after: always; padding: 12mm 15mm; }
+  /* Une fiche = exactement une page A4 (marges @page de 8 mm posées par pages/index.js). */
+  .sheet {
+    box-shadow: none; width: 100%; min-height: 0; height: 280mm; box-sizing: border-box;
+    padding: 4mm 6mm; page-break-after: always; break-inside: avoid;
+  }
   .sheet:last-child { page-break-after: auto; }
 }
 
@@ -1190,3 +1200,24 @@ body {
 .form-title { font-size: 15px; font-weight: 700; margin-bottom: 12px; }
 .form-title.section-gap { margin-top: 24px; }
 .t-muted { color: var(--muted); }
+
+/* --- Coût linge : fenêtre « Voir la facture » (PDF affiché dans la page) --- */
+.fl-voir { margin-top: 8px; }
+.fl-pdf-overlay {
+  position: fixed; inset: 0; background: rgba(15, 23, 42, .55);
+  display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px;
+}
+.fl-pdf {
+  background: #fff; border-radius: 10px; width: 100%; max-width: 960px; height: 86vh;
+  display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,.25);
+}
+.fl-pdf-head { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid #e3e6ea; flex-wrap: wrap; }
+.fl-pdf-titre { font-weight: 700; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fl-pdf-cadre { flex: 1; width: 100%; border: 0; overflow: auto; background: #eef0f3; padding: 12px; box-sizing: border-box; }
+.fl-pdf-page { display: block; margin: 0 auto 12px; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.18); max-width: 100%; height: auto; }
+.fl-pdf-etat { padding: 10px 12px; color: #555; font-size: 14px; }
+.fl-pdf.fl-pdf-grand { max-width: none; width: 100%; height: 100%; border-radius: 0; }
+@media screen and (max-width: 768px) {
+  .fl-pdf-overlay { padding: 0; }
+  .fl-pdf { height: 100%; max-width: none; border-radius: 0; }
+}
