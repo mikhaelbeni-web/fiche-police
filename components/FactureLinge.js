@@ -108,9 +108,19 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
   const [joindreId, setJoindreId] = useState(null);
   function voirOuJoindrePdf(inv) {
     if (inv.fichierUrl) { setApercuPdf({ url: inv.fichierUrl, titre: `Facture ${inv.numFacture}` }); return; }
+    if (inv.pdf) { ouvrirPdfGarde(inv); return; }
     if (!confirm(`Le PDF de la facture ${inv.numFacture} n'a pas été gardé (elle a été enregistrée avant). Voulez-vous le joindre maintenant ?`)) return;
     setJoindreId(inv.id);
     joindreRef.current?.click();
+  }
+  async function ouvrirPdfGarde(inv) {
+    try {
+      setStatus("Ouverture de la facture…");
+      const url = await lirePdf(fs, inv.id);
+      if (!url) { setStatus("PDF introuvable pour cette facture."); return; }
+      setApercuPdf({ url, titre: `Facture ${inv.numFacture}` });
+      setStatus("");
+    } catch (err) { setStatus("Impossible d'ouvrir le PDF : " + err.message); }
   }
   async function joindrePdf(e) {
     const f = e.target.files?.[0];
@@ -121,8 +131,7 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
     setApercuPdf({ url: URL.createObjectURL(f), titre: `Facture ${inv.numFacture}` });
     try {
       setStatus("Envoi du PDF…");
-      const url = await envoyerPdf(f);
-      await fs.updateDoc(fs.doc(fs.db, "linen_invoices", inv.id), { fichierUrl: url, fichierNom: f.name });
+      await garderPdf(fs, inv.id, f);
       await reload();
       setStatus("PDF joint à la facture.");
     } catch (err) {
@@ -133,7 +142,9 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
   function setChamp(k, v) { setForm(f => ({ ...f, [k]: v })); }
   function setLigne(id, k, v) { setForm(f => ({ ...f, lines: { ...f.lines, [id]: { ...f.lines[id], [k]: v } } })); }
 
+  const [enregistrement, setEnregistrement] = useState(false);
   async function enregistrer() {
+    if (enregistrement) return;
     if (!form.numFacture.trim()) { setStatus("Le numéro de facture est requis."); return; }
     // Sécurité anti-doublon : une facture Elis (même n°) ne peut être enregistrée qu'une fois.
     const deja = invoices.find(i => (i.numFacture || "").trim() === form.numFacture.trim());
@@ -154,23 +165,29 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
       };
       if (form.autres?.length) doc.autres = form.autres;
       if (form.fichierNom) doc.fichierNom = form.fichierNom;
-      // Copie du PDF dans Firebase Storage pour pouvoir le revoir plus tard.
-      // Si l'envoi échoue, la facture est quand même enregistrée (sans PDF).
-      let pdfPerdu = false;
-      if (form.fichier) {
-        try { doc.fichierUrl = await envoyerPdf(form.fichier); } catch { pdfPerdu = true; }
-      }
+      setEnregistrement(true);
+      // La facture est enregistrée d'abord ; le PDF est gardé ensuite. Avant,
+      // l'envoi du PDF vers Firebase Storage passait en premier et restait
+      // bloqué (Storage ne répond pas), si bien que le bouton ne faisait rien.
       const ref = await fs.addDoc(fs.collection(fs.db, "linen_invoices"), doc);
+      let pdfPerdu = false;
+      if (form.fichier && ref?.id) {
+        try { await garderPdf(fs, ref.id, form.fichier); } catch { pdfPerdu = true; }
+      }
       setForm(null);
       await reload();
       if (ref?.id) setSelId(ref.id);
-      setStatus(pdfPerdu ? "Facture enregistrée, mais le PDF n'a pas pu être gardé : « Voir la facture » ne sera pas disponible pour elle." : "Facture enregistrée.");
-    } catch (err) { setStatus("Erreur : " + err.message); }
+      setStatus(pdfPerdu ? "Facture enregistrée, mais le PDF n'a pas pu être gardé : utilisez « Voir la facture (joindre le PDF) » sur sa carte." : "Facture enregistrée.");
+    } catch (err) {
+      setStatus("Erreur : " + err.message);
+      alert("La facture n'a pas pu être enregistrée : " + err.message);
+    } finally { setEnregistrement(false); }
   }
 
   async function supprimer(id) {
     if (!confirm("Êtes-vous sûr de vouloir supprimer cette facture ?")) return;
     await fs.deleteDoc(fs.doc(fs.db, "linen_invoices", id));
+    fs.deleteDoc(fs.doc(fs.db, "linen_invoice_pdfs", id)).catch(() => {});
     if (selId === id) setSelId(null);
     await reload();
   }
@@ -280,7 +297,7 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
             {netDiffere && <div className="fm-note fl-orange">Attention : la facture indique {eur(form.netImprime)}. C&apos;est ce montant qui sera enregistré.</div>}
 
             <div className="fm-actions">
-              <button type="button" className="fm-btn primary" onClick={enregistrer} disabled={doublon}>{doublon ? "Déjà importée" : "Enregistrer la facture"}</button>
+              <button type="button" className="fm-btn primary" onClick={enregistrer} disabled={doublon || enregistrement}>{doublon ? "Déjà importée" : enregistrement ? "Enregistrement…" : "Enregistrer la facture"}</button>
               <button type="button" className="fm-btn fm-btn-light" onClick={annulerForm}>Annuler</button>
             </div>
           </div>
@@ -303,8 +320,8 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
             <div className="fl-entete">
               <div className="fm-res-title">Facture {sel.numFacture} · {libellePeriode(sel.periodFrom, sel.periodTo)}</div>
               <div className="fm-note">Datée du {fmtFr(sel.dateFacture)} · net à payer {eur(sel.netAPayer)}</div>
-              {sel.fichierUrl && (
-                <button type="button" className="fm-btn fl-voir" onClick={() => setApercuPdf({ url: sel.fichierUrl, titre: `Facture ${sel.numFacture}` })}>Voir la facture</button>
+              {(sel.fichierUrl || sel.pdf) && (
+                <button type="button" className="fm-btn fl-voir" onClick={() => voirOuJoindrePdf(sel)}>Voir la facture</button>
               )}
             </div>
             <Comparaison key={sel.id} c={selC} inv={sel} destinataires={destinataires} />
@@ -335,14 +352,32 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
   );
 }
 
-// Envoie le PDF dans Firebase Storage et renvoie son adresse de lecture.
-async function envoyerPdf(file) {
-  const { app } = await import("../lib/firebase");
-  const { getStorage, ref, uploadBytes, getDownloadURL } = await import("firebase/storage");
-  const nom = file.name.replace(/[^\w.\-]+/g, "_");
-  const r = ref(getStorage(app), `linge/factures/${Date.now()}_${nom}`);
-  await uploadBytes(r, file, { contentType: "application/pdf" });
-  return getDownloadURL(r);
+// Le PDF est gardé dans Firestore (collection `linen_invoice_pdfs`, même id que
+// la facture), encodé en base64 : une facture Elis fait ~70 Ko, bien sous la
+// limite de 1 Mo d'un document. Firebase Storage n'est pas utilisé : il ne
+// répond pas sur ce projet (l'envoi restait bloqué).
+const PDF_MAX = 700 * 1024;
+function enBase64(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result).split(",")[1] || "");
+    r.onerror = () => reject(new Error("lecture du fichier impossible"));
+    r.readAsDataURL(file);
+  });
+}
+async function garderPdf(fs, id, file) {
+  if (file.size > PDF_MAX) throw new Error("PDF trop gros pour être gardé (700 Ko maximum)");
+  const data = await enBase64(file);
+  await fs.setDoc(fs.doc(fs.db, "linen_invoice_pdfs", id), { nom: file.name, data, createdAt: new Date().toISOString() });
+  await fs.updateDoc(fs.doc(fs.db, "linen_invoices", id), { pdf: true, fichierNom: file.name });
+}
+async function lirePdf(fs, id) {
+  const snap = await fs.getDoc(fs.doc(fs.db, "linen_invoice_pdfs", id));
+  if (!snap.exists()) return null;
+  const bin = atob(snap.data().data || "");
+  const bytes = new Uint8Array(bin.length);
+  for (let k = 0; k < bin.length; k++) bytes[k] = bin.charCodeAt(k);
+  return URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
 }
 
 // Petite fenêtre qui affiche la facture dans la page, sans la télécharger.
@@ -383,7 +418,7 @@ function CarteFacture({ inv, receptions, actif, onVoir, onDelete, onPdf }) {
       <div className="fl-card-net">Net à payer : <strong>{eur(inv.netAPayer)}</strong></div>
       <div className="fm-card-actions">
         <button type="button" className="fm-btn" onClick={onVoir}>{actif ? "Affiché ci-dessus" : "Voir le résultat"}</button>
-        <button type="button" className="fm-btn" onClick={onPdf}>{inv.fichierUrl ? "Voir la facture" : "Voir la facture (joindre le PDF)"}</button>
+        <button type="button" className="fm-btn" onClick={onPdf}>{inv.fichierUrl || inv.pdf ? "Voir la facture" : "Voir la facture (joindre le PDF)"}</button>
         <button type="button" className="fm-btn fm-btn-danger" onClick={onDelete}>Supprimer</button>
       </div>
     </div>
