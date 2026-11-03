@@ -1,8 +1,9 @@
 // components/FactureLinge.js
 // Factures Elis (blanchisserie de Pantin) dans Commande linge > Coût linge :
-// import du PDF (ou saisie manuelle), puis comparaison avec ce qui a été
-// réellement reçu (onglet Réceptions) sur le mois facturé, article par
-// article, en quantité et en euros. Firestore : `linen_invoices`.
+// étape 2 = import du PDF (ou saisie manuelle), étape 3 = comparaison avec ce
+// qui a été réellement reçu (onglet Réceptions) sur le mois facturé, article
+// par article, montant à réclamer et mail de réclamation.
+// Firestore : `linen_invoices`. Styles : classes .fm-* (FactureMenage) + .fl-*.
 
 import { useState, useRef, useEffect } from "react";
 import { ELIS_INVOICE_ARTICLES } from "../lib/linen";
@@ -48,6 +49,7 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
   const p = moisPrecedent();
   const [form, setForm] = useState(null); // null = fermé
   const [lecture, setLecture] = useState(""); // message pendant / après lecture du PDF
+  const [selId, setSelId] = useState(null); // facture enregistrée affichée à l'étape 3
   const fichierRef = useRef(null);
   // Destinataires Elis : les mêmes que pour le bon de ramassage (Firestore, le dépôt est public).
   const [destinataires, setDestinataires] = useState([]);
@@ -58,8 +60,13 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
       .catch(() => {});
   }, [fs]);
 
+  function allerAuResultat() {
+    setTimeout(() => document.getElementById("fl-resultat")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+  }
+
   function ouvrirManuel() {
     setLecture("");
+    setSelId(null);
     setForm({ source: "manuel", numFacture: "", dateFacture: isoDay(new Date()), periodFrom: p.from, periodTo: p.to, lines: lignesVides(), autres: [], participationPerte: 0, avertissements: [] });
   }
 
@@ -68,6 +75,7 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
     e.target.value = "";
     if (!f) return;
     setForm(null);
+    setSelId(null);
     setLecture("Lecture du PDF…");
     try {
       const lignes = await lireLignesPdf(f);
@@ -75,8 +83,20 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
       setForm({ source: "pdf", fichierNom: f.name, ...r });
       setLecture("");
     } catch (err) {
-      setLecture(`Impossible de lire ce PDF (${err.message}). Utilise la saisie manuelle.`);
+      setLecture(`Impossible de lire ce PDF (${err.message}). Utilisez la saisie à la main.`);
     }
+  }
+
+  function annulerForm() {
+    if (!confirm("Abandonner cette facture ? Les chiffres saisis seront perdus.")) return;
+    setForm(null);
+  }
+
+  function voirFacture(id) {
+    if (form && !confirm("Abandonner la facture en cours de vérification ?")) return;
+    setForm(null);
+    setSelId(id);
+    allerAuResultat();
   }
 
   function setChamp(k, v) { setForm(f => ({ ...f, [k]: v })); }
@@ -97,9 +117,10 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
       };
       if (form.autres?.length) doc.autres = form.autres;
       if (form.fichierNom) doc.fichierNom = form.fichierNom;
-      await fs.addDoc(fs.collection(fs.db, "linen_invoices"), doc);
+      const ref = await fs.addDoc(fs.collection(fs.db, "linen_invoices"), doc);
       setForm(null);
       await reload();
+      if (ref?.id) setSelId(ref.id);
       setStatus("Facture enregistrée.");
     } catch (err) { setStatus("Erreur : " + err.message); }
   }
@@ -107,6 +128,7 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
   async function supprimer(id) {
     if (!confirm("Êtes-vous sûr de vouloir supprimer cette facture ?")) return;
     await fs.deleteDoc(fs.doc(fs.db, "linen_invoices", id));
+    if (selId === id) setSelId(null);
     await reload();
   }
 
@@ -114,177 +136,255 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
   const t = form ? totaux(form.lines, form.autres, form.participationPerte) : null;
   const apercu = form ? comparerFactureReceptions(form, receptions) : null;
   const prixChanges = form ? prixDifferents(form.lines, prices) : [];
+  const nbAvert = form ? (form.avertissements?.length || 0) + (doublon ? 1 : 0) + prixChanges.length : 0;
+  const sel = !form && selId ? invoices.find(i => i.id === selId) : null;
+  const selC = sel ? comparerFactureReceptions(sel, receptions) : null;
+  const netDiffere = form && form.netImprime != null && Math.abs(form.netImprime - t.netAPayer) > 0.05;
 
   return (
     <>
-      <div className="recap-head" style={{ marginTop: 28 }}>
-        <div>
-          <div className="recap-title" style={{ fontSize: 16 }}>Factures Elis : facturé contre reçu</div>
-          <div className="recap-sub">Importe le PDF de la facture : chaque article est comparé à ce qui a été enregistré dans Réceptions sur le mois facturé</div>
+      {/* ---------- 2. Importer la facture ---------- */}
+      <div className="fm-step">
+        <div className="fm-step-title"><span className="fm-num">2</span>Importer la facture Elis</div>
+        <p className="fm-note">Choisissez le PDF reçu d&apos;Elis : les chiffres sont lus tout seuls. Sans PDF, saisissez la facture à la main.</p>
+        <div className="fm-actions fl-actions">
+          <input ref={fichierRef} type="file" accept="application/pdf,.pdf" onChange={importerPdf} className="fm-file" tabIndex={-1} aria-hidden="true" />
+          <button type="button" className="fm-btn primary" onClick={() => fichierRef.current?.click()}>Choisir le PDF de la facture</button>
+          {!form && <button type="button" className="fm-btn" onClick={ouvrirManuel}>Saisir à la main</button>}
         </div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <input ref={fichierRef} type="file" accept="application/pdf,.pdf" onChange={importerPdf} style={{ display: "none" }} />
-          <button className="primary" onClick={() => fichierRef.current?.click()}>Importer le PDF de la facture</button>
-          <button onClick={form ? () => setForm(null) : ouvrirManuel}>{form ? "Annuler" : "Saisie manuelle"}</button>
-        </div>
+
+        {lecture && (
+          <div className={`fm-status${lecture.startsWith("Impossible") ? " erreur" : ""}`} role="status">
+            {!lecture.startsWith("Impossible") && <span className="fm-spin" aria-hidden="true" />}{lecture}
+          </div>
+        )}
+
+        {form && (
+          <div className="linen-form fl-form">
+            <div className="fl-form-head">
+              <div className="fl-form-title">Vérifiez les chiffres de la facture</div>
+              <div className="fm-note">
+                {form.source === "pdf" ? <>Lus dans <strong>{form.fichierNom}</strong>. Corrigez si besoin, le résultat se met à jour en dessous.</> : "Recopiez les quantités et prix de la facture. Le résultat se met à jour en dessous."}
+              </div>
+            </div>
+
+            {nbAvert > 0 && (
+              <div className="fm-warn fl-warn">
+                <div className="fm-warn-title">À vérifier ({nbAvert})</div>
+                <ul className="fl-warn-list">
+                  {doublon && <li>Cette facture ({form.numFacture}) est déjà enregistrée.</li>}
+                  {form.avertissements?.map((a, i) => <li key={i}>{a}</li>)}
+                  {prixChanges.map(c => <li key={c.label}>Prix changé : {c.label} facturé {prix3(c.facture)} au lieu de {prix3(c.attendu)} (prix enregistré).</li>)}
+                </ul>
+              </div>
+            )}
+
+            <div className="linen-form-row">
+              <label>N° de facture <input type="text" value={form.numFacture} onChange={e => setChamp("numFacture", e.target.value)} placeholder="ex. 2600104-998618" /></label>
+              <label>Date de la facture <input type="date" value={form.dateFacture} onChange={e => setChamp("dateFacture", e.target.value)} /></label>
+            </div>
+            <div className="linen-form-row">
+              <label>Mois facturé : du <input type="date" value={form.periodFrom} onChange={e => setChamp("periodFrom", e.target.value)} /></label>
+              <label>au <input type="date" value={form.periodTo} onChange={e => setChamp("periodTo", e.target.value)} /></label>
+            </div>
+
+            <div className="tbl-wrap"><table className="tbl fl-tbl">
+              <thead>
+                <tr><th>Article Elis</th><th className="c">Quantité facturée</th><th className="c">Prix unitaire HT</th><th className="r">Montant HT</th></tr>
+              </thead>
+              <tbody>
+                {ELIS_INVOICE_ARTICLES.map(a => {
+                  const l = form.lines[a.id];
+                  const vide = form.source === "pdf" && !(Number(l.qte) > 0);
+                  if (vide) return null; // gamme absente de la facture (ex. Horizon)
+                  return (
+                    <tr key={a.id}>
+                      <td>{a.label}</td>
+                      <td className="c"><input type="number" min="0" inputMode="numeric" className="fl-input fl-input-qte" value={l.qte} onChange={e => setLigne(a.id, "qte", e.target.value)} aria-label={`Quantité facturée ${a.label}`} /></td>
+                      <td className="c"><input type="number" min="0" step="0.001" inputMode="decimal" className="fl-input fl-input-prix" value={l.prixUnitaire} onChange={e => setLigne(a.id, "prixUnitaire", e.target.value)} aria-label={`Prix unitaire ${a.label}`} /></td>
+                      <td className="r">{eur((Number(l.qte) || 0) * (Number(l.prixUnitaire) || 0))}</td>
+                    </tr>
+                  );
+                })}
+                {form.autres?.map((a, i) => (
+                  <tr key={"autre" + i} className="fl-autre">
+                    <td>{a.label} <em>(pas comparé)</em></td><td className="c">{a.qte}</td><td className="c">{prix3(a.prixUnitaire)}</td><td className="r">{eur(a.montant)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table></div>
+
+            <div className="linen-form-row fl-perte">
+              <label>Participation pour perte (€ HT) <input type="number" min="0" step="0.01" inputMode="decimal" value={form.participationPerte} onChange={e => setChamp("participationPerte", e.target.value)} /></label>
+            </div>
+
+            <table className="tbl fm-calc fl-totaux">
+              <tbody>
+                <tr><td>Total des articles HT</td><td className="r">{eur(t.sousTotalHT)}</td></tr>
+                <tr><td>Total HT (avec participation pour perte)</td><td className="r">{eur(t.totalHT)}</td></tr>
+                <tr><td>TVA 20 %</td><td className="r">{eur(t.tva)}</td></tr>
+                <tr className="net vert"><td>Net à payer</td><td className="r">{eur(t.netAPayer)}</td></tr>
+              </tbody>
+            </table>
+            {netDiffere && <div className="fm-note fl-orange">Attention : la facture indique {eur(form.netImprime)}. C&apos;est ce montant qui sera enregistré.</div>}
+
+            <div className="fm-actions">
+              <button type="button" className="fm-btn primary" onClick={enregistrer}>Enregistrer la facture</button>
+              <button type="button" className="fm-btn fm-btn-light" onClick={annulerForm}>Annuler</button>
+            </div>
+          </div>
+        )}
       </div>
 
-      {lecture && <p style={{ fontSize: 13, color: lecture.startsWith("Impossible") ? "#c0392b" : "#666" }}>{lecture}</p>}
-
-      {form && (
-        <div className="linen-form">
-          {form.source === "pdf" && (
-            <div style={{ fontSize: 13, marginBottom: 10 }}>
-              Lu dans <strong>{form.fichierNom}</strong>. Vérifie les chiffres puis enregistre.
+      {/* ---------- 3. Résultat et réclamation ---------- */}
+      <div className="fm-step fm-resultat" id="fl-resultat">
+        <div className="fm-step-title"><span className="fm-num">3</span>Résultat : facturé en trop ?</div>
+        {form ? (
+          <>
+            <div className="fl-entete">
+              <div className="fm-res-title">{form.numFacture ? `Facture ${form.numFacture}` : "Nouvelle facture"} · {libellePeriode(form.periodFrom, form.periodTo)}</div>
+              <div className="fm-note">Aperçu : cette facture n&apos;est pas encore enregistrée.</div>
             </div>
-          )}
-          {(form.avertissements?.length > 0 || doublon || prixChanges.length > 0) && (
-            <ul style={{ fontSize: 13, color: "#b9560b", margin: "0 0 12px", paddingLeft: 18 }}>
-              {doublon && <li>Cette facture ({form.numFacture}) est déjà enregistrée.</li>}
-              {form.avertissements?.map((a, i) => <li key={i}>{a}</li>)}
-              {prixChanges.map(c => <li key={c.label}>Prix changé : {c.label} facturé {prix3(c.facture)} au lieu de {prix3(c.attendu)}.</li>)}
-            </ul>
-          )}
+            <Comparaison key="form" c={apercu} inv={{ ...form, sousTotalHT: t.sousTotalHT }} destinataires={destinataires} />
+          </>
+        ) : sel ? (
+          <>
+            <div className="fl-entete">
+              <div className="fm-res-title">Facture {sel.numFacture} · {libellePeriode(sel.periodFrom, sel.periodTo)}</div>
+              <div className="fm-note">Datée du {fmtFr(sel.dateFacture)} · net à payer {eur(sel.netAPayer)}</div>
+            </div>
+            <Comparaison key={sel.id} c={selC} inv={sel} destinataires={destinataires} />
+          </>
+        ) : (
+          <div className="fm-hint">Importez une facture (étape 2) ou touchez « Voir le résultat » sur une facture enregistrée ci-dessous : le résultat s&apos;affiche ici.</div>
+        )}
+      </div>
 
-          <div className="linen-form-row">
-            <label>N° facture <input type="text" value={form.numFacture} onChange={e => setChamp("numFacture", e.target.value)} placeholder="ex. 2600104-998618" style={{ width: 170 }} /></label>
-            <label>Date facture <input type="date" value={form.dateFacture} onChange={e => setChamp("dateFacture", e.target.value)} /></label>
+      {/* ---------- Factures enregistrées ---------- */}
+      <div className="fm-step">
+        <div className="fm-step-title">Factures enregistrées <span className="fm-count">{invoices.length}</span></div>
+        {invoices.length === 0 ? (
+          <div className="fm-hint">Aucune facture enregistrée pour l&apos;instant.</div>
+        ) : (
+          <div className="fm-cards fl-cards">
+            {invoices.map(inv => (
+              <CarteFacture key={inv.id} inv={inv} receptions={receptions} actif={sel?.id === inv.id}
+                onVoir={() => voirFacture(inv.id)} onDelete={() => supprimer(inv.id)} />
+            ))}
           </div>
-          <div className="linen-form-row">
-            <label>Mois facturé, du <input type="date" value={form.periodFrom} onChange={e => setChamp("periodFrom", e.target.value)} /></label>
-            <label>au <input type="date" value={form.periodTo} onChange={e => setChamp("periodTo", e.target.value)} /></label>
-          </div>
-
-          <div className="tbl-wrap"><table className="tbl" style={{ marginBottom: 12 }}>
-            <thead>
-              <tr><th>Article (Elis)</th><th className="c">Qté facturée</th><th className="c">Prix unit. HT</th><th className="c">Montant HT</th></tr>
-            </thead>
-            <tbody>
-              {ELIS_INVOICE_ARTICLES.map(a => {
-                const l = form.lines[a.id];
-                const vide = form.source === "pdf" && !(Number(l.qte) > 0);
-                if (vide) return null; // gamme absente de la facture (ex. Horizon)
-                return (
-                  <tr key={a.id}>
-                    <td>{a.label}</td>
-                    <td className="c"><input type="number" min="0" value={l.qte} onChange={e => setLigne(a.id, "qte", e.target.value)} style={{ width: 70, textAlign: "center" }} /></td>
-                    <td className="c"><input type="number" min="0" step="0.001" value={l.prixUnitaire} onChange={e => setLigne(a.id, "prixUnitaire", e.target.value)} style={{ width: 80, textAlign: "center" }} /></td>
-                    <td className="c">{eur((Number(l.qte) || 0) * (Number(l.prixUnitaire) || 0))}</td>
-                  </tr>
-                );
-              })}
-              {form.autres?.map((a, i) => (
-                <tr key={"autre" + i} style={{ color: "#888" }}>
-                  <td>{a.label} <em>(non suivi)</em></td><td className="c">{a.qte}</td><td className="c">{prix3(a.prixUnitaire)}</td><td className="c">{eur(a.montant)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table></div>
-
-          <div className="linen-form-row">
-            <label>Participation pour perte € <input type="number" min="0" step="0.01" value={form.participationPerte} onChange={e => setChamp("participationPerte", e.target.value)} style={{ width: 100 }} /></label>
-          </div>
-          <p style={{ fontSize: 13, marginBottom: 12 }}>
-            Sous-total HT : <strong>{eur(t.sousTotalHT)}</strong> · Total HT : <strong>{eur(t.totalHT)}</strong> · TVA 20 % : <strong>{eur(t.tva)}</strong> ·{" "}
-            <strong style={{ color: "#1f7a3f" }}>Net à payer : {eur(t.netAPayer)}</strong>
-            {form.netImprime != null && Math.abs(form.netImprime - t.netAPayer) > 0.05 && <span style={{ color: "#b9560b" }}> (facture : {eur(form.netImprime)})</span>}
-          </p>
-
-          <div style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", margin: "6px 0 8px", textTransform: "uppercase" }}>
-            Aperçu : facturé contre reçu ({libellePeriode(form.periodFrom, form.periodTo)})
-          </div>
-          <Comparaison c={apercu} inv={{ ...form, sousTotalHT: t.sousTotalHT }} destinataires={destinataires} />
-
-          <button className="primary" style={{ marginTop: 12 }} onClick={enregistrer}>Enregistrer la facture</button>
-        </div>
-      )}
-
-      <div className="tbl-wrap"><table className="tbl" style={{ marginTop: 18 }}>
-        <thead>
-          <tr><th>N° facture</th><th>Mois facturé</th><th className="c">Net à payer</th><th className="c">Facturé en trop</th><th></th></tr>
-        </thead>
-        <tbody>
-          {invoices.map(inv => <LigneFacture key={inv.id} inv={inv} receptions={receptions} destinataires={destinataires} onDelete={() => supprimer(inv.id)} />)}
-          {invoices.length === 0 && <tr><td colSpan={5} className="empty-state">Aucune facture enregistrée.</td></tr>}
-        </tbody>
-      </table></div>
+        )}
+      </div>
     </>
   );
 }
 
-function LigneFacture({ inv, receptions, destinataires, onDelete }) {
-  const [open, setOpen] = useState(false);
+function CarteFacture({ inv, receptions, actif, onVoir, onDelete }) {
   const c = comparerFactureReceptions(inv, receptions);
+  const badge = c.nbReceptions === 0
+    ? <span className="fm-badge vide">Pas de réception</span>
+    : c.net > 0.005
+      ? <span className="fm-badge reclame">À réclamer {eur(c.net)} HT</span>
+      : <span className="fm-badge avoir">Rien à réclamer</span>;
   return (
-    <>
-      <tr>
-        <td>{inv.numFacture}<div style={{ fontSize: 11, color: "#999" }}>du {fmtFr(inv.dateFacture)}</div></td>
-        <td>{libellePeriode(inv.periodFrom, inv.periodTo)}</td>
-        <td className="c" style={{ fontWeight: 700 }}>{eur(inv.netAPayer)}</td>
-        <td className="c" style={{ fontWeight: 700, color: c.nbReceptions === 0 ? "#999" : c.enTrop > 0.005 ? "#c0392b" : "#1f7a3f" }}>
-          {c.nbReceptions === 0 ? "—" : c.enTrop > 0.005 ? `${eur(c.enTrop)} HT` : "Rien"}
-        </td>
-        <td style={{ whiteSpace: "nowrap" }}>
-          <button onClick={() => setOpen(!open)} className="ghost" style={{ color: "#2980b9" }}>{open ? "Masquer" : "Comparer"}</button>
-          <button onClick={onDelete} className="ghost" style={{ color: "#e74c3c" }}>✕</button>
-        </td>
-      </tr>
-      {open && (
-        <tr>
-          <td colSpan={5} style={{ background: "#f8f9fb", padding: 14 }}>
-            <Comparaison c={c} inv={inv} destinataires={destinataires} />
-          </td>
-        </tr>
-      )}
-    </>
+    <div className={`fm-card${actif ? " actif" : ""}`}>
+      <div className="fm-card-head">
+        <span className="fm-card-name fl-mois">{libellePeriode(inv.periodFrom, inv.periodTo)}</span>
+        {badge}
+      </div>
+      <div className="fm-card-sub">Facture {inv.numFacture} du {fmtFr(inv.dateFacture)}</div>
+      <div className="fl-card-net">Net à payer : <strong>{eur(inv.netAPayer)}</strong></div>
+      <div className="fm-card-actions">
+        <button type="button" className="fm-btn" onClick={onVoir}>{actif ? "Affiché ci-dessus" : "Voir le résultat"}</button>
+        <button type="button" className="fm-btn fm-btn-danger" onClick={onDelete}>Supprimer</button>
+      </div>
+    </div>
+  );
+}
+
+// Le chiffre qui compte, en gros (même principe que NetResume de FactureMenage).
+function ResultatNet({ c }) {
+  if (c.net > 0.005) {
+    return (
+      <div className="fm-net big rouge">
+        <span className="fm-net-l">Facturé en trop, à réclamer</span>
+        <span className="fm-net-v">{eur(c.net)} HT</span>
+        <span className="fm-net-sub">soit {eur(c.net * 1.2)} TTC</span>
+      </div>
+    );
+  }
+  return (
+    <div className="fm-net big vert">
+      <span className="fm-net-v">Rien à réclamer</span>
+      <span className="fm-net-sub">
+        {c.enTrop > 0.005 ? "Les oublis d'Elis compensent ce qui est facturé en trop." : c.nonFacture > 0.005 ? `Elis a oublié de facturer ${eur(c.nonFacture)} HT.` : "La facture correspond au linge reçu."}
+      </span>
+    </div>
   );
 }
 
 function Comparaison({ c, inv, destinataires }) {
   if (c.nbReceptions === 0) {
-    return <p style={{ fontSize: 13, color: "#b9560b" }}>Aucune réception enregistrée sur ce mois : rien à comparer. Vérifie les dates du mois facturé ou l&apos;onglet Réceptions.</p>;
+    return (
+      <div className="fm-warn">
+        <div className="fm-warn-title">Rien à comparer</div>
+        <div className="fm-warn-sub">Aucune réception enregistrée sur {libellePeriode(inv.periodFrom, inv.periodTo)}. Vérifiez les dates du mois facturé ou l&apos;onglet Réceptions.</div>
+      </div>
+    );
   }
+  const valeurFacturee = c.lignes.reduce((s, l) => s + l.facture * l.prix, 0);
+  const valeurRecue = c.lignes.reduce((s, l) => s + l.recu * l.prix, 0);
   return (
     <>
-      <div className="tbl-wrap"><table className="tbl">
+      <div className="fm-res-grid">
+        <ResultatNet c={c} />
+        <table className="tbl fm-calc">
+          <tbody>
+            <tr><td>Facturé par Elis (articles comparés)</td><td className="r">{eur(valeurFacturee)}</td></tr>
+            <tr><td>Linge reçu, au prix de la facture ({c.nbReceptions} réception{c.nbReceptions > 1 ? "s" : ""})</td><td className="r">{eur(valeurRecue)}</td></tr>
+            <tr><td>Facturé mais pas reçu</td><td className="r">+ {eur(c.enTrop)}</td></tr>
+            <tr><td>Reçu mais pas facturé (déduit)</td><td className="r">− {eur(c.nonFacture)}</td></tr>
+            <tr className={`net ${c.net > 0.005 ? "rouge" : "vert"}`}>
+              <td>À réclamer</td>
+              <td className="r">{c.net > 0.005 ? `${eur(c.net)} HT` : "Rien"}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="fl-sous-titre">Détail par article</div>
+      <div className="tbl-wrap"><table className="tbl fl-tbl">
         <thead>
-          <tr><th>Article</th>{c.avecCommande && <th className="c">Commandé</th>}<th className="c">Facturé</th><th className="c">Reçu</th><th className="c">Écart</th><th className="c">Prix unit. HT</th><th className="c">Écart €</th></tr>
+          <tr><th>Article</th>{c.avecCommande && <th className="c">Commandé</th>}<th className="c">Facturé</th><th className="c">Reçu</th><th className="c">Différence</th><th className="c">Prix unitaire HT</th><th className="r">Différence €</th></tr>
         </thead>
         <tbody>
           {c.lignes.map(l => {
-            const couleur = l.ecart > 0 ? "#c0392b" : l.ecart < 0 ? "#2980b9" : "#1f7a3f";
+            const cls = l.ecart > 0 ? "rouge" : l.ecart < 0 ? "bleu" : "vert";
             return (
               <tr key={l.key}>
                 <td>{l.label}</td>
-                {c.avecCommande && <td className="c" style={{ color: "#888" }}>{l.commande}</td>}
+                {c.avecCommande && <td className="c fl-gris">{l.commande}</td>}
                 <td className="c">{l.facture}</td>
                 <td className="c">{l.recu}</td>
-                <td className="c" style={{ fontWeight: 700, color: couleur }}>{l.ecart === 0 ? "✓" : l.ecart > 0 ? `+${l.ecart}` : l.ecart}</td>
+                <td className={`c fl-ecart ${cls}`}>{l.ecart === 0 ? "✓" : l.ecart > 0 ? `+${l.ecart}` : l.ecart}</td>
                 <td className="c">{l.prix ? prix3(l.prix) : "—"}</td>
-                <td className="c" style={{ fontWeight: 700, color: couleur }}>{l.ecart === 0 ? "" : eur(l.ecartEuros)}</td>
+                <td className={`r fl-ecart ${cls}`}>{l.ecart === 0 ? "" : eur(l.ecartEuros)}</td>
               </tr>
             );
           })}
         </tbody>
       </table></div>
-      <div style={{ marginTop: 10, fontSize: 14 }}>
-        {c.enTrop > 0.005
-          ? <strong style={{ color: "#c0392b" }}>Facturé en trop : {eur(c.enTrop)} HT ({eur(c.enTrop * 1.2)} TTC)</strong>
-          : <strong style={{ color: "#1f7a3f" }}>Rien de facturé en trop.</strong>}
-        {c.nonFacture > 0.005 && <span style={{ color: "#2980b9" }}> · Reçu mais non facturé : {eur(c.nonFacture)} HT</span>}
-      </div>
-      <p style={{ fontSize: 11, color: "#999", marginTop: 6 }}>
-        Écart = facturé − reçu. En rouge : facturé mais pas enregistré en réception. En bleu : reçu mais pas facturé.
-        Reçu = somme des réceptions datées dans le mois facturé ({c.nbReceptions} réception{c.nbReceptions > 1 ? "s" : ""}).
-        La participation pour perte (2,5 %) n&apos;est pas comptée dans l&apos;écart.
-      </p>
+      <ul className="fl-legende">
+        <li><span className="fl-ecart rouge">+ en rouge</span> : facturé mais pas noté dans Réceptions.</li>
+        <li><span className="fl-ecart bleu">− en bleu</span> : reçu mais pas facturé.</li>
+        <li>Reçu = total des réceptions datées dans le mois facturé. La participation pour perte (2,5 %) n&apos;est pas comptée dans la différence.</li>
+      </ul>
       <MailReclamation inv={inv} c={c} destinataires={destinataires} />
     </>
   );
 }
 
 // Mail de réclamation prêt à envoyer (texte modifiable), comme dans Coûts ménage.
-// Rien n'est envoyé automatiquement : Gmail s'ouvre pré-rempli, tu relis et tu envoies.
+// Rien n'est envoyé automatiquement : Gmail s'ouvre pré-rempli, on relit et on envoie.
 function MailReclamation({ inv, c, destinataires }) {
   const mail = mailReclamationLinge(inv, c);
   const [texte, setTexte] = useState(null);
@@ -301,19 +401,21 @@ function MailReclamation({ inv, c, destinataires }) {
     try { await navigator.clipboard.writeText(`${mail.subject}\n\n${body}`); setCopie(true); setTimeout(() => setCopie(false), 2000); } catch (e) { /* ignoré */ }
   }
   return (
-    <div style={{ marginTop: 14, borderTop: "1px solid #e3e6ea", paddingTop: 12 }}>
-      <div style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", marginBottom: 6, textTransform: "uppercase" }}>Mail de réclamation à Elis</div>
-      <div style={{ fontSize: 13, marginBottom: 6 }}>Objet : <strong>{mail.subject}</strong></div>
-      <textarea value={body} onChange={e => setTexte(e.target.value)} rows={Math.min(22, body.split("\n").length + 1)}
-        style={{ width: "100%", boxSizing: "border-box", fontFamily: "inherit", fontSize: 13, padding: 8 }} aria-label="Texte du mail" />
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
-        <button type="button" className="primary" onClick={gmail}>Ouvrir dans Gmail</button>
-        <button type="button" onClick={copier}>{copie ? "Copié ✓" : "Copier le mail"}</button>
-        {texte != null && <button type="button" onClick={() => setTexte(null)}>Remettre le texte proposé</button>}
+    <div className="fl-mail">
+      <div className="fl-mail-title">Envoyer la réclamation à Elis</div>
+      <div className="fm-note">Le mail est prêt. Relisez-le, modifiez-le si besoin, puis ouvrez-le dans Gmail pour l&apos;envoyer.</div>
+      <div className="fm-mail">
+        <div className="fl-objet">Objet : <strong>{mail.subject}</strong></div>
+        <textarea value={body} onChange={e => setTexte(e.target.value)} rows={Math.min(22, body.split("\n").length + 1)} aria-label="Texte du mail" />
       </div>
-      <p style={{ fontSize: 11, color: "#999", marginTop: 6 }}>
-        {destinataires?.length ? `Destinataires : ceux du bon de ramassage (${destinataires.length} adresse${destinataires.length > 1 ? "s" : ""}). ` : "Aucun destinataire enregistré : ajoute-les dans Gmail. "}
-        Le texte est modifiable avant l&apos;ouverture de Gmail. Rien n&apos;est envoyé sans toi.
+      <div className="fm-actions fl-actions">
+        <button type="button" className="fm-btn primary" onClick={gmail}>Ouvrir dans Gmail</button>
+        <button type="button" className="fm-btn" onClick={copier}>{copie ? "Copié ✓" : "Copier le mail"}</button>
+        {texte != null && <button type="button" className="fm-btn fm-btn-light" onClick={() => setTexte(null)}>Remettre le texte proposé</button>}
+      </div>
+      <p className="fm-note">
+        {destinataires?.length ? `Destinataires : ceux du bon de ramassage (${destinataires.length} adresse${destinataires.length > 1 ? "s" : ""}). ` : "Aucun destinataire enregistré : ajoutez-les dans Gmail. "}
+        Rien n&apos;est envoyé sans vous.
       </p>
     </div>
   );

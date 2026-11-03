@@ -1035,13 +1035,16 @@ function PositionTab({ fs, stock, orders, receptions, usage, defects, thresholds
 }
 
 // ---------- COÛT LINGE ----------
-// Estimation à partir des réceptions, puis factures Elis (import du PDF et
-// comparaison facturé / reçu) dans components/FactureLinge.js.
+// Parcours en 3 étapes : 1. estimation à partir des réceptions, 2. import de
+// la facture Elis, 3. résultat (facturé en trop) et mail de réclamation.
+// Les étapes 2 et 3 vivent dans components/FactureLinge.js.
 function CostTab({ fs, invoices, receptions, prices, setPrices, reload, setStatus }) {
   // ---- Estimation automatique : Du/Au -> total anticipé à partir des
   // réceptions déjà enregistrées, sans ressaisie. C'est la réponse directe à
   // "combien vais-je être facturé par Elis sur cette période ?".
   const today = isoDay(new Date());
+  // Prix unitaire affiché au millième (ex. 1,804 €) ; montants et totaux à 2 décimales.
+  const prixUnit = n => (n == null || isNaN(n) ? "—" : Number(n).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 3 }) + " €");
   const [estFrom, setEstFrom] = useState(today);
   const [estTo, setEstTo] = useState(today);
   const [editPrices, setEditPrices] = useState(false);
@@ -1050,12 +1053,26 @@ function CostTab({ fs, invoices, receptions, prices, setPrices, reload, setStatu
 
   const estReceived = {};
   for (const a of LINEN_ARTICLES) estReceived[a.key] = 0;
+  let nbRecep = 0;
   for (const r of receptions) {
     const d = (r.date || "").slice(0, 10);
     if (d < estFrom || d > estTo) continue;
+    nbRecep++;
     for (const a of LINEN_ARTICLES) estReceived[a.key] += Number(r.quantities?.[a.key]) || 0;
   }
-  const estTotal = LINEN_ARTICLES.reduce((s, a) => s + estReceived[a.key] * (Number(prices[a.key]) || 0), 0);
+  // Pendant la modification des prix, le total suit les prix en cours de saisie.
+  const prixAffiches = editPrices ? draftPrices : prices;
+  const estTotal = LINEN_ARTICLES.reduce((s, a) => s + estReceived[a.key] * (Number(prixAffiches[a.key]) || 0), 0);
+  const nbPieces = LINEN_ARTICLES.reduce((s, a) => s + estReceived[a.key], 0);
+
+  // Raccourcis de période (le Du/Au reste modifiable à la main).
+  function choisirMois(decalage) {
+    const d = new Date();
+    const from = new Date(Date.UTC(d.getFullYear(), d.getMonth() + decalage, 1));
+    const to = new Date(Date.UTC(d.getFullYear(), d.getMonth() + decalage + 1, 0));
+    setEstFrom(isoDay(from));
+    setEstTo(decalage === 0 ? today : isoDay(to));
+  }
 
   async function savePrices() {
     try {
@@ -1070,62 +1087,83 @@ function CostTab({ fs, invoices, receptions, prices, setPrices, reload, setStatu
   }
 
   return (
-    <>
+    <div className="facture-menage facture-linge">
       <div className="recap-head">
         <div>
-          <div className="recap-title">Coût linge anticipé</div>
-          <div className="recap-sub">Calculé automatiquement à partir des réceptions déjà enregistrées — aucune ressaisie</div>
+          <div className="recap-title">Coût linge Elis</div>
+          <div className="recap-sub">Combien vous allez payer, puis vérification de la facture Elis en 3 étapes.</div>
         </div>
-        <button onClick={() => setEditPrices(!editPrices)} style={{ fontSize: 12 }}>{editPrices ? "Annuler" : "Modifier les prix unitaires"}</button>
       </div>
 
-      <div className="linen-form" style={{ background: "#eef7ee", borderColor: "#bfe3bf" }}>
-        <div className="linen-form-row">
-          <label>Du <input type="date" value={estFrom} onChange={e => setEstFrom(e.target.value)} /></label>
-          <label>Au <input type="date" value={estTo} onChange={e => setEstTo(e.target.value)} /></label>
+      <div className="fm-step">
+        <div className="fm-step-title"><span className="fm-num">1</span>Estimation : combien je vais payer</div>
+        <p className="fm-note">Calcul fait avec le linge reçu (onglet Réceptions). Choisissez les dates.</p>
+
+        <div className="fl-periode">
+          <div className="fl-raccourcis">
+            <button type="button" className="fm-btn" onClick={() => choisirMois(0)}>Ce mois-ci</button>
+            <button type="button" className="fm-btn" onClick={() => choisirMois(-1)}>Mois dernier</button>
+          </div>
+          <div className="linen-form-row">
+            <label>Du <input type="date" value={estFrom} onChange={e => setEstFrom(e.target.value)} /></label>
+            <label>Au <input type="date" value={estTo} onChange={e => setEstTo(e.target.value)} /></label>
+          </div>
         </div>
 
-        <div className="tbl-wrap"><table className="tbl" style={{ marginBottom: 10 }}>
-          <thead>
-            <tr><th>Article</th><th className="c">Reçu (app)</th><th className="c">Prix unit. HT</th><th className="c">Montant estimé</th></tr>
-          </thead>
-          <tbody>
-            {LINEN_ARTICLES.map(a => {
-              const qte = estReceived[a.key] || 0;
-              const prix = editPrices ? (draftPrices[a.key] ?? 0) : (prices[a.key] ?? 0);
-              const montant = qte * (Number(prix) || 0);
-              return (
-                <tr key={a.key}>
-                  <td>{a.label}</td>
-                  <td className="c">{qte}</td>
-                  <td className="c">
-                    {editPrices
-                      ? <input type="number" min="0" step="0.001" value={draftPrices[a.key] ?? 0}
-                          onChange={e => setDraftPrices({ ...draftPrices, [a.key]: e.target.value })}
-                          style={{ width: 80, textAlign: "center" }} />
-                      : `${euros(prix)}`}
-                  </td>
-                  <td className="c" style={{ fontWeight: 600 }}>{euros(montant)}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table></div>
-        {editPrices
-          ? <button className="primary" onClick={savePrices}>Enregistrer les prix</button>
-          : (
-            <div style={{ fontSize: 16, fontWeight: 700, color: "#1f7a3f" }}>
-              Total HT estimé sur la période : {euros(estTotal)}
+        <div className="fm-res-grid">
+          <div className="fm-net big bleu">
+            <span className="fm-net-l">{editPrices ? "Total avec les nouveaux prix" : "Total estimé"}</span>
+            <span className="fm-net-v">{euros(estTotal)} HT</span>
+            <span className="fm-net-sub">soit {euros(estTotal * 1.2)} TTC</span>
+            <span className="fm-net-sub">{nbPieces} pièce{nbPieces > 1 ? "s" : ""} reçue{nbPieces > 1 ? "s" : ""} en {nbRecep} réception{nbRecep > 1 ? "s" : ""}</span>
+          </div>
+          <div>
+            <div className="tbl-wrap"><table className="tbl">
+              <thead>
+                <tr><th>Article</th><th className="c">Reçu</th><th className="c">Prix unitaire HT</th><th className="r">Montant HT</th></tr>
+              </thead>
+              <tbody>
+                {LINEN_ARTICLES.map(a => {
+                  const qte = estReceived[a.key] || 0;
+                  const prix = prixAffiches[a.key] ?? 0;
+                  const montant = qte * (Number(prix) || 0);
+                  return (
+                    <tr key={a.key}>
+                      <td>{a.label}</td>
+                      <td className="c">{qte}</td>
+                      <td className="c">
+                        {editPrices
+                          ? <input type="number" min="0" step="0.001" inputMode="decimal" className="fl-input fl-input-prix"
+                              value={draftPrices[a.key] ?? 0} aria-label={`Prix unitaire ${a.label}`}
+                              onChange={e => setDraftPrices({ ...draftPrices, [a.key]: e.target.value })} />
+                          : prixUnit(prix)}
+                      </td>
+                      <td className="r fl-gras">{euros(montant)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table></div>
+            <div className="fm-actions">
+              {editPrices ? (
+                <>
+                  <button type="button" className="fm-btn primary" onClick={savePrices}>Enregistrer les prix</button>
+                  <button type="button" className="fm-btn fm-btn-light" onClick={() => { setDraftPrices(prices); setEditPrices(false); }}>Annuler</button>
+                </>
+              ) : (
+                <button type="button" className="fm-btn" onClick={() => setEditPrices(true)}>Modifier les prix unitaires</button>
+              )}
             </div>
-          )}
-        <p style={{ fontSize: 12, color: "#666", marginTop: 8 }}>
-          Cocoon et Horizon partagent le même prix unitaire chez Elis — un seul prix par catégorie suffit pour cette estimation.
-          Ce montant est une anticipation, pas la facture officielle (hors TVA et participation perte éventuelle).
+          </div>
+        </div>
+        <p className="fm-note">
+          C&apos;est une estimation, pas la facture officielle. La participation pour perte n&apos;est pas comptée.
+          Cocoon et Horizon ont le même prix chez Elis : un seul prix par article suffit.
         </p>
       </div>
 
       <FactureLinge fs={fs} invoices={invoices} receptions={receptions} prices={prices} reload={reload} setStatus={setStatus} />
-    </>
+    </div>
   );
 }
 
