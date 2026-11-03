@@ -237,7 +237,7 @@ export default function IncendieImport({ fichiers, fs, types, verifs, docs, fact
           </div>
         );
       })}
-      {err && <div style={{ fontSize: 12, color: "var(--bad)", marginBottom: 8 }}>{err}</div>}
+      {err && <div className="msg bad">{err}</div>}
       <button className="primary" disabled={busy} onClick={enregistrer} style={{ background: "#1f3a5f", color: "#fff", border: "none", padding: "8px 16px", borderRadius: 5, cursor: "pointer" }}>
         {busy ? "Import…" : "Enregistrer et mettre à jour"}
       </button>

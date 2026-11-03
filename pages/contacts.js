@@ -145,7 +145,7 @@ function Contacts() {
                 {form.telephones.map((t, i) => (
                   <div key={i} className="phone-row" style={{ display: "flex", gap: 6, marginBottom: 6 }}>
                     <input type="text" value={t} onChange={e => updatePhone(i, e.target.value)} placeholder="06 12 34 56 78" style={{ width: 180, padding: "7px 9px", border: "1px solid #ccc", borderRadius: 5 }} />
-                    <button onClick={() => removePhoneField(i)} className="ghost" style={{ color: "var(--bad)" }}>✕</button>
+                    <button onClick={() => removePhoneField(i)} className="ghost danger" title="Supprimer" aria-label="Supprimer">✕</button>
                   </div>
                 ))}
                 <button onClick={addPhoneField} className="ghost" style={{ color: "var(--ok)", fontSize: 12 }}>+ Ajouter un numéro</button>
@@ -169,7 +169,7 @@ function Contacts() {
                   <td>{(c.telephones || []).length ? c.telephones.join(" · ") : "—"}</td>
                   <td style={{ whiteSpace: "nowrap" }}>
                     <button onClick={() => openEdit(c)} className="ghost" style={{ color: "var(--info)" }}>Modifier</button>
-                    <button onClick={() => del(c.id)} className="ghost" style={{ color: "var(--bad)" }}>✕</button>
+                    <button onClick={() => del(c.id)} className="ghost danger" title="Supprimer" aria-label="Supprimer">✕</button>
                   </td>
                 </tr>
               ))}

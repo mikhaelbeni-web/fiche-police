@@ -108,7 +108,7 @@ export default function IncendieAcces({ children }) {
               <input type="password" value={code2} onChange={e => setCode2(e.target.value)} placeholder="Confirmer le code"
                 style={{ width: "100%", padding: 10, border: "1px solid #ccc", borderRadius: 6, fontSize: 16, marginBottom: 10 }} />
             )}
-            {err && <div style={{ fontSize: 12, color: "var(--bad)", marginBottom: 8 }}>{err}</div>}
+            {err && <div className="msg bad">{err}</div>}
             <button type="submit" style={{ background: "#1f3a5f", color: "#fff", border: "none", padding: "10px 18px", borderRadius: 6, cursor: "pointer", fontWeight: 600 }}>
               {creation ? "Enregistrer le code" : fichiers ? "Importer" : "Ouvrir"}
             </button>

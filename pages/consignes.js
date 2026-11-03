@@ -201,7 +201,7 @@ function Consignes() {
                   <td>{b.appartement || "—"}</td>
                   <td>{b.client || "—"}</td>
                   <td>{b.code || "—"}</td>
-                  <td><button onClick={() => delBooking(b.id)} className="ghost" style={{ color: "var(--bad)" }}>✕</button></td>
+                  <td><button onClick={() => delBooking(b.id)} className="ghost danger" title="Supprimer" aria-label="Supprimer">✕</button></td>
                 </tr>
               ))}
               {activeAndFuture.length === 0 && <tr><td colSpan={8} className="empty-state">Aucune réservation en cours ou à venir.</td></tr>}
@@ -209,7 +209,7 @@ function Consignes() {
           </table></div>
 
           {past.length > 0 && (
-            <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 10 }}>
+            <p className="note">
               {past.length} réservation(s) passée(s), libérées automatiquement (non affichées ci-dessus).
             </p>
           )}

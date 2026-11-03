@@ -169,7 +169,7 @@ function Codes() {
                       <td style={{ fontWeight: 700, fontFamily: "monospace", fontSize: 14 }}>{c.code}</td>
                       <td style={{ whiteSpace: "nowrap" }}>
                         <button onClick={() => openEdit(c)} className="ghost" style={{ color: "var(--info)" }}>Modifier</button>
-                        <button onClick={() => del(c.id)} className="ghost" style={{ color: "var(--bad)" }}>✕</button>
+                        <button onClick={() => del(c.id)} className="ghost danger" title="Supprimer" aria-label="Supprimer">✕</button>
                       </td>
                     </tr>
                   ))}

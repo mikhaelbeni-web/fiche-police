@@ -233,7 +233,7 @@ function StockTab({ fs, stock, setStock, orders, receptions, usage, defects, set
           })}
         </tbody>
       </table></div>
-      <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 10 }}>
+      <p className="note">
         ⚠ = stock estimé bas (≤ 10). « Défectueux (en cours) » = linge propre arrivé sale, renvoyé et pas encore revenu : retiré du stock jusqu&apos;à son retour.
       </p>
     </>
@@ -391,19 +391,19 @@ function OrdersTab({ fs, orders, usage, receptions, reload, setStatus }) {
               {dateValide ? (type === "mardi" ? "Mardi" : "Jeudi") : "⚠ Ni mardi ni jeudi"}
             </div>
           </label>
-          <span style={{ fontSize: 12, color: "var(--muted)" }}>Réception prévue : {fmtFr(expectedReception(date))}</span>
-          <button onClick={calculerDepuisUsage} disabled={!dateValide} style={{ background: dateValide ? "#2ecc71" : "#ccc", color: dateValide ? "#073" : "var(--muted)", fontWeight: 600 }}>
+          <span className="pill info">Réception prévue : {fmtFr(expectedReception(date))}</span>
+          <button onClick={calculerDepuisUsage} disabled={!dateValide}>
             Calculer depuis le linge utilisé
           </button>
         </div>
         {!dateValide && (
-          <div style={{ fontSize: 12, color: "var(--bad)", marginBottom: 10 }}>
+          <div className="msg bad">
             Les commandes ne se font que le mardi ou le jeudi. Choisis une date correspondant à l&apos;un de ces deux jours.
           </div>
         )}
-        {calcInfo && <div style={{ fontSize: 12, color: "var(--ok)", marginBottom: 10 }}>{calcInfo}</div>}
+        {calcInfo && <div className="msg ok">{calcInfo}</div>}
         {dateValide && orders.some(o => o.date === date && o.type === type) && (
-          <div style={{ fontSize: 12, color: "var(--warn)", marginBottom: 10 }}>
+          <div className="msg warn">
             ⚠ Une commande existe déjà pour ce {type === "mardi" ? "mardi" : "jeudi"} ({fmtFr(date)}) — vérifie la liste ci-dessous avant d&apos;en ajouter une nouvelle.
           </div>
         )}
@@ -435,22 +435,22 @@ function OrdersTab({ fs, orders, usage, receptions, reload, setStatus }) {
               <td>{fmtFr(o.expectedReception)}</td>
               <td>{(() => {
                 const s = o.status;
-                if (s === "recue") return <span style={{ color: "var(--ok)" }}>✓ Reçue</span>;
-                if (s === "commandee" || !s) return <span style={{ color: "var(--warn)" }}>En attente</span>;
-                return <span style={{ color: "var(--muted)" }}>{s}</span>;
+                if (s === "recue") return <span className="pill ok">✓ Reçue</span>;
+                if (s === "commandee" || !s) return <span className="pill warn">En attente</span>;
+                return <span className="pill">{s}</span>;
               })()}</td>
               <td>
-                <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-                  <button onClick={() => exportExcel(o)} className="ghost" title="Télécharger l'Excel" style={{ color: "var(--ok)", padding: "4px 6px", fontSize: 12 }}>📥</button>
-                  <button onClick={() => preparerMail(o)} className="ghost" title="Préparer le mail du bon de ramassage à Elis (Gmail) et télécharger l'Excel à joindre" style={{ padding: "4px 6px", fontSize: 12 }}>✉️</button>
+                <div className="row-actions">
+                  <button onClick={() => exportExcel(o)} className="ghost icon-btn" title="Télécharger l'Excel" aria-label="Télécharger l'Excel">📥</button>
+                  <button onClick={() => preparerMail(o)} className="ghost icon-btn" title="Préparer le mail du bon de ramassage à Elis (Gmail) et télécharger l'Excel à joindre" aria-label="Préparer le mail du bon de ramassage">✉️</button>
                   {o.status === "recue" && (
                     <button onClick={async () => {
                       if (!confirm("Remettre cette commande en 'En attente livraison' ?")) return;
                       await fs.updateDoc(fs.doc(fs.db, "linen_orders", o.id), { status: "commandee" });
                       await reload();
-                    }} className="ghost" style={{ color: "var(--warn)", padding: "4px 6px", fontSize: 12 }}>↩</button>
+                    }} className="ghost icon-btn" title="Remettre en attente de livraison" aria-label="Remettre en attente de livraison">↩</button>
                   )}
-                  <button onClick={() => del(o.id)} className="ghost" style={{ color: "var(--bad)", padding: "4px 6px", fontSize: 12 }}>✕</button>
+                  <button onClick={() => del(o.id)} className="ghost icon-btn danger" title="Supprimer" aria-label="Supprimer">✕</button>
                 </div>
               </td>
             </tr>
@@ -458,10 +458,10 @@ function OrdersTab({ fs, orders, usage, receptions, reload, setStatus }) {
           {orders.length === 0 && <tr><td colSpan={LINEN_ARTICLES.length + 5} className="empty-state">Aucune commande.</td></tr>}
         </tbody>
       </table></div>
-      <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 10 }}>
+      <p className="note">
         ✉️ ouvre le mail du bon de ramassage dans Gmail et télécharge l&apos;Excel : glisse le fichier dans le mail, relis, puis envoie.
         {" "}Destinataires : {destinataires.length ? destinataires.join(", ") : "aucun"}
-        {" "}<button onClick={demanderDestinataires} className="ghost" style={{ padding: "2px 6px", fontSize: 12 }}>Modifier</button>
+        {" "}<button onClick={demanderDestinataires} className="ghost">Modifier</button>
       </p>
     </>
   );
@@ -604,7 +604,7 @@ function ReceptionsTab({ fs, orders, receptions, defects, reload, setStatus }) {
           </tbody>
         </table></div>
         <button className="primary" onClick={addReception}>Enregistrer la réception</button>
-        <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 8 }}>
+        <p className="note">
           Écart <span style={{ color: "var(--bad)", fontWeight: 700 }}>négatif</span> = il manque du linge (défectueux non rendu ou commande incomplète).
           <span style={{ color: "var(--ok)", fontWeight: 700 }}> ✓</span> = commande + défectueux bien reçus. Marque ensuite dans Défectueux ceux réellement revenus.
         </p>
@@ -633,13 +633,13 @@ function ReceptionsTab({ fs, orders, receptions, defects, reload, setStatus }) {
                   </td>
                 );
               })}
-              <td><button onClick={() => del(r.id)} className="ghost" style={{ color: "var(--bad)" }}>✕</button></td>
+              <td><button onClick={() => del(r.id)} className="ghost danger" title="Supprimer" aria-label="Supprimer">✕</button></td>
             </tr>
           ))}
           {receptions.length === 0 && <tr><td colSpan={LINEN_ARTICLES.length + 3} className="empty-state">Aucune réception.</td></tr>}
         </tbody>
       </table></div>
-      <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 10 }}>
+      <p className="note">
         Un nombre rouge entre parenthèses = quantité manquante par rapport à la commande (non livrée).
       </p>
     </>
@@ -708,7 +708,7 @@ function UsageTab({ fs, usage, reload, setStatus }) {
             <tr key={u.id}>
               <td>{fmtFr(u.date)}</td>
               {LINEN_ARTICLES.map(a => <td key={a.key} className="c">{u.quantities?.[a.key] || 0}</td>)}
-              <td><button onClick={() => del(u.id)} className="ghost" style={{ color: "var(--bad)" }}>✕</button></td>
+              <td><button onClick={() => del(u.id)} className="ghost danger" title="Supprimer" aria-label="Supprimer">✕</button></td>
             </tr>
           ))}
           {usage.length === 0 && <tr><td colSpan={LINEN_ARTICLES.length + 2} className="empty-state">Aucune saisie.</td></tr>}
@@ -778,9 +778,9 @@ function DefectsTab({ fs, defects, reload, setStatus }) {
   const totalAccuSum = Object.values(totalAccu).reduce((s, n) => s + n, 0);
 
   function statutLabel(d) {
-    if (d.status === "revenu") return <span style={{ color: "var(--ok)" }}>✓ Revenu {d.returnedDate ? fmtFr(d.returnedDate) : ""}</span>;
-    if (d.status === "renvoye") return <span style={{ color: "var(--info)" }}>Renvoyé {d.sentDate ? fmtFr(d.sentDate) : ""}</span>;
-    return <span style={{ color: "var(--warn)" }}>Accumulé</span>;
+    if (d.status === "revenu") return <span className="pill ok">✓ Revenu {d.returnedDate ? fmtFr(d.returnedDate) : ""}</span>;
+    if (d.status === "renvoye") return <span className="pill info">Renvoyé {d.sentDate ? fmtFr(d.sentDate) : ""}</span>;
+    return <span className="pill warn">Accumulé</span>;
   }
   function rowBg(d) {
     if (d.status === "revenu") return "#f2fbf4";
@@ -847,9 +847,9 @@ function DefectsTab({ fs, defects, reload, setStatus }) {
               {LINEN_ARTICLES.map(a => <td key={a.key} className="c">{d.quantities?.[a.key] || 0}</td>)}
               <td>{d.note || "—"}</td>
               <td>{statutLabel(d)}</td>
-              <td style={{ whiteSpace: "nowrap" }}>
+              <td><div className="row-actions">
                 {d.status === "accumule" &&
-                  <button onClick={() => marquerRenvoye(d.id)} className="ghost" style={{ color: "var(--info)" }}>Renvoyer</button>}
+                  <button onClick={() => marquerRenvoye(d.id)}>Renvoyer</button>}
                 {d.status === "renvoye" && (() => {
                   const rest = d.remaining ? Object.values(d.remaining).reduce((s, n) => s + (Number(n) || 0), 0) : null;
                   const init = Object.values(d.quantities || {}).reduce((s, n) => s + (Number(n) || 0), 0);
@@ -858,8 +858,8 @@ function DefectsTab({ fs, defects, reload, setStatus }) {
                     {partiel ? `reste ${rest} à récupérer` : "soldé auto par réception"}
                   </span>;
                 })()}
-                <button onClick={() => del(d.id)} className="ghost" style={{ color: "var(--bad)" }}>✕</button>
-              </td>
+                <button onClick={() => del(d.id)} className="ghost danger" title="Supprimer" aria-label="Supprimer">✕</button>
+              </div></td>
             </tr>
           ))}
           {defects.length === 0 && <tr><td colSpan={LINEN_ARTICLES.length + 4} className="empty-state">Aucun linge défectueux.</td></tr>}
@@ -1024,7 +1024,7 @@ function PositionTab({ fs, stock, orders, receptions, usage, defects, thresholds
           })}
         </tbody>
       </table></div>
-      <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 10 }}>
+      <p className="note">
         <strong style={{ color: "var(--info)" }}>En attente livraison</strong> = commande passée, pas encore reçue (normal, en route) — <em>pas</em> déduit du stock.
         <strong style={{ color: "var(--bad)" }}> Manquant commande</strong> = commande <em>déjà reçue</em> mais dont il manquait des pièces jamais livrées (vraie anomalie).
         <strong style={{ color: "var(--warn)" }}> Défectueux non rendu</strong> = renvoyé à Pantin, pas encore revenu.

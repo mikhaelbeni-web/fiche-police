@@ -236,7 +236,7 @@ function HistoriqueList({ reports, onSelect, onDelete }) {
               <td className="c">{hasAlert(r) ? "🔴" : "🟢"}</td>
               <td style={{ whiteSpace: "nowrap" }}>
                 <button onClick={() => onSelect(r)} className="ghost" style={{ color: "var(--info)" }}>Consulter</button>
-                <button onClick={() => onDelete(r)} className="ghost" style={{ color: "var(--bad)" }}>✕</button>
+                <button onClick={() => onDelete(r)} className="ghost danger" title="Supprimer" aria-label="Supprimer">✕</button>
               </td>
             </tr>
           ))}

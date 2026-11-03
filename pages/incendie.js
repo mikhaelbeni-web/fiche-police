@@ -249,7 +249,7 @@ function TypeForm({ onSave, onCancel }) {
           </select>
         </label>
       </div>
-      {err && <div style={{ fontSize: 12, color: "var(--bad)", marginBottom: 8 }}>{err}</div>}
+      {err && <div className="msg bad">{err}</div>}
       <button onClick={() => nom.trim() ? onSave(nom.trim(), mois || null) : setErr("Le nom est obligatoire.")} style={{ background: "#1f3a5f", color: "#fff", border: "none", padding: "8px 16px", borderRadius: 5, cursor: "pointer" }}>Créer le contrôle</button>
       <button onClick={onCancel} className="ghost" style={{ marginLeft: 8 }}>Annuler</button>
     </div>
@@ -506,7 +506,7 @@ function VerifForm({ type, ouvertes, onSave, onCancel }) {
       <div className="linen-form-row">
         <label style={{ flex: 1 }}>Note (optionnel) <input type="text" value={note} onChange={e => setNote(e.target.value)} style={{ width: "100%" }} /></label>
       </div>
-      {err && <div style={{ fontSize: 12, color: "var(--bad)", marginBottom: 8 }}>{err}</div>}
+      {err && <div className="msg bad">{err}</div>}
       <button className="primary" onClick={submit} style={{ background: "#1f3a5f", color: "#fff", border: "none", padding: "8px 16px", borderRadius: 5, cursor: "pointer" }}>Enregistrer la vérification</button>
       <button onClick={onCancel} className="ghost" style={{ marginLeft: 8 }}>Annuler</button>
     </div>
@@ -537,7 +537,7 @@ function DocForm({ type, onSave, onCancel }) {
       </div>
       <div className="linen-form-row"><label style={{ flex: 1 }}>Objet <input type="text" value={objet} onChange={e => setObjet(e.target.value)} style={{ width: "100%" }} /></label></div>
       <div className="linen-form-row"><PieceJointe typeId={type.id} value={pj} onChange={setPj} setErr={setErr} /></div>
-      {err && <div style={{ fontSize: 12, color: "var(--bad)", marginBottom: 8 }}>{err}</div>}
+      {err && <div className="msg bad">{err}</div>}
       <button onClick={submit} style={{ background: "#1f3a5f", color: "#fff", border: "none", padding: "8px 16px", borderRadius: 5, cursor: "pointer" }}>Enregistrer le document</button>
       <button onClick={onCancel} className="ghost" style={{ marginLeft: 8 }}>Annuler</button>
     </div>
@@ -679,7 +679,7 @@ function FactureForm({ types, onSave, onCancel }) {
         <label>Montant HT € <input type="number" min="0" step="0.01" value={ht} onChange={e => setHt(e.target.value)} style={{ width: 120 }} /></label>
       </div>
       <div className="linen-form-row"><PieceJointe typeId="factures" value={pj} onChange={setPj} setErr={setErr} /></div>
-      {err && <div style={{ fontSize: 12, color: "var(--bad)", marginBottom: 8 }}>{err}</div>}
+      {err && <div className="msg bad">{err}</div>}
       <button onClick={submit} style={{ background: "#1f3a5f", color: "#fff", border: "none", padding: "8px 16px", borderRadius: 5, cursor: "pointer" }}>Enregistrer la facture</button>
       <button onClick={onCancel} className="ghost" style={{ marginLeft: 8 }}>Annuler</button>
     </div>

@@ -333,7 +333,7 @@ function SinistreForm({ onSave, onCancel }) {
         <label style={{ flex: 1 }}>Note (optionnel) <input type="text" value={note} onChange={e => setNote(e.target.value)} style={{ width: "100%" }} /></label>
       </div>
 
-      {formStatus && <div style={{ fontSize: 12, color: "var(--warn)", marginBottom: 8 }}>{formStatus}</div>}
+      {formStatus && <div className="msg warn">{formStatus}</div>}
       <button className="primary" onClick={submit}>Enregistrer le sinistre</button>
       <button onClick={onCancel} className="ghost" style={{ marginLeft: 8 }}>Annuler</button>
     </div>
@@ -361,7 +361,7 @@ function SinistreRow({ s, onUpdate, onDelete }) {
           <span style={{ fontSize: 12, fontWeight: 600, color: isDirect ? "#8e44ad" : "var(--info)" }}>
             {isDirect ? "En direct" : (CANAL_LABEL[canal] || "Plateforme")}
           </span>
-          <button onClick={onDelete} className="ghost" style={{ color: "var(--bad)" }}>✕</button>
+          <button onClick={onDelete} className="ghost danger" title="Supprimer" aria-label="Supprimer">✕</button>
         </div>
       </div>
 

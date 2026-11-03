@@ -353,7 +353,7 @@ function Linge() {
                       </td>
                       <td>{e.type === "decale" ? <span style={{ color: "var(--info)" }}>Décalé</span> : "Supplément"}</td>
                       <td className="c">{euros((e.menageHT || 0) + (e.amenitiesHT || 0))}</td>
-                      <td><button onClick={() => delExtraMenage(e.id)} className="ghost" style={{ color: "var(--bad)" }}>✕</button></td>
+                      <td><button onClick={() => delExtraMenage(e.id)} className="ghost danger" title="Supprimer" aria-label="Supprimer">✕</button></td>
                     </tr>
                   ))}
                 </tbody>

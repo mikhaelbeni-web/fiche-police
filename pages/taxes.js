@@ -797,13 +797,13 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
               <td className="c" style={{ color: e.type === "expense" ? "var(--bad)" : "var(--ok)", fontWeight: 600 }}>
                 {e.type === "expense" ? "−" : "+"}{euros2(e.amount)}
               </td>
-              <td><button onClick={() => delEntry(e)} className="ghost" style={{ color: "var(--bad)" }}>✕</button></td>
+              <td><button onClick={() => delEntry(e)} className="ghost danger" title="Supprimer" aria-label="Supprimer">✕</button></td>
             </tr>
           ))}
           {unrecovered.length === 0 && <tr><td colSpan={9} className="empty-state">Rien depuis la dernière récupération.</td></tr>}
         </tbody>
       </table></div>
-      <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 10 }}>
+      <p className="note">
         Total en caisse = reliquat laissé à la dernière récupération ({euros2(baseline)}) + paiements clients ({euros2(sumClient)}) − dépenses ({euros2(sumExpense)}).
       </p>
     </>
@@ -1029,7 +1029,7 @@ function CashHistory({ recoveries, entries, fs, reload, setStatus, requestCode }
               <td>{r.note || "—"}</td>
               <td style={{ whiteSpace: "nowrap" }}>
                 <button onClick={() => exportRecoveryCSV(r)} className="ghost" style={{ color: "var(--ok)" }}>📥 Excel</button>
-                <button onClick={() => delRecovery(r)} className="ghost" style={{ color: "var(--bad)" }}>✕</button>
+                <button onClick={() => delRecovery(r)} className="ghost danger" title="Supprimer" aria-label="Supprimer">✕</button>
               </td>
             </tr>
           ))}
