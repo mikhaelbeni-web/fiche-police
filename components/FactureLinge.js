@@ -7,7 +7,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { ELIS_INVOICE_ARTICLES } from "../lib/linen";
-import { lireLignesPdf, analyserFactureElis, comparerFactureReceptions, prixDifferents, mailReclamationLinge } from "../lib/factureLinge";
+import { chargerPdfJs, lireLignesPdf, analyserFactureElis, comparerFactureReceptions, prixDifferents, mailReclamationLinge } from "../lib/factureLinge";
 
 const HOTEL_GMAIL = "residencelebelleville@gmail.com";
 
@@ -381,21 +381,59 @@ async function lirePdf(fs, id) {
 }
 
 // Petite fenêtre qui affiche la facture dans la page, sans la télécharger.
+// Les pages sont dessinées avec pdf.js (déjà utilisé pour l'import) plutôt que
+// par le lecteur PDF du navigateur : quand Chrome est réglé sur « Télécharger
+// les PDF », un <iframe> n'affiche qu'un bouton « Ouvrir » et rien d'autre.
 function FenetrePdf({ url, titre, onClose }) {
+  const zone = useRef(null);
+  const [etat, setEtat] = useState("Chargement de la facture…");
+  const [grand, setGrand] = useState(false);
   useEffect(() => {
     const k = e => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", k);
     return () => window.removeEventListener("keydown", k);
   }, [onClose]);
+  useEffect(() => {
+    let fini = false;
+    (async () => {
+      try {
+        const pdfjs = await chargerPdfJs();
+        const pdf = await pdfjs.getDocument(url).promise;
+        const el = zone.current;
+        if (!el || fini) return;
+        el.innerHTML = "";
+        const largeur = Math.max(320, el.clientWidth - 24);
+        const dpr = window.devicePixelRatio || 1;
+        for (let n = 1; n <= pdf.numPages; n++) {
+          const page = await pdf.getPage(n);
+          if (fini) return;
+          const base = page.getViewport({ scale: 1 });
+          const vp = page.getViewport({ scale: (largeur / base.width) * dpr });
+          const c = document.createElement("canvas");
+          c.className = "fl-pdf-page";
+          c.width = Math.floor(vp.width);
+          c.height = Math.floor(vp.height);
+          c.style.width = Math.floor(vp.width / dpr) + "px";
+          el.appendChild(c);
+          await page.render({ canvasContext: c.getContext("2d"), viewport: vp }).promise;
+        }
+        setEtat("");
+      } catch (err) {
+        if (!fini) setEtat("Impossible d'afficher la facture : " + err.message);
+      }
+    })();
+    return () => { fini = true; };
+  }, [url, grand]);
   return (
     <div className="fl-pdf-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-label={titre}>
-      <div className="fl-pdf" onClick={e => e.stopPropagation()}>
+      <div className={"fl-pdf" + (grand ? " fl-pdf-grand" : "")} onClick={e => e.stopPropagation()}>
         <div className="fl-pdf-head">
           <span className="fl-pdf-titre">{titre}</span>
-          <a className="fm-btn fm-btn-light" href={url} target="_blank" rel="noreferrer">Ouvrir en grand</a>
+          <button type="button" className="fm-btn fm-btn-light" onClick={() => setGrand(g => !g)}>{grand ? "Réduire" : "Agrandir"}</button>
           <button type="button" className="fm-btn" onClick={onClose}>Fermer</button>
         </div>
-        <iframe className="fl-pdf-cadre" src={url} title={titre} />
+        {etat && <div className="fl-pdf-etat">{etat}</div>}
+        <div className="fl-pdf-cadre" ref={zone} />
       </div>
     </div>
   );

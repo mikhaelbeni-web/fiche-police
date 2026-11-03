@@ -1037,7 +1037,10 @@ body {
 }
 .fl-pdf-head { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid #e3e6ea; flex-wrap: wrap; }
 .fl-pdf-titre { font-weight: 700; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.fl-pdf-cadre { flex: 1; width: 100%; border: 0; }
+.fl-pdf-cadre { flex: 1; width: 100%; border: 0; overflow: auto; background: #eef0f3; padding: 12px; box-sizing: border-box; }
+.fl-pdf-page { display: block; margin: 0 auto 12px; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.18); max-width: 100%; height: auto; }
+.fl-pdf-etat { padding: 10px 12px; color: #555; font-size: 14px; }
+.fl-pdf.fl-pdf-grand { max-width: none; width: 100%; height: 100%; border-radius: 0; }
 @media screen and (max-width: 768px) {
   .fl-pdf-overlay { padding: 0; }
   .fl-pdf { height: 100%; max-width: none; border-radius: 0; }
