@@ -1154,3 +1154,26 @@ body {
 .linen-form.tone-info { background: var(--info-bg); border-color: var(--info-line); margin-bottom: 14px; }
 .linen-form.tone-ok { background: var(--ok-bg); border-color: var(--ok-line); }
 .recep-row.a-remplir { background: var(--warn-bg); padding: 8px; border-radius: 6px; margin-bottom: 10px; }
+
+/* Fiches en carte (Sinistres, Réclamations Gmail) : bord gauche = état. */
+.card { background: #fff; border: 1px solid var(--border); border-left: 4px solid var(--border); border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; }
+.card.card-ok { border-left-color: var(--ok); }
+.card.card-warn { border-left-color: var(--warn); }
+.card.card-bad { border-left-color: var(--bad); }
+.card-head { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px; }
+.card-meta { font-size: 12.5px; color: var(--muted); }
+.card-body { font-size: 14px; margin: 8px 0 4px; line-height: 1.45; }
+.card-quote { font-size: 13px; color: var(--muted); font-style: italic; }
+.card-montant { font-size: 13px; font-weight: 600; margin-top: 2px; }
+.card-link { font-size: 13px; font-weight: 600; color: var(--info); }
+.card-controls { display: flex; gap: 10px 16px; flex-wrap: wrap; align-items: flex-end; margin-top: 12px; padding-top: 10px; border-top: 1px solid #eef0f3; }
+.card-controls + .card-controls { border-top: none; padding-top: 0; margin-top: 8px; }
+.check { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; min-height: 36px; }
+.inline-field { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--muted); font-weight: 600; }
+.inline-field.grow { flex: 1; min-width: 200px; }
+.inline-field.grow input { width: 100%; }
+.pick-ok { font-size: 12.5px; color: var(--ok); margin-top: 4px; }
+.t-bad { color: var(--bad); }
+.t-warn { color: var(--warn); }
+.pill.violet { background: #f3ecfa; color: #7a3d99; }
+@media print { .card { border-left-width: 1px; } }

@@ -255,7 +255,7 @@ function SinistreForm({ onSave, onCancel }) {
           <label style={{ minWidth: 320, position: "relative" }}>Nom du client
             <input type="text" value={picked ? picked.client : query} onChange={e => runSearch(e.target.value)}
               placeholder="Tape au moins 2 lettres du nom…" style={{ width: "100%" }} />
-            {searching && <span style={{ fontSize: 11, color: "var(--muted)" }}>Recherche…</span>}
+            {searching && <span className="note">Recherche…</span>}
             {!picked && results.length > 0 && (
               <div style={{ border: "1px solid #ddd", borderRadius: 6, marginTop: 4, maxHeight: 220, overflowY: "auto", background: "#fff", position: "relative", zIndex: 5 }}>
                 {results.map((r, i) => (
@@ -268,15 +268,15 @@ function SinistreForm({ onSave, onCancel }) {
                   }}
                     style={{ padding: "8px 10px", cursor: "pointer", borderBottom: "1px solid #f0f0f0", fontSize: 13 }}>
                     <strong>{r.client}</strong> — {r.residence} {r.appartement} ({r.unitNumber})
-                    <div style={{ fontSize: 11, color: "var(--muted)" }}>{fmtFr(r.arrivee)} → {fmtFr(r.depart)} · {r.channel}</div>
+                    <div className="card-meta">{fmtFr(r.arrivee)} → {fmtFr(r.depart)} · {r.channel}</div>
                   </div>
                 ))}
               </div>
             )}
             {picked && (
-              <div style={{ fontSize: 11, color: "var(--ok)", marginTop: 4 }}>
+              <div className="pick-ok">
                 {picked.residence} {picked.appartement} · {fmtFr(picked.arrivee)} → {fmtFr(picked.depart)}
-                {" "}<button type="button" onClick={() => { setPicked(null); setQuery(""); }} className="ghost" style={{ fontSize: 11 }}>changer</button>
+                {" "}<button type="button" onClick={() => { setPicked(null); setQuery(""); }} className="ghost">changer</button>
               </div>
             )}
           </label>
@@ -350,35 +350,35 @@ function SinistreRow({ s, onUpdate, onDelete }) {
   const canal = s.canal || (s.origine === "booking" ? "booking" : null);
 
   return (
-    <div className="resid" style={{ padding: "12px 14px", background: s.problemeRegle ? "#f4faf4" : "#fdf9f0", borderRadius: 8, marginBottom: 10, border: "1px solid #eee" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+    <div className={`resid card ${s.problemeRegle ? "card-ok" : "card-warn"}`}>
+      <div className="card-head">
         <div>
           <strong>{s.client}</strong>{" "}
-          {s.residence && <span style={{ fontSize: 12, color: "var(--muted)" }}>· {s.residence} {s.appartement}</span>}
-          <span style={{ fontSize: 12, color: "var(--muted)" }}> · {fmtFr(s.date)}</span>
+          {s.residence && <span className="card-meta">· {s.residence} {s.appartement}</span>}
+          <span className="card-meta"> · {fmtFr(s.date)}</span>
         </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <span style={{ fontSize: 12, fontWeight: 600, color: isDirect ? "#8e44ad" : "var(--info)" }}>
+        <div className="row-actions">
+          <span className={`pill ${isDirect ? "violet" : "info"}`}>
             {isDirect ? "En direct" : (CANAL_LABEL[canal] || "Plateforme")}
           </span>
           <button onClick={onDelete} className="ghost danger" title="Supprimer" aria-label="Supprimer">✕</button>
         </div>
       </div>
 
-      <div style={{ fontSize: 14, margin: "6px 0" }}>{s.motif}</div>
-      {s.montant != null && <div style={{ fontSize: 13, color: "var(--bad)" }}>Montant : {euros(s.montant)}</div>}
-      {s.note && <div style={{ fontSize: 12, color: "var(--muted)", fontStyle: "italic" }}>{s.note}</div>}
+      <div className="card-body">{s.motif}</div>
+      {s.montant != null && <div className="card-montant t-bad">Montant : {euros(s.montant)}</div>}
+      {s.note && <div className="card-quote">{s.note}</div>}
 
-      <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginTop: 10, alignItems: "center" }}>
-        <label style={{ fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}>
+      <div className="card-controls">
+        <label className="check">
           <input type="checkbox" checked={!!s.reponseRapide} onChange={e => onUpdate({ reponseRapide: e.target.checked })} />
           Répondu rapidement
         </label>
-        <label style={{ fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}>
+        <label className="check">
           <input type="checkbox" checked={!!s.problemeRegle} onChange={e => onUpdate({ problemeRegle: e.target.checked })} />
           Problème réglé
         </label>
-        <label style={{ fontSize: 12 }}>
+        <label className="inline-field">
           Statut plateforme{" "}
           <select value={s.statutPlateforme || s.statutBooking || "non_ouvert"} onChange={e => onUpdate({ statutPlateforme: e.target.value })}>
             {STATUT_PLATEFORME.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
