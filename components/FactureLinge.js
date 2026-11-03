@@ -50,6 +50,7 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
   const [form, setForm] = useState(null); // null = fermé
   const [lecture, setLecture] = useState(""); // message pendant / après lecture du PDF
   const [selId, setSelId] = useState(null); // facture enregistrée affichée à l'étape 3
+  const [apercuPdf, setApercuPdf] = useState(null); // { url, titre } : fenêtre « Voir la facture »
   const fichierRef = useRef(null);
   // Destinataires Elis : les mêmes que pour le bon de ramassage (Firestore, le dépôt est public).
   const [destinataires, setDestinataires] = useState([]);
@@ -80,7 +81,7 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
     try {
       const lignes = await lireLignesPdf(f);
       const r = analyserFactureElis(lignes);
-      setForm({ source: "pdf", fichierNom: f.name, ...r });
+      setForm({ source: "pdf", fichierNom: f.name, fichier: f, fichierLocal: URL.createObjectURL(f), ...r });
       setLecture("");
     } catch (err) {
       setLecture(`Impossible de lire ce PDF (${err.message}). Utilisez la saisie à la main.`);
@@ -117,11 +118,17 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
       };
       if (form.autres?.length) doc.autres = form.autres;
       if (form.fichierNom) doc.fichierNom = form.fichierNom;
+      // Copie du PDF dans Firebase Storage pour pouvoir le revoir plus tard.
+      // Si l'envoi échoue, la facture est quand même enregistrée (sans PDF).
+      let pdfPerdu = false;
+      if (form.fichier) {
+        try { doc.fichierUrl = await envoyerPdf(form.fichier); } catch { pdfPerdu = true; }
+      }
       const ref = await fs.addDoc(fs.collection(fs.db, "linen_invoices"), doc);
       setForm(null);
       await reload();
       if (ref?.id) setSelId(ref.id);
-      setStatus("Facture enregistrée.");
+      setStatus(pdfPerdu ? "Facture enregistrée, mais le PDF n'a pas pu être gardé : « Voir la facture » ne sera pas disponible pour elle." : "Facture enregistrée.");
     } catch (err) { setStatus("Erreur : " + err.message); }
   }
 
@@ -166,6 +173,9 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
               <div className="fm-note">
                 {form.source === "pdf" ? <>Lus dans <strong>{form.fichierNom}</strong>. Corrigez si besoin, le résultat se met à jour en dessous.</> : "Recopiez les quantités et prix de la facture. Le résultat se met à jour en dessous."}
               </div>
+              {form.fichierLocal && (
+                <button type="button" className="fm-btn fl-voir" onClick={() => setApercuPdf({ url: form.fichierLocal, titre: form.fichierNom })}>Voir la facture</button>
+              )}
             </div>
 
             {nbAvert > 0 && (
@@ -255,6 +265,9 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
             <div className="fl-entete">
               <div className="fm-res-title">Facture {sel.numFacture} · {libellePeriode(sel.periodFrom, sel.periodTo)}</div>
               <div className="fm-note">Datée du {fmtFr(sel.dateFacture)} · net à payer {eur(sel.netAPayer)}</div>
+              {sel.fichierUrl && (
+                <button type="button" className="fm-btn fl-voir" onClick={() => setApercuPdf({ url: sel.fichierUrl, titre: `Facture ${sel.numFacture}` })}>Voir la facture</button>
+              )}
             </div>
             <Comparaison key={sel.id} c={selC} inv={sel} destinataires={destinataires} />
           </>
@@ -272,16 +285,49 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
           <div className="fm-cards fl-cards">
             {invoices.map(inv => (
               <CarteFacture key={inv.id} inv={inv} receptions={receptions} actif={sel?.id === inv.id}
-                onVoir={() => voirFacture(inv.id)} onDelete={() => supprimer(inv.id)} />
+                onVoir={() => voirFacture(inv.id)} onDelete={() => supprimer(inv.id)}
+                onPdf={inv.fichierUrl ? () => setApercuPdf({ url: inv.fichierUrl, titre: `Facture ${inv.numFacture}` }) : null} />
             ))}
           </div>
         )}
       </div>
+      {apercuPdf && <FenetrePdf url={apercuPdf.url} titre={apercuPdf.titre} onClose={() => setApercuPdf(null)} />}
     </>
   );
 }
 
-function CarteFacture({ inv, receptions, actif, onVoir, onDelete }) {
+// Envoie le PDF dans Firebase Storage et renvoie son adresse de lecture.
+async function envoyerPdf(file) {
+  const { app } = await import("../lib/firebase");
+  const { getStorage, ref, uploadBytes, getDownloadURL } = await import("firebase/storage");
+  const nom = file.name.replace(/[^\w.\-]+/g, "_");
+  const r = ref(getStorage(app), `linge/factures/${Date.now()}_${nom}`);
+  await uploadBytes(r, file, { contentType: "application/pdf" });
+  return getDownloadURL(r);
+}
+
+// Petite fenêtre qui affiche la facture dans la page, sans la télécharger.
+function FenetrePdf({ url, titre, onClose }) {
+  useEffect(() => {
+    const k = e => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", k);
+    return () => window.removeEventListener("keydown", k);
+  }, [onClose]);
+  return (
+    <div className="fl-pdf-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-label={titre}>
+      <div className="fl-pdf" onClick={e => e.stopPropagation()}>
+        <div className="fl-pdf-head">
+          <span className="fl-pdf-titre">{titre}</span>
+          <a className="fm-btn fm-btn-light" href={url} target="_blank" rel="noreferrer">Ouvrir en grand</a>
+          <button type="button" className="fm-btn" onClick={onClose}>Fermer</button>
+        </div>
+        <iframe className="fl-pdf-cadre" src={url} title={titre} />
+      </div>
+    </div>
+  );
+}
+
+function CarteFacture({ inv, receptions, actif, onVoir, onDelete, onPdf }) {
   const c = comparerFactureReceptions(inv, receptions);
   const badge = c.nbReceptions === 0
     ? <span className="fm-badge vide">Pas de réception</span>
@@ -298,6 +344,7 @@ function CarteFacture({ inv, receptions, actif, onVoir, onDelete }) {
       <div className="fl-card-net">Net à payer : <strong>{eur(inv.netAPayer)}</strong></div>
       <div className="fm-card-actions">
         <button type="button" className="fm-btn" onClick={onVoir}>{actif ? "Affiché ci-dessus" : "Voir le résultat"}</button>
+        {onPdf && <button type="button" className="fm-btn" onClick={onPdf}>Voir la facture</button>}
         <button type="button" className="fm-btn fm-btn-danger" onClick={onDelete}>Supprimer</button>
       </div>
     </div>
