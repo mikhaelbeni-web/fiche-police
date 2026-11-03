@@ -1177,3 +1177,13 @@ body {
 .t-warn { color: var(--warn); }
 .pill.violet { background: #f3ecfa; color: #7a3d99; }
 @media print { .card { border-left-width: 1px; } }
+
+/* Check-list : la barre du personnel prolonge la barre d'outils au lieu
+   d'ajouter une troisième nuance de bleu ; boutons d'admin plus grands. */
+@media screen {
+  .staffbar { background: var(--accent-2); border-top: 1px solid rgba(255, 255, 255, .1); }
+  .resid-head button.ghost { color: #fff; min-height: 30px; }
+  .resid-head button.ghost:hover:not(:disabled) { background: rgba(255, 255, 255, .15); }
+  .task-admin-btn { width: 30px; height: 30px; font-size: 13px; }
+  .lunch-sep { color: var(--muted); }
+}
