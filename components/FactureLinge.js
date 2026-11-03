@@ -83,6 +83,8 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
       const r = analyserFactureElis(lignes);
       setForm({ source: "pdf", fichierNom: f.name, fichier: f, fichierLocal: URL.createObjectURL(f), ...r });
       setLecture("");
+      const deja = r.numFacture && invoices.find(i => (i.numFacture || "").trim() === r.numFacture);
+      if (deja) alert(`Vous avez déjà importé cette facture (n° ${deja.numFacture}, ${libellePeriode(deja.periodFrom, deja.periodTo)}). Vous pouvez la consulter, mais elle ne sera pas enregistrée une deuxième fois.`);
     } catch (err) {
       setLecture(`Impossible de lire ce PDF (${err.message}). Utilisez la saisie à la main.`);
     }
@@ -105,6 +107,12 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
 
   async function enregistrer() {
     if (!form.numFacture.trim()) { setStatus("Le numéro de facture est requis."); return; }
+    // Sécurité anti-doublon : une facture Elis (même n°) ne peut être enregistrée qu'une fois.
+    const deja = invoices.find(i => (i.numFacture || "").trim() === form.numFacture.trim());
+    if (deja) {
+      alert(`Vous avez déjà importé cette facture (n° ${deja.numFacture}, ${libellePeriode(deja.periodFrom, deja.periodTo)}). Elle n'est pas enregistrée une deuxième fois. Pour la remplacer, supprimez d'abord l'ancienne dans « Factures enregistrées ».`);
+      return;
+    }
     try {
       setStatus("Enregistrement…");
       const lines = {};
@@ -139,7 +147,8 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
     await reload();
   }
 
-  const doublon = form && form.numFacture && invoices.some(i => i.numFacture === form.numFacture.trim());
+  const doublonInv = form && form.numFacture ? invoices.find(i => (i.numFacture || "").trim() === form.numFacture.trim()) : null;
+  const doublon = !!doublonInv;
   const t = form ? totaux(form.lines, form.autres, form.participationPerte) : null;
   const apercu = form ? comparerFactureReceptions(form, receptions) : null;
   const prixChanges = form ? prixDifferents(form.lines, prices) : [];
@@ -182,7 +191,7 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
               <div className="fm-warn fl-warn">
                 <div className="fm-warn-title">À vérifier ({nbAvert})</div>
                 <ul className="fl-warn-list">
-                  {doublon && <li>Cette facture ({form.numFacture}) est déjà enregistrée.</li>}
+                  {doublon && <li><strong>Vous avez déjà importé cette facture</strong> ({libellePeriode(doublonInv.periodFrom, doublonInv.periodTo)}). Elle ne peut pas être enregistrée deux fois : supprimez l&apos;ancienne pour la remplacer.</li>}
                   {form.avertissements?.map((a, i) => <li key={i}>{a}</li>)}
                   {prixChanges.map(c => <li key={c.label}>Prix changé : {c.label} facturé {prix3(c.facture)} au lieu de {prix3(c.attendu)} (prix enregistré).</li>)}
                 </ul>
@@ -242,7 +251,7 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
             {netDiffere && <div className="fm-note fl-orange">Attention : la facture indique {eur(form.netImprime)}. C&apos;est ce montant qui sera enregistré.</div>}
 
             <div className="fm-actions">
-              <button type="button" className="fm-btn primary" onClick={enregistrer}>Enregistrer la facture</button>
+              <button type="button" className="fm-btn primary" onClick={enregistrer} disabled={doublon}>{doublon ? "Déjà importée" : "Enregistrer la facture"}</button>
               <button type="button" className="fm-btn fm-btn-light" onClick={annulerForm}>Annuler</button>
             </div>
           </div>
