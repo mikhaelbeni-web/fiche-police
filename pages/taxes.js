@@ -35,20 +35,20 @@ function ControleExclusions({ data }) {
   if (!data.scanned) return null;
 
   return (
-    <div style={{ background: "#f7f9fc", border: "1px solid #dbe4ee", borderRadius: 8, padding: "10px 14px", marginBottom: 14, fontSize: 12 }}>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
+    <div className="panel">
+      <div className="panel-row">
         <strong>Contrôle :</strong>
         <span>{data.scanned} réservation(s) analysée(s) sur la période</span>
-        <span>→ <strong style={{ color: "var(--ok)" }}>{data.total} retenue(s)</strong></span>
+        <span className="pill ok">{data.total} retenue(s)</span>
         <span>· {totalExclus} écartée(s)</span>
         {detail.length > 0 && (
-          <button onClick={() => setOuvert(o => !o)} className="ghost" style={{ fontSize: 11, color: "var(--info)" }}>
+          <button onClick={() => setOuvert(o => !o)} className="ghost">
             {ouvert ? "Masquer" : `Voir les ${detail.length} cas à vérifier`}
           </button>
         )}
       </div>
 
-      <div style={{ marginTop: 6, color: "var(--muted)" }}>
+      <div className="note">
         Motifs d&apos;exclusion : {ex.horsBooking || 0} hors Booking.com · {ex.dejaPaye || 0} déjà payées · {ex.sansLigneTaxe || 0} sans ligne de taxe · {ex.pasEncoreArrive || 0} pas encore arrivées · {ex.horsPeriode || 0} hors période.
       </div>
 
@@ -283,7 +283,7 @@ function TaxesImpayees() {
                       <td className="c">{euros(it.taxeSejour)}</td>
                       <td className="c"><span className="box" /></td>
                       <td>
-                        <button onClick={() => maskTax(it)} className="ghost" style={{ fontSize: 11, color: "var(--muted)" }}
+                        <button onClick={() => maskTax(it)} className="ghost"
                           title="Déjà réglée en réalité (désynchro Hostaway) — la masquer définitivement de cette liste">
                           Masquer
                         </button>
@@ -296,7 +296,7 @@ function TaxesImpayees() {
           ))}
 
           {!loading && !data && status.startsWith("Erreur") && (
-            <div className="empty-state" style={{ color: "var(--bad)", fontWeight: 600 }}>
+            <div className="msg bad">
               ⚠ Impossible de vérifier — la connexion à Hostaway a échoué ({status.replace("Erreur : ", "")}).
               Ceci n&apos;est PAS un résultat « aucune taxe due », c&apos;est une vérification qui n&apos;a pas pu se faire. Réessaie avec ↻ avant de conclure quoi que ce soit.
             </div>
@@ -314,7 +314,7 @@ function TaxesImpayees() {
 
           {masked.length > 0 && (
             <div style={{ marginTop: 20 }}>
-              <button onClick={() => setShowMasked(s => !s)} className="ghost" style={{ fontSize: 12, color: "var(--muted)" }}>
+              <button onClick={() => setShowMasked(s => !s)} className="ghost">
                 {showMasked ? "Masquer" : `Voir les ${masked.length} taxe(s) masquée(s) manuellement`}
               </button>
               {showMasked && (
@@ -330,7 +330,7 @@ function TaxesImpayees() {
                         <td>{fmtFr(m.arrivee)}</td>
                         <td className="c">{euros(m.taxeSejour)}</td>
                         <td>{fmtFr((m.maskedAt || "").slice(0, 10))}</td>
-                        <td><button onClick={() => unmaskTax(m)} className="ghost" style={{ fontSize: 11, color: "var(--info)" }}>Réafficher</button></td>
+                        <td><button onClick={() => unmaskTax(m)} className="ghost">Réafficher</button></td>
                       </tr>
                     ))}
                   </tbody>
@@ -625,7 +625,7 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
       </div>
 
       <div style={{ marginBottom: 14 }}>
-        <button onClick={() => setShowStartForm(!showStartForm)} className="ghost" style={{ fontSize: 12, color: "var(--info)" }}>
+        <button onClick={() => setShowStartForm(!showStartForm)} className="ghost">
           {showStartForm ? "Annuler" : (recoveries.length ? "Redéfinir le solde de départ" : "Définir un solde de départ")}
         </button>
       </div>
@@ -635,35 +635,35 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
       )}
 
       <div className="linen-form">
-        <div className="linen-form-row" style={{ background: saisiPar ? "transparent" : "#fdf3e6", padding: saisiPar ? 0 : "8px", borderRadius: 6, marginBottom: 10 }}>
-          <label style={{ fontWeight: 700 }}>Réceptionniste (obligatoire)
+        <div className={`linen-form-row recep-row${saisiPar ? "" : " a-remplir"}`}>
+          <label className="t-strong">Réceptionniste (obligatoire)
             <select value={saisiPar} onChange={e => setSaisiPar(e.target.value)}>
               <option value="">— Qui saisit ? —</option>
               {staffList.map(name => <option key={name} value={name}>{name}</option>)}
             </select>
           </label>
-          {!saisiPar && <span style={{ fontSize: 12, color: "var(--warn)", alignSelf: "center" }}>À renseigner avant toute saisie</span>}
-          <button type="button" onClick={toggleStaffAdmin} className="ghost" style={{ fontSize: 11, color: staffAdmin ? "var(--ok)" : "var(--muted)", marginLeft: "auto" }}>
+          {!saisiPar && <span className="pill warn">À renseigner avant toute saisie</span>}
+          <button type="button" onClick={toggleStaffAdmin} className="ghost push-right">
             {staffAdmin ? "✓ Édition liste active" : "Gérer la liste"}
           </button>
         </div>
         {staffAdmin && (
-          <div style={{ background: "#eef7ee", border: "1px solid #bfe3bf", borderRadius: 6, padding: "8px 12px", marginBottom: 10 }}>
-            <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Réceptionnistes (liste partagée avec la Check-list)</div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
+          <div className="panel">
+            <div className="panel-title">Réceptionnistes (liste partagée avec la Check-list)</div>
+            <div className="panel-row">
               {staffList.map(name => (
-                <span key={name} style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "#fff", border: "1px solid #cde", borderRadius: 999, padding: "3px 4px 3px 10px", fontSize: 12 }}>
+                <span key={name} className="chip">
                   {name}
-                  <button type="button" onClick={() => removeStaffName(name)} style={{ background: "transparent", border: "none", color: "var(--bad)", cursor: "pointer", fontSize: 13, lineHeight: 1, padding: "0 6px" }}>✕</button>
+                  <button type="button" onClick={() => removeStaffName(name)} className="chip-del" title={`Retirer ${name}`} aria-label={`Retirer ${name}`}>✕</button>
                 </span>
               ))}
-              {staffList.length === 0 && <span style={{ fontSize: 12, color: "var(--muted)" }}>Aucun nom pour l&apos;instant.</span>}
+              {staffList.length === 0 && <span className="note">Aucun nom pour l&apos;instant.</span>}
             </div>
-            <div style={{ display: "flex", gap: 6 }}>
+            <div className="panel-row">
               <input type="text" value={newStaffName} onChange={e => setNewStaffName(e.target.value)}
                 onKeyDown={e => { if (e.key === "Enter") addStaffName(); }}
-                placeholder="Ajouter un prénom…" style={{ padding: "6px 9px", border: "1px solid #ccc", borderRadius: 5, fontSize: 13 }} />
-              <button type="button" onClick={addStaffName} className="primary" style={{ fontSize: 12 }}>Ajouter</button>
+                placeholder="Ajouter un prénom…" />
+              <button type="button" onClick={addStaffName} className="primary">Ajouter</button>
             </div>
           </div>
         )}
@@ -788,7 +788,7 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
           {unrecovered.map(e => (
             <tr key={e.id}>
               <td>{fmtFrShort(e.date)}</td>
-              <td>{e.type === "client" ? "Client" : <span style={{ color: "var(--bad)" }}>Dépense</span>}</td>
+              <td>{e.type === "client" ? <span className="pill ok">Client</span> : <span className="pill bad">Dépense</span>}</td>
               <td>{e.saisiPar || "—"}</td>
               <td>{e.client || "—"}</td>
               <td>{e.appartement || "—"}</td>
@@ -817,9 +817,9 @@ function StartingBalanceForm({ hasRecoveries, onConfirm, onCancel }) {
   const [startAmount, setStartAmount] = useState("");
 
   return (
-    <div className="linen-form" style={{ background: "#eef5fb", borderColor: "#b8d4ec", marginBottom: 14 }}>
+    <div className="linen-form tone-info">
       {hasRecoveries && (
-        <div style={{ color: "var(--warn)", fontSize: 12, marginBottom: 8 }}>
+        <div className="msg warn">
           Attention : des récupérations existent déjà. Ce solde de départ créera une nouvelle entrée de base
           (la plus récente prévaut dans les calculs) — vérifie que c&apos;est bien ce que tu veux plutôt que de
           corriger une récupération existante.
@@ -943,18 +943,18 @@ function RecoverForm({ fs, unrecovered, totalEnCaisse, baseline, sumClient, sumE
   }
 
   return (
-    <div className="linen-form" style={{ background: "#eef7ee", borderColor: "#bfe3bf" }}>
+    <div className="linen-form tone-ok">
       <div className="linen-form-row">
         <div style={{ fontSize: 13 }}><strong>Total en caisse à répartir : {euros2(totalEnCaisse)}</strong></div>
       </div>
       <div className="linen-form-row">
         <label>Montant récupéré € <input type="number" step="0.01" min="0" max={totalEnCaisse} value={amountRecovered} onChange={e => setAmountRecovered(e.target.value)} style={{ width: 110 }} /></label>
         <label>Laissé en caisse €
-          <input type="text" value={euros2(left)} disabled style={{ width: 110, background: "#f2f2f2", color: "#555" }} />
+          <input type="text" value={euros2(left)} disabled style={{ width: 110 }} />
         </label>
         <label style={{ flex: 1 }}>Note <input type="text" value={note} onChange={e => setNote(e.target.value)} style={{ width: "100%" }} /></label>
       </div>
-      {!montantValide && <div style={{ color: "var(--bad)", fontSize: 12, marginBottom: 8 }}>Le montant récupéré ne peut pas dépasser le total en caisse ({euros2(totalEnCaisse)}).</div>}
+      {!montantValide && <div className="msg bad">Le montant récupéré ne peut pas dépasser le total en caisse ({euros2(totalEnCaisse)}).</div>}
       <button className="primary" onClick={confirmRecovery} disabled={!peutValider}>Confirmer la récupération</button>
     </div>
   );

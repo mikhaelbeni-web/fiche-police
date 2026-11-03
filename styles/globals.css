@@ -1139,3 +1139,18 @@ body {
   .pill { background: none; padding: 0; color: #000; }
   .msg { background: none; color: #000; }
 }
+.panel { background: #f7f9fc; border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; font-size: 13px; }
+.panel-title { font-size: 12.5px; font-weight: 700; margin-bottom: 8px; }
+.panel-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.panel-row + .panel-row { margin-top: 8px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 2px; background: #fff; border: 1px solid var(--border);
+  border-radius: 999px; padding: 2px 2px 2px 12px; font-size: 13px;
+}
+.chip-del { background: transparent; border: none; color: var(--bad); cursor: pointer; font-size: 13px; line-height: 1; min-width: 28px; min-height: 28px; border-radius: 999px; }
+.chip-del:hover { background: var(--bad-bg); }
+.t-strong { font-weight: 700; }
+.push-right { margin-left: auto; }
+.linen-form.tone-info { background: var(--info-bg); border-color: var(--info-line); margin-bottom: 14px; }
+.linen-form.tone-ok { background: var(--ok-bg); border-color: var(--ok-line); }
+.recep-row.a-remplir { background: var(--warn-bg); padding: 8px; border-radius: 6px; margin-bottom: 10px; }
