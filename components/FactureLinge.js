@@ -4,9 +4,11 @@
 // réellement reçu (onglet Réceptions) sur le mois facturé, article par
 // article, en quantité et en euros. Firestore : `linen_invoices`.
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ELIS_INVOICE_ARTICLES } from "../lib/linen";
-import { lireLignesPdf, analyserFactureElis, comparerFactureReceptions, prixDifferents } from "../lib/factureLinge";
+import { lireLignesPdf, analyserFactureElis, comparerFactureReceptions, prixDifferents, mailReclamationLinge } from "../lib/factureLinge";
+
+const HOTEL_GMAIL = "residencelebelleville@gmail.com";
 
 function isoDay(d) { return d.toISOString().slice(0, 10); }
 const fmtFr = d => (d ? d.slice(0, 10).split("-").reverse().join("/") : "");
@@ -47,6 +49,14 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
   const [form, setForm] = useState(null); // null = fermé
   const [lecture, setLecture] = useState(""); // message pendant / après lecture du PDF
   const fichierRef = useRef(null);
+  // Destinataires Elis : les mêmes que pour le bon de ramassage (Firestore, le dépôt est public).
+  const [destinataires, setDestinataires] = useState([]);
+  useEffect(() => {
+    if (!fs) return;
+    fs.getDoc(fs.doc(fs.db, "linen_settings", "belleville"))
+      .then(snap => { if (snap.exists()) setDestinataires(snap.data().bonDestinataires || []); })
+      .catch(() => {});
+  }, [fs]);
 
   function ouvrirManuel() {
     setLecture("");
@@ -183,7 +193,7 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
           <div style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", margin: "6px 0 8px", textTransform: "uppercase" }}>
             Aperçu : facturé contre reçu ({libellePeriode(form.periodFrom, form.periodTo)})
           </div>
-          <Comparaison c={apercu} />
+          <Comparaison c={apercu} inv={{ ...form, sousTotalHT: t.sousTotalHT }} destinataires={destinataires} />
 
           <button className="primary" style={{ marginTop: 12 }} onClick={enregistrer}>Enregistrer la facture</button>
         </div>
@@ -194,7 +204,7 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
           <tr><th>N° facture</th><th>Mois facturé</th><th className="c">Net à payer</th><th className="c">Facturé en trop</th><th></th></tr>
         </thead>
         <tbody>
-          {invoices.map(inv => <LigneFacture key={inv.id} inv={inv} receptions={receptions} onDelete={() => supprimer(inv.id)} />)}
+          {invoices.map(inv => <LigneFacture key={inv.id} inv={inv} receptions={receptions} destinataires={destinataires} onDelete={() => supprimer(inv.id)} />)}
           {invoices.length === 0 && <tr><td colSpan={5} className="empty-state">Aucune facture enregistrée.</td></tr>}
         </tbody>
       </table></div>
@@ -202,7 +212,7 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
   );
 }
 
-function LigneFacture({ inv, receptions, onDelete }) {
+function LigneFacture({ inv, receptions, destinataires, onDelete }) {
   const [open, setOpen] = useState(false);
   const c = comparerFactureReceptions(inv, receptions);
   return (
@@ -222,7 +232,7 @@ function LigneFacture({ inv, receptions, onDelete }) {
       {open && (
         <tr>
           <td colSpan={5} style={{ background: "#f8f9fb", padding: 14 }}>
-            <Comparaison c={c} />
+            <Comparaison c={c} inv={inv} destinataires={destinataires} />
           </td>
         </tr>
       )}
@@ -230,7 +240,7 @@ function LigneFacture({ inv, receptions, onDelete }) {
   );
 }
 
-function Comparaison({ c }) {
+function Comparaison({ c, inv, destinataires }) {
   if (c.nbReceptions === 0) {
     return <p style={{ fontSize: 13, color: "#b9560b" }}>Aucune réception enregistrée sur ce mois : rien à comparer. Vérifie les dates du mois facturé ou l&apos;onglet Réceptions.</p>;
   }
@@ -238,7 +248,7 @@ function Comparaison({ c }) {
     <>
       <div className="tbl-wrap"><table className="tbl">
         <thead>
-          <tr><th>Article</th><th className="c">Facturé</th><th className="c">Reçu</th><th className="c">Écart</th><th className="c">Prix unit. HT</th><th className="c">Écart €</th></tr>
+          <tr><th>Article</th>{c.avecCommande && <th className="c">Commandé</th>}<th className="c">Facturé</th><th className="c">Reçu</th><th className="c">Écart</th><th className="c">Prix unit. HT</th><th className="c">Écart €</th></tr>
         </thead>
         <tbody>
           {c.lignes.map(l => {
@@ -246,6 +256,7 @@ function Comparaison({ c }) {
             return (
               <tr key={l.key}>
                 <td>{l.label}</td>
+                {c.avecCommande && <td className="c" style={{ color: "#888" }}>{l.commande}</td>}
                 <td className="c">{l.facture}</td>
                 <td className="c">{l.recu}</td>
                 <td className="c" style={{ fontWeight: 700, color: couleur }}>{l.ecart === 0 ? "✓" : l.ecart > 0 ? `+${l.ecart}` : l.ecart}</td>
@@ -267,6 +278,43 @@ function Comparaison({ c }) {
         Reçu = somme des réceptions datées dans le mois facturé ({c.nbReceptions} réception{c.nbReceptions > 1 ? "s" : ""}).
         La participation pour perte (2,5 %) n&apos;est pas comptée dans l&apos;écart.
       </p>
+      <MailReclamation inv={inv} c={c} destinataires={destinataires} />
     </>
+  );
+}
+
+// Mail de réclamation prêt à envoyer (texte modifiable), comme dans Coûts ménage.
+// Rien n'est envoyé automatiquement : Gmail s'ouvre pré-rempli, tu relis et tu envoies.
+function MailReclamation({ inv, c, destinataires }) {
+  const mail = mailReclamationLinge(inv, c);
+  const [texte, setTexte] = useState(null);
+  const [copie, setCopie] = useState(false);
+  if (!mail) return null;
+  const body = texte ?? mail.body;
+  function gmail() {
+    const url = "https://mail.google.com/mail/?" + new URLSearchParams({
+      authuser: HOTEL_GMAIL, view: "cm", fs: "1", to: (destinataires || []).join(","), su: mail.subject, body,
+    }).toString();
+    window.open(url, "_blank");
+  }
+  async function copier() {
+    try { await navigator.clipboard.writeText(`${mail.subject}\n\n${body}`); setCopie(true); setTimeout(() => setCopie(false), 2000); } catch (e) { /* ignoré */ }
+  }
+  return (
+    <div style={{ marginTop: 14, borderTop: "1px solid #e3e6ea", paddingTop: 12 }}>
+      <div style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", marginBottom: 6, textTransform: "uppercase" }}>Mail de réclamation à Elis</div>
+      <div style={{ fontSize: 13, marginBottom: 6 }}>Objet : <strong>{mail.subject}</strong></div>
+      <textarea value={body} onChange={e => setTexte(e.target.value)} rows={Math.min(22, body.split("\n").length + 1)}
+        style={{ width: "100%", boxSizing: "border-box", fontFamily: "inherit", fontSize: 13, padding: 8 }} aria-label="Texte du mail" />
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
+        <button type="button" className="primary" onClick={gmail}>Ouvrir dans Gmail</button>
+        <button type="button" onClick={copier}>{copie ? "Copié ✓" : "Copier le mail"}</button>
+        {texte != null && <button type="button" onClick={() => setTexte(null)}>Remettre le texte proposé</button>}
+      </div>
+      <p style={{ fontSize: 11, color: "#999", marginTop: 6 }}>
+        {destinataires?.length ? `Destinataires : ceux du bon de ramassage (${destinataires.length} adresse${destinataires.length > 1 ? "s" : ""}). ` : "Aucun destinataire enregistré : ajoute-les dans Gmail. "}
+        Le texte est modifiable avant l&apos;ouverture de Gmail. Rien n&apos;est envoyé sans toi.
+      </p>
+    </div>
   );
 }
