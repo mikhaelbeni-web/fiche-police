@@ -958,3 +958,59 @@ body {
 .inc-reserve { padding: 6px 0; border-top: 1px solid #f0c9c4; font-size: 13px; cursor: pointer; }
 .inc-reserve:first-of-type { border-top: none; }
 @media print { .inc-reserves { border: 1px solid #000; background: none; } .inc-reserve { cursor: default; } }
+
+/* --- Coût linge (pages/commande-linge.js CostTab + components/FactureLinge.js) ---
+   Réutilise les classes .fm-* de FactureMenage ; ici seulement les compléments. */
+.facture-linge .fm-step { padding-bottom: 20px; border-bottom: 1px solid #eef0f3; }
+.facture-linge .fm-step:last-child { border-bottom: none; padding-bottom: 0; }
+.facture-linge .fm-step-title { font-size: 16px; }
+.facture-linge .fm-note { font-size: 13px; line-height: 1.45; }
+.facture-linge .fl-periode { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 16px; margin: 8px 0 14px; }
+.facture-linge .fl-periode .linen-form-row { margin-bottom: 0; }
+.facture-linge .fl-raccourcis { display: flex; gap: 8px; flex-wrap: wrap; }
+.facture-linge .linen-form-row input { min-height: 40px; box-sizing: border-box; font-size: 14px; }
+.facture-linge .fm-net.big.bleu { background: #eef3f9; border: 1px solid #cfdbea; color: var(--accent); }
+.facture-linge .tbl .r { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.facture-linge .fl-gras { font-weight: 700; }
+.facture-linge .fl-gris { color: #888; }
+.facture-linge .fl-input {
+  min-height: 38px; padding: 6px 8px; border: 1px solid #c9d1db; border-radius: 6px;
+  font: inherit; font-size: 14px; text-align: center; background: #fff; box-sizing: border-box;
+}
+.facture-linge .fl-input-qte { width: 76px; }
+.facture-linge .fl-input-prix { width: 96px; }
+.facture-linge .fl-form { margin-top: 14px; background: #fff; }
+.facture-linge .fl-form-head { margin-bottom: 12px; }
+.facture-linge .fl-form-title { font-size: 15px; font-weight: 700; }
+.facture-linge .fl-warn { margin: 0 0 14px; }
+.facture-linge .fl-warn-list { margin: 6px 0 0; padding-left: 18px; font-size: 13px; color: #8a5300; line-height: 1.5; }
+.facture-linge .fl-tbl { margin-bottom: 12px; }
+.facture-linge .fl-autre td { color: #888; }
+.facture-linge .fl-perte { margin-top: 4px; }
+.facture-linge .fl-totaux { max-width: 420px; margin-bottom: 8px; }
+.facture-linge .fl-orange { color: #b45309; font-weight: 600; }
+.facture-linge .fl-entete { margin-bottom: 12px; }
+.facture-linge .fl-sous-titre { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); margin: 4px 0 6px; }
+.facture-linge .fl-ecart { font-weight: 700; }
+.facture-linge .fl-ecart.rouge { color: #b91c1c; }
+.facture-linge .fl-ecart.bleu { color: #1d63b8; }
+.facture-linge .fl-ecart.vert { color: #15803d; }
+.facture-linge .fl-legende { margin: 4px 0 0; padding-left: 18px; font-size: 12px; color: var(--muted); line-height: 1.5; }
+.facture-linge .fl-cards { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+.facture-linge .fl-mois { text-transform: capitalize; }
+.facture-linge .fl-card-net { font-size: 14px; }
+.facture-linge .fl-mail { margin-top: 18px; padding: 14px; border: 1px solid #f5c2bd; border-radius: 10px; background: #fffafa; }
+.facture-linge .fl-mail-title { font-size: 15px; font-weight: 700; color: #b91c1c; margin-bottom: 2px; }
+.facture-linge .fl-objet { font-size: 13px; overflow-wrap: anywhere; }
+.facture-linge .fm-mail textarea { font-size: 14px; line-height: 1.45; box-sizing: border-box; }
+
+@media screen and (max-width: 768px) {
+  .facture-linge .fl-periode { flex-direction: column; align-items: stretch; }
+  .facture-linge .fl-raccourcis .fm-btn { flex: 1; }
+  .facture-linge .fl-actions .fm-btn { flex: 1 1 100%; white-space: normal; }
+  .facture-linge .fm-card-actions .fm-btn { flex: 1; }
+  .facture-linge .fl-totaux { max-width: none; }
+  .facture-linge .fm-net.big .fm-net-v { font-size: 26px; }
+  .facture-linge .fm-calc td:first-child { white-space: normal; }
+  .facture-linge .fl-cards { grid-template-columns: 1fr; }
+}
