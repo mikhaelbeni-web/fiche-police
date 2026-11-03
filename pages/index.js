@@ -84,12 +84,6 @@ function Sheet({ r }) {
         </div>
       </div>
 
-      <div className="rgpd">
-        Conformément à la loi « Informatique et Libertés » n°78-17 du 6 janvier 1978 et au RGPD, vous disposez d'un droit
-        d'accès et de rectification de vos données en contactant le responsable de l'établissement. /
-        In accordance with the French Data Protection Act, you have the right to access and rectify your personal data.
-      </div>
-
       <div className="footer-block">
         <div className="sig">
           <div className="lbl">Fait à Paris, le / Done in Paris, on {today}</div>
@@ -97,6 +91,12 @@ function Sheet({ r }) {
           <div className="hint">Signature du voyageur / Guest signature</div>
         </div>
       </div>
+      <div className="rgpd">
+        Conformément à la loi « Informatique et Libertés » n°78-17 du 6 janvier 1978 et au RGPD, vous disposez d'un droit
+        d'accès et de rectification de vos données en contactant le responsable de l'établissement. /
+        In accordance with the French Data Protection Act, you have the right to access and rectify your personal data.
+      </div>
+
     </div>
   );
 }
@@ -187,6 +187,7 @@ function Home() {
   return (
     <>
       <Head><title>Fiches de Police du jour — Le Belleville</title></Head>
+      <style>{"@page { size: A4 portrait; margin: 8mm; }"}</style>
 
       <div className="toolbar">
         <h1>Fiches de Police</h1>
