@@ -172,8 +172,8 @@ async function coveredCheck(page) {
 }
 
 async function settle(page) {
-  await page.waitForLoadState("networkidle", { timeout: 8000 }).catch(() => {});
-  await page.waitForTimeout(900);
+  // Pas de "networkidle" : Firestore garde une connexion ouverte en permanence.
+  await page.waitForTimeout(2500);
 }
 
 async function runStep(page, step) {
@@ -203,7 +203,8 @@ async function main() {
 
   const report = [];
   const browsers = { chromium: await chromium.launch(), webkit: await webkit.launch() };
-  for (const dev of DEVICES) {
+  const withTimeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error("délai dépassé " + ms + " ms")), ms))]);
+  await Promise.all(DEVICES.map(async (dev) => {
     const ctx = await browsers[dev.browser].newContext({
       viewport: dev.viewport, isMobile: dev.browser === "chromium" ? dev.isMobile : undefined,
       hasTouch: dev.hasTouch, deviceScaleFactor: dev.deviceScaleFactor,
@@ -231,29 +232,33 @@ async function main() {
         page.on("requestfailed", r => { if (!/google|firestore|8080/.test(r.url())) errors.push("requestfailed: " + r.url().slice(0, 120)); });
         let stepError = null;
         try {
-          await page.goto(BASE + "/" + p, { waitUntil: "domcontentloaded", timeout: 30000 });
-          await settle(page);
-          for (const s of st.steps || []) await runStep(page, s);
-          await settle(page);
+          await withTimeout((async () => {
+            await page.goto(BASE + "/" + p, { waitUntil: "domcontentloaded", timeout: 30000 });
+            await settle(page);
+            for (const s of st.steps || []) await runStep(page, s);
+            if ((st.steps || []).length) await page.waitForTimeout(800);
+          })(), 60000);
         } catch (e) { stepError = String(e.message).split("\n")[0].slice(0, 200); }
-        const m = await page.evaluate(measure).catch(e => ({ error: String(e) }));
-        m.covered = dev.light ? [] : await coveredCheck(page).catch(() => []);
+        const m = await withTimeout(page.evaluate(measure), 30000).catch(e => ({ error: String(e) }));
+        m.covered = dev.light ? [] : await withTimeout(coveredCheck(page), 30000).catch(() => []);
         const name = p + (st.name ? "__" + st.name : "");
         const shot = path.join(OUT, "screenshots", dev.name, name + ".png");
         fs.mkdirSync(path.dirname(shot), { recursive: true });
         await page.screenshot({ path: shot, fullPage: true }).catch(() => {});
         report.push({ page: p, state: st.name || "(chargement)", device: dev.name, stepError, errors: errors.filter(e => !/mock absent/.test(e)), ...m });
-        await page.close();
+        console.log(`… ${dev.name} ${name}${stepError ? " (étape KO)" : ""}`);
+        await page.close().catch(() => {});
       }
     }
     await ctx.close();
-  }
+  }));
   await browsers.chromium.close();
   await browsers.webkit.close();
   fs.writeFileSync(path.join(OUT, "report.json"), JSON.stringify(report, null, 2));
 
   // Résumé lisible dans les logs.
   let defects = 0;
+  report.sort((a, b) => (a.page + a.state + a.device).localeCompare(b.page + b.state + b.device));
   for (const r of report) {
     const n = (r.overflow?.length ? 1 : 0) + (r.offscreen?.length || 0) + (r.covered?.length || 0) + (r.inputFont?.length || 0) + (r.clipped?.length || 0);
     defects += n;
