@@ -5,21 +5,8 @@ import Head from "next/head";
 import Gate from "../components/Gate";
 import Nav from "../components/Nav";
 import NotesWidget from "../components/NotesWidget";
-import { useEffect } from "react";
-
-// Quand le navigateur est libre, charger à l'avance le petit module Firestore
-// « lite » (Commande linge, Rapport de transition) : en passant par le menu,
-// ces pages n'ont plus à le télécharger.
-function usePreloadLite() {
-  useEffect(() => {
-    const go = () => import("../lib/firestoreLite").then(m => m.loadLite()).catch(() => {});
-    const id = window.requestIdleCallback ? window.requestIdleCallback(go, { timeout: 4000 }) : setTimeout(go, 2500);
-    return () => (window.cancelIdleCallback ? window.cancelIdleCallback(id) : clearTimeout(id));
-  }, []);
-}
 
 export default function App({ Component, pageProps }) {
-  usePreloadLite();
   return (
     <>
       <Head>

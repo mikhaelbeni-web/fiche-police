@@ -9,7 +9,7 @@ import { RESIDENCES, QUESTIONS, emptyReport, today, yesterday, isLocked, hasAler
 import CodeModal from "../components/CodeModal";
 import { useCodeGate } from "../hooks/useCodeGate";
 import { isFirebaseConfigured } from "../lib/firebaseApp";
-import { loadLite, makePrefetch } from "../lib/firestoreLite";
+import { loadFs, makePrefetch } from "../lib/firestoreClient";
 
 // Même code que les autres suppressions sensibles de l'app. Frein volontaire
 // côté navigateur, pas une vraie sécurité. Changeable via
@@ -55,7 +55,7 @@ function Transition() {
     (async () => {
       try {
         const dataP = prefetch.take();
-        const api = await loadLite();
+        const api = await loadFs();
         if (!alive) return;
         setFs(api);
         let data = await dataP;

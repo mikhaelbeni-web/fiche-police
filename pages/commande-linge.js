@@ -7,7 +7,7 @@ import Head from "next/head";
 import { LINEN_ARTICLES, emptyQuantities, expectedReception, orderWindow, sumUsage, computeDefectSettlements, PANTIN_CODES, PANTIN_CLIENT, ELIS_INVOICE_ARTICLES } from "../lib/linen";
 import FactureLinge from "../components/FactureLinge";
 import { isFirebaseConfigured } from "../lib/firebaseApp";
-import { loadLite, makePrefetch } from "../lib/firestoreLite";
+import { loadFs, makePrefetch } from "../lib/firestoreClient";
 
 // « Grande serviette (Drap bain) » -> « Grande serviette » (fiches sur téléphone).
 const court = label => label.split(" (")[0];
@@ -101,7 +101,7 @@ function CommandeLinge() {
     (async () => {
       try {
         const dataP = prefetch.take();
-        const api = await loadLite();
+        const api = await loadFs();
         if (!alive) return;
         setFs(api);
         const data = await dataP;
