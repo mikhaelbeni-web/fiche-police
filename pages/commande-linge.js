@@ -874,7 +874,7 @@ function DefectsTab({ fs, defects, reload, setStatus }) {
                     {partiel ? `reste ${rest} à récupérer` : "soldé auto par réception"}
                   </span>;
                 })()}
-                <button onClick={() => del(d.id)} className="ghost danger" title="Supprimer" aria-label="Supprimer">✕</button>
+                <button onClick={() => del(d.id)} className="ghost icon-btn danger" title="Supprimer" aria-label="Supprimer">✕</button>
               </div></td>
             </tr>
           ))}
