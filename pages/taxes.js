@@ -53,19 +53,19 @@ function ControleExclusions({ data }) {
       </div>
 
       {ouvert && detail.length > 0 && (
-        <div className="tbl-wrap"><table className="tbl" style={{ marginTop: 10 }}>
+        <div className="tbl-wrap"><table className="tbl tbl-cards" style={{ marginTop: 10 }}>
           <thead>
             <tr><th>Client</th><th>Arrivée</th><th>Appartement</th><th>Canal</th><th>Statut paiement</th><th>Motif</th></tr>
           </thead>
           <tbody>
             {detail.map((d, i) => (
               <tr key={i}>
-                <td>{d.client}</td>
-                <td>{fmtFr(d.arrivee)}</td>
-                <td>{d.listing}</td>
-                <td>{d.canal || "—"}</td>
-                <td>{d.statutPaiement || "—"}</td>
-                <td>
+                <td className="card-title">{d.client}</td>
+                <td data-label="Arrivée">{fmtFr(d.arrivee)}</td>
+                <td data-label="Appartement">{d.listing}</td>
+                <td data-label="Canal">{d.canal || "—"}</td>
+                <td data-label="Statut paiement">{d.statutPaiement || "—"}</td>
+                <td data-label="Motif" className="card-full">
                   {d.motif === "horsBooking" ? "Canal ≠ Booking.com"
                     : d.motif === "dejaPaye" ? "Paiement non partiel"
                     : d.motif === "sansLigneTaxe" ? "Aucune ligne taxe de séjour"
@@ -226,7 +226,7 @@ function TaxesImpayees() {
             {residences.map(r => <option key={r} value={r}>{r}</option>)}
           </select>
         </div>
-        <button onClick={() => load(from, to, creds.account, creds.key)} disabled={loading} title="Actualiser">↻</button>
+        <button onClick={() => load(from, to, creds.account, creds.key)} disabled={loading} title="Actualiser" aria-label="Actualiser" className="tx-refresh">↻</button>
         <button className="primary" onClick={downloadCSV} disabled={!items.length}>Télécharger CSV</button>
         <button onClick={() => window.print()} disabled={!items.length}>Imprimer</button>
         <span className="status">{status}</span>
@@ -259,7 +259,7 @@ function TaxesImpayees() {
                 <span className="resid-name">{g.residence}</span>
                 <span className="resid-count">{g.items.length} résa · {euros(g.sum)}</span>
               </div>
-              <div className="tbl-wrap"><table className="tbl">
+              <div className="tbl-wrap"><table className="tbl tbl-cards">
                 <thead>
                   <tr>
                     <th>N°</th>
@@ -275,14 +275,14 @@ function TaxesImpayees() {
                 <tbody>
                   {g.items.map((it, i) => (
                     <tr key={i}>
-                      <td className="apt">{it.unitNumber || "—"}</td>
-                      <td>{it.appartement}</td>
-                      <td>{fmtFr(it.arrivee)}</td>
-                      <td>{it.client}</td>
-                      <td>{it.paymentStatus}</td>
-                      <td className="c">{euros(it.taxeSejour)}</td>
-                      <td className="c"><span className="box" /></td>
-                      <td>
+                      <td className="apt" data-label="N°">{it.unitNumber || "—"}</td>
+                      <td data-label="Appartement">{it.appartement}</td>
+                      <td data-label="Arrivée">{fmtFr(it.arrivee)}</td>
+                      <td className="card-title">{it.client}</td>
+                      <td data-label="Statut">{it.paymentStatus}</td>
+                      <td className="c" data-label="Taxe séjour">{euros(it.taxeSejour)}</td>
+                      <td className="c tx-regle"><span className="box" /></td>
+                      <td className="tx-actions">
                         <button onClick={() => maskTax(it)} className="ghost"
                           title="Déjà réglée en réalité (désynchro Hostaway) — la masquer définitivement de cette liste">
                           Masquer
@@ -318,19 +318,19 @@ function TaxesImpayees() {
                 {showMasked ? "Masquer" : `Voir les ${masked.length} taxe(s) masquée(s) manuellement`}
               </button>
               {showMasked && (
-                <div className="tbl-wrap" style={{ marginTop: 8 }}><table className="tbl">
+                <div className="tbl-wrap" style={{ marginTop: 8 }}><table className="tbl tbl-cards">
                   <thead>
                     <tr><th>Client</th><th>Appartement</th><th>Arrivée</th><th className="c">Taxe</th><th>Masquée le</th><th></th></tr>
                   </thead>
                   <tbody>
                     {masked.map(m => (
                       <tr key={m.id}>
-                        <td>{m.client}</td>
-                        <td>{m.residence} {m.appartement}</td>
-                        <td>{fmtFr(m.arrivee)}</td>
-                        <td className="c">{euros(m.taxeSejour)}</td>
-                        <td>{fmtFr((m.maskedAt || "").slice(0, 10))}</td>
-                        <td><button onClick={() => unmaskTax(m)} className="ghost">Réafficher</button></td>
+                        <td className="card-title">{m.client}</td>
+                        <td data-label="Appartement">{m.residence} {m.appartement}</td>
+                        <td data-label="Arrivée">{fmtFr(m.arrivee)}</td>
+                        <td className="c" data-label="Taxe">{euros(m.taxeSejour)}</td>
+                        <td data-label="Masquée le">{fmtFr((m.maskedAt || "").slice(0, 10))}</td>
+                        <td className="tx-actions"><button onClick={() => unmaskTax(m)} className="ghost">Réafficher</button></td>
                       </tr>
                     ))}
                   </tbody>
@@ -713,31 +713,31 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
                     ))}
                   </select>
                   {taxeClients.length === 0 && (
-                    <span style={{ fontSize: 11, color: "var(--warn)" }}>Aucun client taxe Belleville chargé (vérifie les identifiants Hostaway sur Fiches, ou utilise « Autre client »).</span>
+                    <span className="tx-help" style={{ fontSize: 11, color: "var(--warn)" }}>Aucun client taxe Belleville chargé (vérifie les identifiants Hostaway sur Fiches, ou utilise « Autre client »).</span>
                   )}
                 </label>
               ) : clientMode === "recherche" ? (
                 <label style={{ minWidth: 320, position: "relative" }}>Nom du client
                   <input type="text" value={client || searchQuery} onChange={e => runClientSearch(e.target.value)}
                     placeholder="Tape au moins 2 lettres du nom…" style={{ width: "100%" }} />
-                  {searching && <span style={{ fontSize: 11, color: "var(--muted)" }}>Recherche…</span>}
+                  {searching && <span className="tx-help" style={{ fontSize: 11, color: "var(--muted)" }}>Recherche…</span>}
                   {!client && searchResults.length > 0 && (
-                    <div style={{ border: "1px solid #ddd", borderRadius: 6, marginTop: 4, maxHeight: 220, overflowY: "auto", background: "#fff", position: "absolute", width: "100%", zIndex: 5 }}>
+                    <div className="tx-search-results" style={{ border: "1px solid #ddd", borderRadius: 6, marginTop: 4, maxHeight: 220, overflowY: "auto", background: "#fff", position: "absolute", width: "100%", zIndex: 5 }}>
                       {searchResults.map((r, i) => (
                         <div key={i} onClick={() => {
                           setClient(r.client); setAppartement(r.unitNumber || r.appartement || ""); setArrivalDate(r.arrivee || "");
                           setDesignation("Taxe de séjour"); setSearchResults([]);
-                        }} style={{ padding: "8px 10px", cursor: "pointer", borderBottom: "1px solid #f0f0f0", fontSize: 13 }}>
+                        }} className="tx-search-item" style={{ padding: "8px 10px", cursor: "pointer", borderBottom: "1px solid #f0f0f0", fontSize: 13 }}>
                           <strong>{r.client}</strong> — {r.residence} {r.appartement} ({r.unitNumber})
-                          <div style={{ fontSize: 11, color: "var(--muted)" }}>{fmtFr(r.arrivee)} → {fmtFr(r.depart)} · {r.channel}</div>
+                          <div className="tx-help" style={{ fontSize: 11, color: "var(--muted)" }}>{fmtFr(r.arrivee)} → {fmtFr(r.depart)} · {r.channel}</div>
                         </div>
                       ))}
                     </div>
                   )}
                   {client && (
-                    <div style={{ fontSize: 11, color: "var(--ok)", marginTop: 4 }}>
+                    <div className="tx-help" style={{ fontSize: 11, color: "var(--ok)", marginTop: 4 }}>
                       {appartement} · {fmtFr(arrivalDate)}
-                      {" "}<button type="button" onClick={() => { setClient(""); setSearchQuery(""); }} className="ghost" style={{ fontSize: 11 }}>changer</button>
+                      {" "}<button type="button" onClick={() => { setClient(""); setSearchQuery(""); }} className="ghost tx-change" style={{ fontSize: 11 }}>changer</button>
                     </div>
                   )}
                 </label>
@@ -764,7 +764,7 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
         <button className="primary" onClick={addEntry} disabled={!saisiPar}>Ajouter</button>
       </div>
 
-      <div style={{ display: "flex", gap: 8, margin: "14px 0" }}>
+      <div className="tx-btn-row" style={{ display: "flex", gap: 8, margin: "14px 0" }}>
         <button onClick={exportCurrentCSV} disabled={!unrecovered.length}>Télécharger Excel (en cours)</button>
         <button className="primary" onClick={() => setShowRecoverForm(!showRecoverForm)} disabled={!unrecovered.length && !baseline}>
           {showRecoverForm ? "Annuler" : "Récupération des espèces"}
@@ -777,7 +777,7 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
           onDone={() => { setShowRecoverForm(false); reload(); }} setStatus={setStatus} requestCode={requestCode} />
       )}
 
-      <div className="tbl-wrap"><table className="tbl" style={{ marginTop: 10 }}>
+      <div className="tbl-wrap"><table className="tbl tbl-cards" style={{ marginTop: 10 }}>
         <thead>
           <tr>
             <th>Date</th><th>Type</th><th>Saisi par</th><th>Client</th><th>Appartement</th>
@@ -787,17 +787,17 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
         <tbody>
           {unrecovered.map(e => (
             <tr key={e.id}>
-              <td>{fmtFrShort(e.date)}</td>
-              <td>{e.type === "client" ? <span className="pill ok">Client</span> : <span className="pill bad">Dépense</span>}</td>
-              <td>{e.saisiPar || "—"}</td>
-              <td>{e.client || "—"}</td>
-              <td>{e.appartement || "—"}</td>
-              <td>{e.fournisseur || "—"}</td>
-              <td>{e.designation || "—"}</td>
-              <td className="c" style={{ color: e.type === "expense" ? "var(--bad)" : "var(--ok)", fontWeight: 600 }}>
+              <td data-label="Date">{fmtFrShort(e.date)}</td>
+              <td data-label="Type">{e.type === "client" ? <span className="pill ok">Client</span> : <span className="pill bad">Dépense</span>}</td>
+              <td data-label="Saisi par">{e.saisiPar || "—"}</td>
+              <td data-label="Client">{e.client || "—"}</td>
+              <td data-label="Appartement">{e.appartement || "—"}</td>
+              <td data-label="Fournisseur">{e.fournisseur || "—"}</td>
+              <td className="card-title">{e.designation || "—"}</td>
+              <td className="c" data-label="Montant" style={{ color: e.type === "expense" ? "var(--bad)" : "var(--ok)", fontWeight: 600 }}>
                 {e.type === "expense" ? "−" : "+"}{euros2(e.amount)}
               </td>
-              <td><button onClick={() => delEntry(e)} className="ghost danger" title="Supprimer" aria-label="Supprimer">✕</button></td>
+              <td className="tx-actions"><button onClick={() => delEntry(e)} className="ghost danger tx-del" title="Supprimer" aria-label="Supprimer">✕</button></td>
             </tr>
           ))}
           {unrecovered.length === 0 && <tr><td colSpan={9} className="empty-state">Rien depuis la dernière récupération.</td></tr>}
@@ -829,7 +829,7 @@ function StartingBalanceForm({ hasRecoveries, onConfirm, onCancel }) {
         <label>Date <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} /></label>
         <label>Montant de départ € <input type="number" min="0" step="0.01" value={startAmount} onChange={e => setStartAmount(e.target.value)} style={{ width: 120 }} /></label>
       </div>
-      <div style={{ display: "flex", gap: 8 }}>
+      <div className="tx-btn-row" style={{ display: "flex", gap: 8 }}>
         <button className="primary" onClick={() => onConfirm(startDate, startAmount)}>Enregistrer le solde de départ</button>
         <button onClick={onCancel}>Annuler</button>
       </div>
@@ -1012,7 +1012,7 @@ function CashHistory({ recoveries, entries, fs, reload, setStatus, requestCode }
           <div className="recap-sub">Chaque récupération est exportable individuellement</div>
         </div>
       </div>
-      <div className="tbl-wrap"><table className="tbl">
+      <div className="tbl-wrap"><table className="tbl tbl-cards">
         <thead>
           <tr>
             <th>Date</th><th className="c">Total avant</th><th className="c">Récupéré</th>
@@ -1022,14 +1022,14 @@ function CashHistory({ recoveries, entries, fs, reload, setStatus, requestCode }
         <tbody>
           {recoveries.map(r => (
             <tr key={r.id}>
-              <td>{fmtFrShort(r.date)}</td>
-              <td className="c">{euros2(r.totalAvant)}</td>
-              <td className="c" style={{ fontWeight: 700, color: "var(--ok)" }}>{euros2(r.amountRecovered)}</td>
-              <td className="c">{euros2(r.amountLeftInBox)}</td>
-              <td>{r.note || "—"}</td>
-              <td style={{ whiteSpace: "nowrap" }}>
+              <td className="card-title">{fmtFrShort(r.date)}</td>
+              <td className="c" data-label="Total avant">{euros2(r.totalAvant)}</td>
+              <td className="c" data-label="Récupéré" style={{ fontWeight: 700, color: "var(--ok)" }}>{euros2(r.amountRecovered)}</td>
+              <td className="c" data-label="Laissé en caisse">{euros2(r.amountLeftInBox)}</td>
+              <td data-label="Note" className="card-full">{r.note || "—"}</td>
+              <td className="tx-actions" style={{ whiteSpace: "nowrap" }}>
                 <button onClick={() => exportRecoveryCSV(r)} className="ghost" style={{ color: "var(--ok)" }}>📥 Excel</button>
-                <button onClick={() => delRecovery(r)} className="ghost danger" title="Supprimer" aria-label="Supprimer">✕</button>
+                <button onClick={() => delRecovery(r)} className="ghost danger tx-del" title="Supprimer" aria-label="Supprimer">✕</button>
               </td>
             </tr>
           ))}
@@ -1043,7 +1043,7 @@ function CashHistory({ recoveries, entries, fs, reload, setStatus, requestCode }
 export default function TaxesPage() {
   const [subtab, setSubtab] = useState("impayees");
   return (
-    <>
+    <div className="taxes-page">
       <div className="toolbar" style={{ paddingBottom: 0 }}>
         <div className="quick tabs">
           <button onClick={() => setSubtab("impayees")} className={subtab === "impayees" ? "primary" : ""}>Taxes impayées</button>
@@ -1052,6 +1052,6 @@ export default function TaxesPage() {
       </div>
       {subtab === "impayees" && <TaxesImpayees />}
       {subtab === "especes" && <CashManagement />}
-    </>
+    </div>
   );
 }

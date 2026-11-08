@@ -123,7 +123,7 @@ function Sinistres() {
   return (
     <>
       <Head><title>Sinistres</title></Head>
-      <div className="toolbar">
+      <div className="toolbar sin-toolbar">
         <h1>Sinistres</h1>
         <div className="quick tabs">
           <button onClick={() => setVue("sinistres")} className={vue === "sinistres" ? "primary" : ""}>Sinistres</button>
@@ -144,7 +144,7 @@ function Sinistres() {
         <span className="status">{status}</span>
       </div>
 
-      <div className="menage-page">
+      <div className="menage-page sinistres-page">
         {vue === "gmail" ? (
           <div className="recap">
             <ReclamationsGmail fs={fs} items={reclamations} onReload={() => loadReclamations(fs)} onStatus={setStatus} />
@@ -257,9 +257,9 @@ function SinistreForm({ onSave, onCancel }) {
               placeholder="Tape au moins 2 lettres du nom…" style={{ width: "100%" }} />
             {searching && <span className="note">Recherche…</span>}
             {!picked && results.length > 0 && (
-              <div style={{ border: "1px solid #ddd", borderRadius: 6, marginTop: 4, maxHeight: 220, overflowY: "auto", background: "#fff", position: "relative", zIndex: 5 }}>
+              <div className="sin-results" style={{ border: "1px solid #ddd", borderRadius: 6, marginTop: 4, maxHeight: 220, overflowY: "auto", background: "#fff", position: "relative", zIndex: 5 }}>
                 {results.map((r, i) => (
-                  <div key={i} onClick={() => {
+                  <div key={i} className="sin-result" onClick={() => {
                     setPicked(r); setResults([]);
                     const ch = (r.channel || "").toLowerCase();
                     if (ch.includes("airbnb")) setCanal("airbnb");
@@ -350,7 +350,7 @@ function SinistreRow({ s, onUpdate, onDelete }) {
   const canal = s.canal || (s.origine === "booking" ? "booking" : null);
 
   return (
-    <div className={`resid card ${s.problemeRegle ? "card-ok" : "card-warn"}`}>
+    <div className={`resid card sin-card ${s.problemeRegle ? "card-ok" : "card-warn"}`}>
       <div className="card-head">
         <div>
           <strong>{s.client}</strong>{" "}

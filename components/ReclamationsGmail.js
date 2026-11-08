@@ -73,7 +73,7 @@ export default function ReclamationsGmail({ fs, items, onReload, onStatus }) {
             Repérées automatiquement dans Gmail chaque jour · total remboursé : {euros(totalRembourse)}
           </div>
         </div>
-        <div className="quick tabs">
+        <div className="quick tabs recl-filtres">
           <button onClick={() => setFiltre("a_traiter")} className={filtre === "a_traiter" ? "primary" : ""}>À traiter</button>
           <button onClick={() => setFiltre("traitees")} className={filtre === "traitees" ? "primary" : ""}>Traitées</button>
           <button onClick={() => setFiltre("toutes")} className={filtre === "toutes" ? "primary" : ""}>Toutes</button>
@@ -128,7 +128,7 @@ function ReclamationRow({ r, onSave }) {
   }
 
   return (
-    <div className={`resid card ${r.traite ? "card-ok" : "card-bad"}`}>
+    <div className={`resid card recl-card ${r.traite ? "card-ok" : "card-bad"}`}>
       <div className="card-head">
         <div>
           <strong>{r.client || "Client inconnu"}</strong>{" "}

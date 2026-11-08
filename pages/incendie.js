@@ -133,8 +133,8 @@ function Incendie({ verrouiller, changerCode, importRapide, finImport }) {
     return (
       <>
         <Head><title>Sécurité incendie</title></Head>
-        <div className="toolbar"><h1>Sécurité incendie</h1><span className="status">Import sans ouvrir le suivi</span></div>
-        <div className="menage-page">
+        <div className="toolbar inc-toolbar"><h1>Sécurité incendie</h1><span className="status">Import sans ouvrir le suivi</span></div>
+        <div className="menage-page incendie-page">
           <div className="recap inc-page">
             <IncendieImport fichiers={importRapide} fs={fs} types={types} verifs={verifs} docs={docs} factures={factures}
               onCancel={() => finImport("")} onDone={msg => finImport(msg)} />
@@ -152,14 +152,14 @@ function Incendie({ verrouiller, changerCode, importRapide, finImport }) {
         <title>Sécurité incendie</title>
         <style>{"@page { size: A4 landscape; margin: 6mm; }"}</style>
       </Head>
-      <div className="toolbar">
+      <div className="toolbar inc-toolbar">
         <h1>Sécurité incendie</h1>
         <div className="quick tabs">
           <button onClick={() => setVue("verifications")} className={vue === "verifications" ? "primary" : ""}>Vérification</button>
           <button onClick={() => setVue("factures")} className={vue === "factures" ? "primary" : ""}>Factures et coûts</button>
         </div>
         {vue === "verifications" && <button className="primary" onClick={() => setNouveau(n => !n)}>+ Nouveau contrôle</button>}
-        <button onClick={() => window.print()}>Imprimer</button>
+        <button className="inc-print-btn" onClick={() => window.print()}>Imprimer</button>
         <label className="inc-import">
           Importer un document
           <input type="file" multiple accept="application/pdf,image/*" style={{ display: "none" }}
@@ -170,7 +170,7 @@ function Incendie({ verrouiller, changerCode, importRapide, finImport }) {
         <span className="status">{status}</span>
       </div>
 
-      <div className="menage-page">
+      <div className="menage-page incendie-page">
         {vue === "factures" ? (
           <Factures factures={factures} types={types} actions={actions} today={today} />
         ) : (
@@ -615,7 +615,7 @@ function Factures({ factures, types, actions, today }) {
               </tr>
             ))}
           </tbody>
-          {liste.length > 0 && <tfoot><tr><td colSpan={5}><strong>Total</strong></td><td>{totalHT ? euros(totalHT) : ""}</td><td><strong>{euros(total)}</strong></td><td className="no-print"></td></tr></tfoot>}
+          {liste.length > 0 && <tfoot><tr><td colSpan={5}><strong>Total</strong></td><td data-label={totalHT ? "Total HT" : undefined}>{totalHT ? euros(totalHT) : ""}</td><td data-label="Total TTC"><strong>{euros(total)}</strong></td><td className="no-print"></td></tr></tfoot>}
         </table>
       </div>
     </div>

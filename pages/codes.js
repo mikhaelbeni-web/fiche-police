@@ -2,7 +2,7 @@
 // Codes des boîtes à clés statiques par résidence (ménage, garde-bagages, portail...).
 // Création, consultation, modification, suppression à tout moment. Persistance Firebase.
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Head from "next/head";
 
 function emptyForm() {
@@ -25,6 +25,16 @@ function Codes() {
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState(null);
   const [form, setForm] = useState(emptyForm());
+  const formRef = useRef(null);
+
+  // Téléphone : le formulaire s'ouvre en haut de la liste — on le ramène à
+  // l'écran après « Modifier » sur une ligne basse (présentation seulement).
+  useEffect(() => {
+    if (!showForm || !formRef.current || typeof window === "undefined") return;
+    if (window.matchMedia && window.matchMedia("(max-width: 640px)").matches) {
+      formRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [showForm, editId]);
 
   useEffect(() => {
     (async () => {
@@ -120,7 +130,7 @@ function Codes() {
   return (
     <>
       <Head><title>Codes d&apos;accès</title></Head>
-      <div className="toolbar">
+      <div className="toolbar codes-toolbar">
         <h1>Codes</h1>
         <div className="field">
           <label>Rechercher</label>
@@ -130,10 +140,10 @@ function Codes() {
         <span className="status">{status}</span>
       </div>
 
-      <div className="menage-page">
+      <div className="menage-page codes-page">
         <div className="recap">
           {showForm && (
-            <div className="linen-form" style={{ marginBottom: 18 }}>
+            <div className="linen-form codes-form" ref={formRef} style={{ marginBottom: 18 }}>
               <div className="form-title">
                 {editId ? "Modifier le code" : "Nouveau code"}
               </div>
@@ -150,26 +160,27 @@ function Codes() {
                 <label>Emplacement <input type="text" value={form.emplacement} onChange={e => setForm({ ...form, emplacement: e.target.value })} placeholder="ex. boîte à clé ménage, portail…" style={{ width: 260 }} /></label>
                 <label>Code <input type="text" value={form.code} onChange={e => setForm({ ...form, code: e.target.value })} style={{ width: 120 }} /></label>
               </div>
-              <div style={{ display: "flex", gap: 8 }}>
+              <div className="codes-form-actions" style={{ display: "flex", gap: 8 }}>
                 <button className="primary" onClick={save}>Enregistrer</button>
                 <button onClick={() => setShowForm(false)}>Annuler</button>
               </div>
+              {status && <div className="codes-form-status">{status}</div>}
             </div>
           )}
 
           {residences.map(r => (
             <div className="resid" key={r}>
               <div className="resid-head"><span className="resid-name">{r}</span><span className="resid-count">{byResidence[r].length} code(s)</span></div>
-              <div className="tbl-wrap"><table className="tbl">
+              <div className="tbl-wrap"><table className="tbl tbl-cards codes-tbl">
                 <thead><tr><th>Emplacement</th><th>Code</th><th></th></tr></thead>
                 <tbody>
                   {byResidence[r].map(c => (
                     <tr key={c.id}>
-                      <td>{c.emplacement}</td>
-                      <td style={{ fontWeight: 700, fontFamily: "monospace", fontSize: 14 }}>{c.code}</td>
-                      <td style={{ whiteSpace: "nowrap" }}>
+                      <td className="card-title">{c.emplacement}</td>
+                      <td data-label="Code" className="codes-code" style={{ fontWeight: 700, fontFamily: "monospace", fontSize: 14 }}>{c.code}</td>
+                      <td className="codes-actions" style={{ whiteSpace: "nowrap" }}>
                         <button onClick={() => openEdit(c)} className="ghost">Modifier</button>
-                        <button onClick={() => del(c.id)} className="ghost danger" title="Supprimer" aria-label="Supprimer">✕</button>
+                        <button onClick={() => del(c.id)} className="ghost danger icon-btn" title="Supprimer" aria-label="Supprimer">✕</button>
                       </td>
                     </tr>
                   ))}

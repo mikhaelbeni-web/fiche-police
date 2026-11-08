@@ -76,7 +76,7 @@ export default function IncendieAcces({ children }) {
   const creation = etat === "creation" || changer;
   return (
     <>
-      <div className="toolbar">
+      <div className="toolbar inc-toolbar">
         <h1>Sécurité incendie</h1>
         {!creation && (
           <label className="inc-import">
@@ -86,8 +86,8 @@ export default function IncendieAcces({ children }) {
           </label>
         )}
       </div>
-      <div className="menage-page">
-        <div className="recap" style={{ maxWidth: 420 }}>
+      <div className="menage-page incendie-page">
+        <div className="recap inc-acces" style={{ maxWidth: 420 }}>
           {info && <div style={{ fontSize: 13, color: "#1e7e34", marginBottom: 10 }}>{info}</div>}
           <div className="recap-title">{changer ? "Changer le code d'accès" : creation ? "Créer le code d'accès" : fichiers ? "Code requis pour importer" : "Code d'accès requis"}</div>
           {fichiers && !creation && (
