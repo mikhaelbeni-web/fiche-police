@@ -180,7 +180,7 @@ function Arrivees() {
         <style>{"@page { size: A4 landscape; margin: 6mm; }"}</style>
       </Head>
 
-      <div className="toolbar">
+      <div className="toolbar arr-toolbar">
         <h1>Arrivées</h1>
 
         <div className="quick">
@@ -197,7 +197,7 @@ function Arrivees() {
           <label>Au</label>
           <input type="date" value={to} onChange={e => setTo(e.target.value)} />
         </div>
-        <div className="field">
+        <div className="field arr-field-resid">
           <label>Résidence</label>
           <select value={residence} onChange={e => setResidence(e.target.value)}>
             <option value="__all__">Toutes</option>
@@ -205,9 +205,9 @@ function Arrivees() {
           </select>
         </div>
 
-        <button onClick={() => { load(from, to, creds.account, creds.key); loadNotes(from, to); }} disabled={loading} title="Actualiser">↻</button>
-        <button className="primary" onClick={downloadCSV} disabled={!shownTotal}>Télécharger CSV</button>
-        <button onClick={() => window.print()} disabled={!shownTotal}>Imprimer</button>
+        <button onClick={() => { load(from, to, creds.account, creds.key); loadNotes(from, to); }} disabled={loading} title="Actualiser" aria-label="Actualiser" className="arr-refresh">↻</button>
+        <button className="primary arr-action" onClick={downloadCSV} disabled={!shownTotal}>Télécharger CSV</button>
+        <button className="arr-action" onClick={() => window.print()} disabled={!shownTotal}>Imprimer</button>
 
         <span className="status">{status}</span>
       </div>
@@ -236,7 +236,7 @@ function Arrivees() {
                 <span className="resid-name">{g.residence}</span>
                 <span className="resid-count">{g.count} arrivée{g.count > 1 ? "s" : ""}</span>
               </div>
-              <div className="tbl-wrap"><table className="tbl arr-tbl">
+              <div className="tbl-wrap"><table className="tbl arr-tbl tbl-cards">
                 <thead>
                   <tr>
                     <th>N°</th>
@@ -256,45 +256,47 @@ function Arrivees() {
                     const l = ligne(it, notes[it.reservationId]);
                     return (
                       <tr key={i} className={i % 2 ? "alt" : ""}>
-                        <td className="apt">
+                        <td className="apt card-title">
                           <div className="arr-num">{it.unitNumber || "—"}</div>
                           <div className="arr-sub">{it.appartement}</div>
                         </td>
-                        <td>
+                        <td className="card-full arr-client-cell">
                           <div className="arr-client">{it.client}</div>
                           {it.voyageurs !== "" && <div className="arr-sub">{it.voyageurs} pers.{from !== to ? " · " + fmtFr(it.arrivee) : ""}</div>}
                           {it.depart && <div className="arr-sub arr-depart">Départ {fmtFr(it.depart).slice(0, 5)}</div>}
                         </td>
-                        <td className="arr-ota">{l.ota}</td>
-                        <td className="arr-heure">{l.heure}</td>
-                        <td className={"arr-resume" + (l.alerte ? " alerte" : "")}>
+                        <td className="arr-ota" data-label="OTA">{l.ota}</td>
+                        <td className="arr-heure" data-label="Arrivée">{l.heure}</td>
+                        <td className={"arr-resume card-full" + (l.alerte ? " alerte" : "")} data-label="Résumé des échanges">
                           {l.resume}
                           {l.majLe && <span className="auto-note-maj"> · {fmtHeure(l.majLe)}</span>}
                         </td>
                         {g.mode === "depot" ? <>
-                          <td className={"arr-taxe " + (l.depot ? l.depot.statut : "")}>
-                            {l.depot && <>
+                          <td className={"arr-taxe " + (l.depot ? l.depot.statut : "")} data-label="Dépôt de garantie">
+                            {l.depot && <div>
                               {l.depot.libelle}
                               {l.depot.detail && <div className="arr-sub">{l.depot.detail}</div>}
-                            </>}
+                            </div>}
                           </td>
-                          <td className="arr-codes">
+                          <td className="arr-codes" data-label="Codes">
                             {l.codesEnvoyes === undefined ? null : !l.codesEnvoyes
                               ? <span className="a_regler">Non envoyés</span>
-                              : <>
+                              : <div>
                                 <div>Envoyés{l.codesEnvoyesLe && <span className="arr-sub"> {l.codesEnvoyesLe}</span>}</div>
                                 <div className={l.codesConfirmes ? "reglee" : "a_regler"}>
                                   {l.codesConfirmes ? "Réception confirmée" : "Pas de confirmation"}
                                 </div>
-                              </>}
+                              </div>}
                           </td>
                         </> : (
-                          <td className={"arr-taxe " + l.taxe.statut}>
-                            {l.taxe.libelle}
-                            {l.taxe.montant ? <div className="arr-sub">{euros(l.taxe.montant)}</div> : null}
+                          <td className={"arr-taxe " + l.taxe.statut} data-label="Taxe de séjour">
+                            {(l.taxe.libelle || l.taxe.montant) ? <div>
+                              {l.taxe.libelle}
+                              {l.taxe.montant ? <div className="arr-sub">{euros(l.taxe.montant)}</div> : null}
+                            </div> : null}
                           </td>
                         )}
-                        <td className="c"><span className="box" /></td>
+                        <td className="c arr-fait"><span className="box" /></td>
                       </tr>
                     );
                   })}

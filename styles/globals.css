@@ -150,6 +150,36 @@ body {
   .sheet:last-child { page-break-after: auto; }
 }
 
+/* Fiche police sur téléphone (≤ 640 px, écran seulement : la fiche imprimée
+   A4 portrait ne change pas). Barre : le jour sur toute la largeur, puis
+   Aujourd'hui · ↻ · Imprimer · ⚙ sur une ligne ; la fiche est lue comme une
+   carte, sans marges A4. */
+@media screen and (max-width: 640px) {
+  .fiche-toolbar h1 { display: none; }
+  .fiche-toolbar .fiche-today, .fiche-toolbar button.primary { flex: 1 1 0; }
+  .fiche-toolbar button.fiche-icon { flex: none; width: var(--tap, 44px); padding: 0; font-size: 20px; }
+  .fiche-toolbar .status { flex: 1 1 auto; width: auto; order: 0; margin: 0; align-self: center; }
+  .fiche-toolbar button.ghost.forget { margin-left: 0; opacity: .85; font-size: 13px; }
+  .fiche-toolbar .token-setup button.arrow.save { flex: 1 1 100%; width: 100%; }
+
+  .sheets { padding: 10px 8px; gap: 14px; }
+  .sheets .sheet { padding: 14px 12px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+  .sheets .sheet-head { gap: 6px; }
+  .sheets .sheet-head .hotel { font-size: 17px; }
+  .sheets .sheet-head .doc-title .t1 { font-size: 18px; line-height: 1.2; }
+  .sheets .legal, .sheets .rgpd { font-size: 12px; text-align: left; }
+  .sheets .section-label { font-size: 13px; padding: 8px 12px; }
+  .sheets .cell { min-height: 0; padding: 10px 12px; }
+  .sheets .cell .lbl { font-size: 11.5px; }
+  .sheets .cell .val { font-size: 18px; }
+  /* L'e-mail tient sur une ligne à l'impression ; à l'écran il revient à la
+     ligne au lieu de rétrécir jusqu'à devenir illisible. */
+  .sheets .cell .val.one-line { font-size: 16px !important; white-space: normal; overflow-wrap: anywhere; }
+  .sheets .sig .lbl { font-size: 14px; }
+  .sheets .sig .box { height: 96px; }
+  .sheets .empty-state { padding: 32px 12px; }
+}
+
 /* --- Verrou d'accès appareil --- */
 .gate {
   position: fixed; inset: 0; background: var(--accent);
@@ -356,6 +386,48 @@ body {
   .recap:has(.arr-tbl) { padding: 0 9mm; }
   .recap:has(.arr-tbl) .recap-head { padding-bottom: 6px; margin-bottom: 10px; }
   .arr-resid { break-inside: avoid; page-break-inside: avoid; margin-bottom: 14px; }
+}
+
+/* Arrivées sur téléphone (≤ 640 px, écran seulement : la feuille paysage
+   imprimée ne change pas). Chaque client devient une carte : N° et
+   appartement en titre avec l'OTA à droite, client, puis Arrivée / Taxe ou
+   Dépôt / Codes en lignes « titre … valeur », résumé en entier. La case
+   « Fait » sert à cocher au stylo sur la feuille : masquée à l'écran. */
+@media screen and (max-width: 640px) {
+  .arr-toolbar .field { flex: 1 1 calc(50% - 4px); }
+  .arr-toolbar .arr-field-resid { flex: 1 1 100%; }
+  .arr-toolbar .arr-refresh { flex: none; width: var(--tap, 44px); padding: 0; font-size: 20px; }
+  .arr-toolbar .arr-action { flex: 1 1 0; white-space: nowrap; font-size: 14px; padding: 8px 6px; }
+
+  .recap:has(.arr-tbl) .recap-head { flex-direction: row; align-items: center; gap: 12px; padding-bottom: 10px; margin-bottom: 12px; }
+  .recap:has(.arr-tbl) .recap-total { align-self: auto; flex: none; }
+  .recap:has(.arr-tbl) .recap-total .maj { white-space: normal; max-width: 110px; }
+  .recap:has(.arr-tbl) { padding: 10px; }
+
+  .arr-resid { margin-bottom: 16px; }
+  .arr-resid .resid-head { flex-direction: row; align-items: center; border-radius: 8px; margin-bottom: 8px; }
+  .arr-tbl.tbl-cards tr { position: relative; border: 1px solid #c9d1db; box-shadow: 0 1px 2px rgba(15,23,42,.06); padding: 10px 0 8px; }
+  .arr-tbl.tbl-cards tr.alt td { background: transparent; }
+  .arr-tbl.tbl-cards td.card-title { display: flex; align-items: baseline; justify-content: flex-start; gap: 8px; padding-right: 110px !important; }
+  .arr-tbl.tbl-cards .arr-num { font-size: 20px; }
+  .arr-tbl.tbl-cards td.apt .arr-sub { font-size: 13px; margin: 0; }
+  .arr-tbl.tbl-cards td.arr-ota {
+    position: absolute; top: 10px; right: 0; width: auto !important; padding: 2px 14px !important;
+    font-size: 13px;
+  }
+  .arr-tbl.tbl-cards td.arr-ota::before { content: none; }
+  .arr-tbl.tbl-cards td.arr-client-cell { padding-top: 2px !important; padding-bottom: 8px !important; border-bottom: 1px solid #edf0f3 !important; margin-bottom: 4px; }
+  .arr-tbl.tbl-cards .arr-client { font-size: 16px; }
+  .arr-tbl.tbl-cards .arr-client-cell .arr-sub { display: inline; font-size: 13px; }
+  .arr-tbl.tbl-cards .arr-client-cell .arr-sub + .arr-sub::before { content: " · "; }
+  .arr-tbl.tbl-cards td[data-label] { font-size: 15px; }
+  .arr-tbl.tbl-cards td[data-label]::before { font-size: 13px; }
+  .arr-tbl.tbl-cards td.arr-heure { font-size: 16px; }
+  .arr-tbl.tbl-cards td.arr-resume { font-size: 15px; line-height: 1.45; }
+  .arr-tbl.tbl-cards td.arr-resume.alerte { background: var(--warn-bg); border-radius: 6px; margin: 4px 8px 0; width: auto !important; padding: 8px 10px !important; }
+  .arr-tbl.tbl-cards td.arr-taxe .arr-sub, .arr-tbl.tbl-cards td.arr-codes .arr-sub { font-size: 13px; }
+  .arr-tbl.tbl-cards td.arr-codes { font-size: 14px; }
+  .arr-tbl.tbl-cards td.arr-fait { display: none; }
 }
 @media print {
   .tbl .note-col { min-width: 260px; border-left: 1px solid #ccc; }
