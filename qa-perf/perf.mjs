@@ -5,7 +5,7 @@
 import { chromium, webkit } from "playwright";
 import crypto from "node:crypto";
 
-const TARGETS = { avant: "http://127.0.0.1:3001", apres: "http://127.0.0.1:3002" };
+const TARGETS = { avant: "http://127.0.0.1:3001", lite: "http://127.0.0.1:3002", complet: "http://127.0.0.1:3003" };
 const PAGES = (process.env.PAGES || "/commande-linge /transition").split(" ");
 const BROWSERS = (process.env.BROWSERS || "chromium webkit").split(" ");
 let T0 = 0; const TRACE = process.env.TRACE === "1";

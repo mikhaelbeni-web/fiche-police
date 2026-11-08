@@ -45,12 +45,15 @@ jobs:
           git worktree add /tmp/avant origin/main
           npm ci
           (cd /tmp/avant && npm ci --silent && npm run build 2>&1 | sed -n '/Route (pages)/,$p' | sed 's/^/AVANT /')
+          git worktree add /tmp/complet HEAD
+          (cd /tmp/complet && npm ci --silent && NEXT_PUBLIC_FS_FULL=1 npm run build 2>&1 | sed -n '/Route (pages)/,$p' | sed 's/^/COMPLET /')
           npm run build 2>&1 | sed -n '/Route (pages)/,$p' | sed 's/^/APRES /'
       - name: Démarrer les deux versions
         run: |
           (cd /tmp/avant && npx next start -p 3001 > /tmp/avant.log 2>&1 &)
           (npx next start -p 3002 > /tmp/apres.log 2>&1 &)
-          for i in $(seq 1 60); do curl -s 127.0.0.1:3001/api/auth >/dev/null && curl -s 127.0.0.1:3002/api/auth >/dev/null && break; sleep 1; done
+          (cd /tmp/complet && npx next start -p 3003 > /tmp/complet.log 2>&1 &)
+          for i in $(seq 1 60); do curl -s 127.0.0.1:3001/api/auth >/dev/null && curl -s 127.0.0.1:3002/api/auth >/dev/null && curl -s 127.0.0.1:3003/api/auth >/dev/null && break; sleep 1; done
       - run: npm install --no-save playwright@1.48.2 && npx playwright install --with-deps chromium webkit
       - name: Réseau type 4G (latence 150 ms aller-retour, 5 Mbit/s)
         run: |
@@ -58,5 +61,5 @@ jobs:
           sudo tc qdisc add dev lo root netem delay 75ms rate 5mbit
           sudo tc qdisc add dev $IF root netem delay 70ms
           ping -c 2 127.0.0.1 | tail -1
-      - name: Chronologie détaillée (Transition)
-        run: RUNS=2 TRACE=1 PAGES=/transition BROWSERS=chromium node qa-perf/perf.mjs
+      - name: Mesures
+        run: node qa-perf/perf.mjs
