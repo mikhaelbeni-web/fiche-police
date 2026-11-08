@@ -272,7 +272,7 @@ function Linge() {
           <button className="arrow" onClick={() => shiftDay(1)}>›</button>
         </div>
         <button onClick={() => setDay(isoDay(new Date()))}>Aujourd&apos;hui</button>
-        <button onClick={() => load(day, creds.account, creds.key)} disabled={loading} title="Actualiser">↻</button>
+        <button onClick={() => load(day, creds.account, creds.key)} disabled={loading} title="Actualiser" aria-label="Actualiser" className="linge-refresh">↻</button>
         <button className="primary" onClick={() => window.print()} disabled={!sheetItems.length}>Imprimer</button>
         <span className="status">{status}</span>
       </div>

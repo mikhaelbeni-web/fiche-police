@@ -2085,3 +2085,19 @@ body {
   }
   .transition-page .transition-save { width: 100%; min-height: 48px; font-size: 16px; }
 }
+
+/* ---- Ajustements après la 2e série de captures ---- */
+@media screen and (max-width: 640px) {
+  .linge-page .tbl-cards button.danger { min-width: var(--tap); min-height: var(--tap); }
+  .toolbar .linge-refresh { min-width: var(--tap); }
+  .taxes-page .tx-search-results { position: static !important; width: auto !important; }
+  .checklist-page span.staff-chip { display: inline-flex; align-items: center; }
+  .checklist-page span.staff-chip.present { min-height: 32px; }
+  .incendie-page .inc-form input:not([type=checkbox]):not([type=radio]) { font-size: 16px; }
+}
+/* Téléphone en paysage (641–940 px) : rien ne doit sortir de l'écran. */
+@media screen and (max-width: 940px) {
+  .linge-page { flex-wrap: wrap; justify-content: stretch; }
+  .linge-page > * { min-width: 0; max-width: 100%; }
+  .taches-toolbar .taches-filters { flex-wrap: wrap; }
+}
