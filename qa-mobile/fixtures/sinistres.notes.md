@@ -1,0 +1,15 @@
+# sinistres — notes QA mobile
+
+- Vue 1 « Sinistres » : cartes `.card` lues dans `sinistres` (orderBy `date` desc, format "YYYY-MM-DD"). Champs rendus : client, residence, appartement, date, origine (`plateforme` | `direct` | ancien `booking`), canal, motif, montant (nombre ou null/absent), note, reponseRapide, problemeRegle, statutPlateforme (ou ancien `statutBooking`). Filtres Tous / Non réglés / Réglés.
+- Vue 2 « Réclamations Gmail » (components/ReclamationsGmail.js) : `reclamations_gmail` (orderBy `dateRecu` desc, "YYYY-MM-DD"). Champs : client (vide → « Client inconnu »), logement, reservation, plateforme, type, resume, citation, montantDemande, gmailUrl, traite, rembourse, montantRembourse, plateformeRemboursement, motif/motifSuggere, note, traiteLe (ISO), traitePar. Fixtures : type et plateforme inconnus (rendu brut), sans gmailUrl, traité oui/non.
+- /api/reservation-search n'est appelé que depuis le formulaire (saisie ≥ 2 lettres, nécessite localStorage hostaway_account/hostaway_api_key → sinistres.localstorage.json). Réponse `{ items: [...] }`.
+- Aucun `.toDate()` : tout est en chaînes. CodeModal (code 2305 = NEXT_PUBLIC_DELETE_PASSWORD par défaut, sinistres.js:14) ne protège que la suppression, précédée d'un `confirm()` → pas d'état capturé (destructif).
+
+## Risques mobile (360–430 px)
+1. `components/ReclamationsGmail.js:533-537` + `styles/globals.css:1143` : `.row-actions` est un flex SANS `flex-wrap`, avec 2 `.pill` en `white-space: nowrap` (globals.css:1137) + lien « Ouvrir le mail ». « Demande de remboursement » + « Booking.com » + lien ≈ 350 px pour ≈ 290 px dispo → débordement horizontal (masqué par `body{overflow-x:hidden}`).
+2. `pages/sinistres.js:255` : `<label style={{ minWidth: 320 }}>` dans le formulaire. Le `width/max-width:100% !important` mobile (globals.css:386-388) n'annule pas `min-width` → le champ « Nom du client » déborde de ~30 px à 360 px. Idem `minWidth: 260` (sinistres.js:284), limite.
+3. `pages/sinistres.js:126-145` : barre d'outils avec 2 groupes d'onglets + bouton + statut ; boutons `.toolbar button` à 12px / padding 7px 10px (globals.css:370-372) ≈ 28-30 px de haut : cibles tactiles < 44 px, et exclues de la règle min-height 40 px.
+4. `pages/sinistres.js:260-272` : liste de résultats de recherche en `fontSize: 13` dans un label étroit ; lignes longues (`client — residence appartement (unit)`) peu lisibles ; `maxHeight: 220` avec scroll interne imbriqué.
+5. `pages/sinistres.js:364` : bouton ✕ de suppression seul dans `.row-actions`, collé à la pastille — risque de tap accidentel (protégé par confirm + code).
+6. `components/ReclamationsGmail.js:572` : `.inline-field.grow { min-width: 200px }` (globals.css:1184) + `input type=number style={{ width: 90 }}` (l.564) : rangée `.card-controls` qui passe sur 3-4 lignes ; OK en largeur mais carte très haute (10 cartes × ~400 px).
+7. Longs textes sans espace (email dans `note`, sinistres.js:370 `.card-quote`) : aucun `overflow-wrap:anywhere` sur `.card-*` → débordement possible.
