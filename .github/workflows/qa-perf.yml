@@ -58,5 +58,5 @@ jobs:
           sudo tc qdisc add dev lo root netem delay 75ms rate 5mbit
           sudo tc qdisc add dev $IF root netem delay 70ms
           ping -c 2 127.0.0.1 | tail -1
-      - name: Mesures
-        run: node qa-perf/perf.mjs
+      - name: Chronologie détaillée (Transition)
+        run: RUNS=2 TRACE=1 PAGES=/transition BROWSERS=chromium node qa-perf/perf.mjs

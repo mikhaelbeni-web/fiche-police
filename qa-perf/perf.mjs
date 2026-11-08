@@ -6,7 +6,9 @@ import { chromium, webkit } from "playwright";
 import crypto from "node:crypto";
 
 const TARGETS = { avant: "http://127.0.0.1:3001", apres: "http://127.0.0.1:3002" };
-const PAGES = ["/commande-linge", "/transition"];
+const PAGES = (process.env.PAGES || "/commande-linge /transition").split(" ");
+const BROWSERS = (process.env.BROWSERS || "chromium webkit").split(" ");
+let T0 = 0; const TRACE = process.env.TRACE === "1";
 const RUNS = Number(process.env.RUNS || 5);
 const token = "ok." + crypto.createHmac("sha256", process.env.SESSION_SECRET).update("ok").digest("hex");
 
@@ -16,6 +18,10 @@ async function measure(browserType, base, path, mode) {
   await ctx.addCookies([{ name: "fp_session", value: token, url: base }]);
   const page = await ctx.newPage();
   let fsReq = 0, fsBytes = 0, jsBytes = 0;
+  if (TRACE) {
+    page.on("request", r => { if (!r.url().startsWith("data:")) r._t = Date.now(); });
+    page.on("requestfinished", r => { if (T0 && r._t >= T0) console.log(`   ${r._t - T0}→${Date.now() - T0} ms ${r.method()} ${r.url().replace(/\?.*/, "").slice(-90)}`); });
+  }
   page.on("response", async r => {
     const u = r.url();
     try {
@@ -29,7 +35,7 @@ async function measure(browserType, base, path, mode) {
   }, path, { timeout: 60000, polling: 20 });
   let ms;
   if (mode === "direct") {
-    const t0 = Date.now();
+    const t0 = Date.now(); T0 = t0;
     await page.goto(base + path);
     await ready();
     ms = Date.now() - t0;
@@ -39,19 +45,21 @@ async function measure(browserType, base, path, mode) {
     await page.waitForFunction(() => window.next && window.next.router && document.querySelector(".toolbar, nav"), null, { timeout: 60000 });
     await page.waitForTimeout(3000); // le temps d'ouvrir le menu
     fsReq = 0; fsBytes = 0; jsBytes = 0;
-    const t0 = Date.now();
+    const t0 = Date.now(); T0 = t0;
     await page.evaluate(p => window.next.router.push(p), path);
     await ready();
     ms = Date.now() - t0;
   }
+  if (TRACE) console.log(`  -> prêt à ${ms} ms (${path} ${mode} ${base})`);
   await page.waitForTimeout(300);
+  T0 = 0;
   await browser.close();
   return { ms, fsReq, fsKo: Math.round(fsBytes / 1024), jsKo: Math.round(jsBytes / 1024) };
 }
 
 const med = a => { const s = [...a].sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
 const out = [];
-for (const [bname, bt] of [["chromium", chromium], ["webkit", webkit]]) {
+for (const [bname, bt] of [["chromium", chromium], ["webkit", webkit]].filter(([n]) => BROWSERS.includes(n))) {
   for (const path of PAGES) for (const mode of ["direct", "menu"]) for (const [ver, base] of Object.entries(TARGETS)) {
     const res = [];
     for (let i = 0; i < RUNS; i++) {
