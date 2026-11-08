@@ -226,7 +226,7 @@ function Menage() {
         <span className="status">{status}</span>
       </div>
 
-      <div className="menage-page">
+      <div className="menage-page menage-jour">
         <div className="recap">
           <div className="recap-head">
             <div>
@@ -258,7 +258,7 @@ function Menage() {
                 </span>
                 <span className="resid-count">{g.count} ménage{g.count > 1 ? "s" : ""}</span>
               </div>
-              <div className="tbl-wrap"><table className="tbl">
+              <div className="tbl-wrap"><table className={`tbl${from === to ? " un-jour" : ""}`}>
                 <thead>
                   <tr>
                     <th>N°</th>
@@ -267,17 +267,17 @@ function Menage() {
                     <th title="Heure annoncée par le client dans ses messages (vide s'il n'a rien dit)">Heure</th>
                     <th>Client</th>
                     <th className="note-col">Note</th>
-                    <th className="c">Fait</th>
+                    <th className="c m-fait">Fait</th>
                   </tr>
                 </thead>
                 <tbody>
                   {g.items.map((it, i) => (
                     <tr key={i} style={it.extra ? { background: it.extraType === "decale" ? "#eaf3fb" : "#fff8ec" } : undefined}>
                       <td className="apt">{it.unitNumber || "—"}</td>
-                      <td>{it.appartement}</td>
-                      <td>{fmtFr(it.depart)}</td>
+                      <td className="m-appart">{it.appartement}</td>
+                      <td className="m-depart">{fmtFr(it.depart)}</td>
                       <td className="heure">{heureDe(it)}</td>
-                      <td>
+                      <td className="m-client">
                         {it.client}
                         {it.extra && (
                           it.extraType === "decale"
@@ -298,7 +298,7 @@ function Menage() {
                           </span>
                         ) : null}
                       </td>
-                      <td className="c"><span className="box" /></td>
+                      <td className="c m-fait"><span className="box" /></td>
                     </tr>
                   ))}
                 </tbody>
