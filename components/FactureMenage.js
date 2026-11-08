@@ -369,7 +369,7 @@ export default function FactureMenage() {
                         <tr key={ecartKey(e)} className={e.reclamable ? undefined : "fm-off"}>
                           <td className="no-print c"><label className="fm-check"><input type="checkbox" checked={e.reclamable} onChange={() => toggle(e)} aria-label="Réclamer cette ligne" /></label></td>
                           <td>{TYPES[e.type].label}</td><td className="apt">{e.unit || "—"}</td><td>{fmtFr(e.date)}</td>
-                          <td className="r">{eur(e.montantHT)}</td><td className="fm-detail">{e.detail}</td>
+                          <td className="r" data-label="HT">{eur(e.montantHT)}</td><td className="fm-detail">{e.detail}</td>
                         </tr>))}</tbody>
                     </table></div>
                     <div className="fm-note no-print">Décoche une ligne si le ménage a bien eu lieu (ex. ménage fait sans départ) : elle sort de la réclamation.</div>
@@ -384,7 +384,7 @@ export default function FactureMenage() {
                       <tbody>{compens.map(e => (
                         <tr key={ecartKey(e)} className={e.compensation ? undefined : "fm-off"}>
                           <td className="no-print c"><label className="fm-check"><input type="checkbox" checked={e.compensation} onChange={() => toggle(e)} aria-label="Déduire ce ménage" /></label></td>
-                          <td className="apt">{e.unit || "—"}</td><td>{fmtFr(e.date)}</td><td className="r">{eur(e.montantHT)}</td><td className="fm-detail">{e.detail}</td>
+                          <td className="apt">{e.unit || "—"}</td><td>{fmtFr(e.date)}</td><td className="r" data-label="HT">{eur(e.montantHT)}</td><td className="fm-detail">{e.detail}</td>
                         </tr>))}</tbody>
                     </table></div>
                     <div className="fm-note no-print">Décoche un ménage s&apos;il n&apos;a finalement pas eu lieu : il n&apos;est plus déduit.</div>
@@ -397,7 +397,7 @@ export default function FactureMenage() {
                     <div className="tbl-wrap"><table className="tbl">
                       <thead><tr><th>Date</th><th>Description</th><th className="r">HT</th><th className="r">TVA</th><th className="r">TTC</th></tr></thead>
                       <tbody>{communes.map(l => (
-                        <tr key={l.ligne}><td>{fmtFr(l.date)}</td><td className="fm-detail">{l.desc}</td><td className="r">{eur(l.ht)}</td><td className="r">{eur(l.tva)}</td><td className="r">{eur(l.ttc)}</td></tr>))}</tbody>
+                        <tr key={l.ligne}><td>{fmtFr(l.date)}</td><td className="fm-detail">{l.desc}</td><td className="r" data-label="HT">{eur(l.ht)}</td><td className="r" data-label="TVA">{eur(l.tva)}</td><td className="r" data-label="TTC">{eur(l.ttc)}</td></tr>))}</tbody>
                     </table></div>
                   </div>
                 )}

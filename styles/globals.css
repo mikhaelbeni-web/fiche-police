@@ -975,6 +975,96 @@ body {
   .facture-menage .fm-hist .fm-row-actions .fm-btn { flex: 1; }
   .facture-menage .fm-hist .fm-row-actions .fm-btn + .fm-btn { margin-left: 0; }
 }
+
+/* --- Téléphone : Ménages (pages/menage.js) et Contrôle facture ménage (Coûts ménage) ---
+   Écran seulement : l'impression garde le tableau d'origine. */
+@media screen and (max-width: 768px) {
+  /* Coûts ménage : contrôle de la facture et coûts l'un sous l'autre (côte à côte, le contrôle sortait de l'écran à gauche). */
+  .couts-page { flex-direction: column; align-items: stretch; gap: 12px; }
+  .couts-page > .recap { margin-bottom: 0 !important; }
+}
+@media screen and (max-width: 640px) {
+  .menage-jour .recap, .couts-page .recap { padding: 14px 12px; }
+  .menage-jour .resid-head, .facture-menage .resid-head { border-radius: 8px 8px 0 0; }
+
+  /* Ménages : une fiche par départ, sans défilement horizontal.
+     N° en gros à gauche, puis appartement, heure annoncée, client, note. */
+  .menage-jour .tbl-wrap { overflow: visible; border: 1px solid var(--border); border-top: none; border-radius: 0 0 8px 8px; }
+  .menage-jour .tbl { width: 100%; min-width: 0; }
+  .menage-jour .tbl thead { display: none; }
+  .menage-jour .tbl tbody { display: block; }
+  .menage-jour .tbl tr {
+    display: grid; grid-template-columns: 56px minmax(0, 1fr);
+    grid-template-areas: "apt appart" "apt heure" "apt client" "apt depart" "note note";
+    column-gap: 10px; row-gap: 3px; padding: 10px 12px; border-bottom: 1px solid #e5e9ef;
+  }
+  .menage-jour .tbl tr:last-child { border-bottom: none; }
+  .menage-jour .tbl td { display: block; padding: 0; border: none; white-space: normal; min-width: 0; overflow-wrap: anywhere; }
+  .menage-jour .tbl td:empty { display: none; }
+  .menage-jour .tbl td.apt { grid-area: apt; align-self: center; font-size: 22px; font-weight: 800; color: var(--accent); text-align: center; }
+  .menage-jour .tbl td.m-appart { grid-area: appart; font-size: 15px; font-weight: 700; }
+  .menage-jour .tbl td.heure {
+    grid-area: heure; justify-self: start; font-size: 13px; color: var(--info);
+    background: var(--info-bg); border-radius: 999px; padding: 2px 10px;
+  }
+  .menage-jour .tbl td.heure::before { content: "Départ annoncé : "; font-weight: 500; }
+  .menage-jour .tbl td.m-client { grid-area: client; font-size: 14px; color: #333; }
+  .menage-jour .tbl td.m-depart { grid-area: depart; font-size: 12px; color: var(--muted); }
+  .menage-jour .tbl.un-jour td.m-depart { display: none; } /* un seul jour : la date est déjà sur le bandeau */
+  .menage-jour .tbl td.note-col { grid-area: note; min-width: 0; font-size: 13px; padding-top: 4px; }
+  .menage-jour .tbl .m-fait { display: none; } /* case à cocher à la main : utile seulement sur papier */
+
+  /* Contrôle facture : boutons et champs à 44 px pour le pouce. */
+  .facture-menage .fm-btn { min-height: 44px; }
+  .facture-menage .fm-arrow { width: 44px; height: 44px; flex: 0 0 44px; }
+  .facture-menage .fm-mois input, .facture-menage select { min-height: 44px; }
+  .facture-menage .fm-card-actions .fm-btn { flex: 1 1 auto; justify-content: center; }
+  .facture-menage .fm-res-head .fm-btn { width: 100%; justify-content: center; }
+  .facture-menage .fm-res-head > div { min-width: 0; }
+  .facture-menage .recap-sub { overflow-wrap: anywhere; }
+
+  /* Tableaux du résultat : une fiche par ligne (case à gauche, montant à droite, détail dessous). */
+  .facture-menage .resid .tbl-wrap { overflow: visible; border: 1px solid var(--border); border-top: none; border-radius: 0 0 8px 8px; }
+  .facture-menage .resid .tbl { width: 100%; min-width: 0; }
+  .facture-menage .resid .tbl thead { display: none; }
+  .facture-menage .resid .tbl tbody { display: block; }
+  .facture-menage .resid .tbl tr {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px;
+    padding: 8px 12px; border-bottom: 1px solid #e5e9ef;
+  }
+  .facture-menage .resid .tbl tr:last-child { border-bottom: none; }
+  .facture-menage .resid .tbl td { display: block; padding: 0; border: none; white-space: normal; min-width: 0; }
+  .facture-menage .resid .tbl td.r { margin-left: auto; font-weight: 700; }
+  .facture-menage .resid .tbl td.r ~ td.r { margin-left: 0; }
+  .facture-menage .resid .tbl td.r[data-label]::before { content: attr(data-label) " "; font-size: 11px; font-weight: 600; color: var(--muted); }
+  .facture-menage .resid .tbl td.fm-detail { flex: 1 0 100%; min-width: 0; font-size: 13px; overflow-wrap: anywhere; }
+  .facture-menage .resid .tbl td.c { flex: 0 0 auto; }
+  .facture-menage .fm-check { min-width: 44px; min-height: 44px; margin: -6px -8px -6px -10px; }
+  .facture-menage .resid .fm-note { padding: 0 2px; }
+
+  /* Coûts ménage : une fiche par départ (total à droite, détail ménage / amenities dessous). */
+  .couts-page > .recap:not(.facture-menage) .tbl-wrap { overflow: visible; border: 1px solid var(--border); border-top: none; border-radius: 0 0 8px 8px; }
+  .couts-page > .recap:not(.facture-menage) .tbl { width: 100%; min-width: 0; }
+  .couts-page > .recap:not(.facture-menage) .tbl thead { display: none; }
+  .couts-page > .recap:not(.facture-menage) .tbl tbody { display: block; }
+  .couts-page > .recap:not(.facture-menage) .tbl tr {
+    display: grid; grid-template-columns: 48px minmax(0, 1fr) auto;
+    grid-template-areas: "apt appart total" "apt depart depart" "apt men men" "apt amen amen";
+    column-gap: 10px; row-gap: 2px; padding: 9px 12px; border-bottom: 1px solid #e5e9ef;
+  }
+  .couts-page > .recap:not(.facture-menage) .tbl tr:last-child { border-bottom: none; }
+  .couts-page > .recap:not(.facture-menage) .tbl td { display: block; padding: 0; border: none; white-space: normal; min-width: 0; text-align: left; }
+  .couts-page > .recap:not(.facture-menage) .tbl td.apt { grid-area: apt; align-self: center; text-align: center; font-size: 18px; font-weight: 800; color: var(--accent); }
+  .couts-page > .recap:not(.facture-menage) .tbl td.m-appart { grid-area: appart; font-weight: 700; }
+  .couts-page > .recap:not(.facture-menage) .tbl td.m-depart { grid-area: depart; font-size: 12px; color: var(--muted); }
+  .couts-page > .recap:not(.facture-menage) .tbl.un-jour td.m-depart { display: none; }
+  .couts-page > .recap:not(.facture-menage) .tbl td.m-total { grid-area: total; font-weight: 800; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .couts-page > .recap:not(.facture-menage) .tbl td.m-menage { grid-area: men; font-size: 12px; color: var(--muted); }
+  .couts-page > .recap:not(.facture-menage) .tbl td.m-menage::before { content: "Ménage "; }
+  .couts-page > .recap:not(.facture-menage) .tbl td.m-amen { grid-area: amen; font-size: 12px; color: var(--muted); }
+  .couts-page > .recap:not(.facture-menage) .tbl td.m-amen::before { content: "Amenities "; }
+  .couts-page > .recap:not(.facture-menage) .tbl td.m-vide { display: none; }
+}
 .inc-reserves { background: #fdecea; border: 1px solid #f5b7b1; border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; }
 .inc-reserve { padding: 6px 0; border-top: 1px solid #f0c9c4; font-size: 13px; cursor: pointer; }
 .inc-reserve:first-of-type { border-top: none; }
