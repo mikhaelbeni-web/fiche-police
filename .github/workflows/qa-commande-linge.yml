@@ -4,7 +4,7 @@ name: qa-commande-linge
 on:
   push:
     branches: [claude/project-thread-tph45x]
-    paths-ignore: ["qa-mobile/out/**"]
+    paths-ignore: ["qa-cl/out/**"]
   workflow_dispatch:
 permissions:
   contents: write
@@ -13,6 +13,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Tester avec la base commune mobile (PR #43), sans la pousser
+        run: |
+          git config user.name "qa-bot"; git config user.email "qa-bot@users.noreply.github.com"
+          git fetch origin claude/project-thread-mrfxgu && (git merge --no-edit origin/claude/project-thread-mrfxgu || git merge --abort) || true
+          git log --oneline -3
       - uses: actions/setup-node@v4
         with: { node-version: 20, cache: npm }
       - run: npm ci
@@ -21,8 +27,8 @@ jobs:
           cat > next.config.js <<'EOC'
           const path = require("path");
           module.exports = { webpack(config) {
-            config.resolve.alias["firebase/app"] = path.resolve("qa-mobile/mock/firebase-app.js");
-            config.resolve.alias["firebase/firestore"] = path.resolve("qa-mobile/mock/firebase-firestore.js");
+            config.resolve.alias["firebase/app"] = path.resolve("qa-cl/mock/firebase-app.js");
+            config.resolve.alias["firebase/firestore"] = path.resolve("qa-cl/mock/firebase-firestore.js");
             return config; } };
           EOC
       - run: npm run build
@@ -33,10 +39,10 @@ jobs:
         run: |
           (npx next start -p 3100 > /tmp/next.log 2>&1 &)
           npx wait-on -t 60000 http://localhost:3100/api/auth || sleep 15
-          rm -rf qa-mobile/out && node qa-mobile/audit.js
+          rm -rf qa-cl/out && node qa-cl/audit.js
       - name: Résultats sur la branche
         run: |
-          git config user.name "qa-bot"; git config user.email "qa-bot@users.noreply.github.com"
-          git add qa-mobile/out
+          mv qa-cl/out /tmp/out && git reset -q --hard "$GITHUB_SHA" && mkdir -p qa-cl && mv /tmp/out qa-cl/out
+          git add qa-cl/out
           git commit -m "QA mobile : résultats ${GITHUB_SHA::7} [skip ci]" || exit 0
           git pull --rebase origin ${GITHUB_REF_NAME} && git push origin HEAD:${GITHUB_REF_NAME}

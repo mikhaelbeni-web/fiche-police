@@ -40,3 +40,5 @@ export async function addDoc(c, d){ const id = "n"+(++seq); DB[c.name] = DB[c.na
 export async function updateDoc(r, d){ DB[r.name][r.id] = { ...DB[r.name][r.id], ...d }; }
 export async function deleteDoc(r){ delete DB[r.name]?.[r.id]; }
 export function getFirestore(){ return {}; }
+export function onSnapshot(r, cb){ const d = DB[r.name]?.[r.id]; if (r.id) cb(snap(r.id, d)); else cb({ docs: Object.entries(DB[r.name]||{}).map(([id,x]) => snap(id,x)) }); return () => {}; }
+export function where(){ return null; } export function limit(){ return null; } export function serverTimestamp(){ return new Date().toISOString(); }

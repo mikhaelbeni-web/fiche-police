@@ -256,7 +256,7 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
               La date de la facture sert seulement à la retrouver. Le comparatif utilise les dates du linge (le « Mois de … » de la facture) : ce sont les réceptions de ces jours-là qui sont comparées.
             </div>
 
-            <div className="tbl-wrap"><table className="tbl fl-tbl">
+            <div className="tbl-wrap"><table className="tbl fl-tbl cl-cards cl-cout">
               <thead>
                 <tr><th>Article Elis</th><th className="c">Quantité facturée</th><th className="c">Prix unitaire HT</th><th className="r">Montant HT</th></tr>
               </thead>
@@ -267,16 +267,16 @@ export default function FactureLinge({ fs, invoices, receptions, prices, reload,
                   if (vide) return null; // gamme absente de la facture (ex. Horizon)
                   return (
                     <tr key={a.id}>
-                      <td>{a.label}</td>
-                      <td className="c"><input type="number" min="0" inputMode="numeric" className="fl-input fl-input-qte" value={l.qte} onChange={e => setLigne(a.id, "qte", e.target.value)} aria-label={`Quantité facturée ${a.label}`} /></td>
-                      <td className="c"><input type="number" min="0" step="0.001" inputMode="decimal" className="fl-input fl-input-prix" value={l.prixUnitaire} onChange={e => setLigne(a.id, "prixUnitaire", e.target.value)} aria-label={`Prix unitaire ${a.label}`} /></td>
-                      <td className="r">{eur((Number(l.qte) || 0) * (Number(l.prixUnitaire) || 0))}</td>
+                      <td className="cl-head">{a.label}</td>
+                      <td className="c" data-label="Quantité facturée"><input type="number" min="0" inputMode="numeric" className="fl-input fl-input-qte" value={l.qte} onChange={e => setLigne(a.id, "qte", e.target.value)} aria-label={`Quantité facturée ${a.label}`} /></td>
+                      <td className="c" data-label="Prix unitaire HT"><input type="number" min="0" step="0.001" inputMode="decimal" className="fl-input fl-input-prix" value={l.prixUnitaire} onChange={e => setLigne(a.id, "prixUnitaire", e.target.value)} aria-label={`Prix unitaire ${a.label}`} /></td>
+                      <td className="r" data-label="Montant HT">{eur((Number(l.qte) || 0) * (Number(l.prixUnitaire) || 0))}</td>
                     </tr>
                   );
                 })}
                 {form.autres?.map((a, i) => (
                   <tr key={"autre" + i} className="fl-autre">
-                    <td>{a.label} <em>(pas comparé)</em></td><td className="c">{a.qte}</td><td className="c">{prix3(a.prixUnitaire)}</td><td className="r">{eur(a.montant)}</td>
+                    <td className="cl-head">{a.label} <em>(pas comparé)</em></td><td className="c" data-label="Quantité">{a.qte}</td><td className="c" data-label="Prix unitaire HT">{prix3(a.prixUnitaire)}</td><td className="r" data-label="Montant HT">{eur(a.montant)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -514,7 +514,7 @@ function Comparaison({ c, inv, destinataires }) {
       </div>
 
       <div className="fl-sous-titre">Détail par article</div>
-      <div className="tbl-wrap"><table className="tbl fl-tbl">
+      <div className="tbl-wrap"><table className="tbl fl-tbl cl-cards cl-cout">
         <thead>
           <tr><th>Article</th>{c.avecCommande && <th className="c">Commandé</th>}<th className="c">Facturé</th><th className="c">Reçu</th><th className="c">Différence</th><th className="c">Prix unitaire HT</th><th className="r">Différence €</th></tr>
         </thead>
@@ -523,13 +523,13 @@ function Comparaison({ c, inv, destinataires }) {
             const cls = l.ecart > 0 ? "rouge" : l.ecart < 0 ? "bleu" : "vert";
             return (
               <tr key={l.key}>
-                <td>{l.label}</td>
-                {c.avecCommande && <td className="c fl-gris">{l.commande}</td>}
-                <td className="c">{l.facture}</td>
-                <td className="c">{l.recu}</td>
-                <td className={`c fl-ecart ${cls}`}>{l.ecart === 0 ? "✓" : l.ecart > 0 ? `+${l.ecart}` : l.ecart}</td>
-                <td className="c">{l.prix ? prix3(l.prix) : "—"}</td>
-                <td className={`r fl-ecart ${cls}`}>{l.ecart === 0 ? "" : eur(l.ecartEuros)}</td>
+                <td className="cl-head">{l.label}</td>
+                {c.avecCommande && <td className="c fl-gris" data-label="Commandé">{l.commande}</td>}
+                <td className="c" data-label="Facturé">{l.facture}</td>
+                <td className="c" data-label="Reçu">{l.recu}</td>
+                <td className={`c fl-ecart ${cls}`} data-label="Différence">{l.ecart === 0 ? "✓" : l.ecart > 0 ? `+${l.ecart}` : l.ecart}</td>
+                <td className="c" data-label="Prix unitaire HT">{l.prix ? prix3(l.prix) : "—"}</td>
+                <td className={`r fl-ecart ${cls}`} data-label="Différence €">{l.ecart === 0 ? "" : eur(l.ecartEuros)}</td>
               </tr>
             );
           })}

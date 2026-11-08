@@ -5,7 +5,7 @@ const { chromium } = require("playwright");
 const crypto = require("crypto");
 const fs = require("fs");
 const BASE = "http://localhost:3100";
-const OUT = "qa-mobile/out";
+const OUT = "qa-cl/out";
 const token = "ok." + crypto.createHmac("sha256", process.env.SESSION_SECRET || "audit").update("ok").digest("hex");
 const VIEWPORTS = [[360, 740], [390, 844], [430, 932]];
 const click = t => async p => { await p.getByRole("button", { name: t, exact: true }).first().click(); await p.waitForTimeout(300); };
