@@ -10,7 +10,9 @@ import FactureMenage from "../components/FactureMenage";
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
 
-function isoDay(d) { return d.toISOString().slice(0, 10); }
+// Date du jour en heure locale (Paris) : toISOString() donnait la date UTC,
+// donc la veille entre minuit et 1 h / 2 h, et « Ce mois-ci » commençait le 31 du mois précédent.
+function isoDay(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; }
 function fmtFr(d) {
   const x = new Date(d + "T12:00:00");
   return isNaN(x) ? d : x.toLocaleDateString("fr-FR");

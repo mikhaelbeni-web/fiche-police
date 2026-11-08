@@ -50,10 +50,12 @@ function NetResume({ net, big }) {
   );
 }
 
+// Mois précédent, en heure locale. L'ancien calcul (setMonth − 1 puis toISOString)
+// tombait sur le mauvais mois le 29, 30 ou 31 (ex. 31 mars → « 3 mars » → mars).
 function defaultMois() {
   const d = new Date();
-  d.setMonth(d.getMonth() - 1);
-  return d.toISOString().slice(0, 7);
+  const p = new Date(d.getFullYear(), d.getMonth() - 1, 1);
+  return `${p.getFullYear()}-${String(p.getMonth() + 1).padStart(2, "0")}`;
 }
 
 function lastDay(mois) {

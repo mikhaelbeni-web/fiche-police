@@ -9,7 +9,9 @@ const ACCOUNT_KEY = "hostaway_account";
 // écrites chaque matin par la routine 9h. Doc ID = id Hostaway de la résa.
 const HEURES_COLLECTION = "heures_depart";
 
-function isoDay(d) { return d.toISOString().slice(0, 10); }
+// Date du jour en heure locale (Paris) : toISOString() donnait la date UTC,
+// donc la veille entre minuit et 1 h / 2 h, et « Ce mois-ci » commençait le 31 du mois précédent.
+function isoDay(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; }
 function fmtFr(d) {
   if (!d) return "";
   const x = new Date(d + "T12:00:00");
@@ -107,12 +109,12 @@ function Menage() {
 
   function setToday() { setFrom(today); setTo(today); }
   function setTomorrow() {
-    const t = isoDay(new Date(Date.now() + 864e5));
+    const t = isoDay(new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate() + 1));
     setFrom(t); setTo(t);
   }
   function setWeek() {
     setFrom(today);
-    setTo(isoDay(new Date(Date.now() + 6 * 864e5)));
+    setTo(isoDay(new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate() + 6)));
   }
 
   const groups = (data?.groups || []).filter(
