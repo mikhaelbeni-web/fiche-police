@@ -150,6 +150,36 @@ body {
   .sheet:last-child { page-break-after: auto; }
 }
 
+/* Fiche police sur téléphone (≤ 640 px, écran seulement : la fiche imprimée
+   A4 portrait ne change pas). Barre : le jour sur toute la largeur, puis
+   Aujourd'hui · ↻ · Imprimer · ⚙ sur une ligne ; la fiche est lue comme une
+   carte, sans marges A4. */
+@media screen and (max-width: 640px) {
+  .fiche-toolbar h1 { display: none; }
+  .fiche-toolbar .fiche-today, .fiche-toolbar button.primary { flex: 1 1 0; }
+  .fiche-toolbar button.fiche-icon { flex: none; width: var(--tap, 44px); padding: 0; font-size: 20px; }
+  .fiche-toolbar .status { flex: 1 1 auto; width: auto; order: 0; margin: 0; align-self: center; }
+  .fiche-toolbar button.ghost.forget { margin-left: 0; opacity: .85; font-size: 13px; }
+  .fiche-toolbar .token-setup button.arrow.save { flex: 1 1 100%; width: 100%; }
+
+  .sheets { padding: 10px 8px; gap: 14px; }
+  .sheets .sheet { padding: 14px 12px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+  .sheets .sheet-head { gap: 6px; }
+  .sheets .sheet-head .hotel { font-size: 17px; }
+  .sheets .sheet-head .doc-title .t1 { font-size: 18px; line-height: 1.2; }
+  .sheets .legal, .sheets .rgpd { font-size: 12px; text-align: left; }
+  .sheets .section-label { font-size: 13px; padding: 8px 12px; }
+  .sheets .cell { min-height: 0; padding: 10px 12px; }
+  .sheets .cell .lbl { font-size: 11.5px; }
+  .sheets .cell .val { font-size: 18px; }
+  /* L'e-mail tient sur une ligne à l'impression ; à l'écran il revient à la
+     ligne au lieu de rétrécir jusqu'à devenir illisible. */
+  .sheets .cell .val.one-line { font-size: 16px !important; white-space: normal; overflow-wrap: anywhere; }
+  .sheets .sig .lbl { font-size: 14px; }
+  .sheets .sig .box { height: 96px; }
+  .sheets .empty-state { padding: 32px 12px; }
+}
+
 /* --- Verrou d'accès appareil --- */
 .gate {
   position: fixed; inset: 0; background: var(--accent);
@@ -356,6 +386,48 @@ body {
   .recap:has(.arr-tbl) { padding: 0 9mm; }
   .recap:has(.arr-tbl) .recap-head { padding-bottom: 6px; margin-bottom: 10px; }
   .arr-resid { break-inside: avoid; page-break-inside: avoid; margin-bottom: 14px; }
+}
+
+/* Arrivées sur téléphone (≤ 640 px, écran seulement : la feuille paysage
+   imprimée ne change pas). Chaque client devient une carte : N° et
+   appartement en titre avec l'OTA à droite, client, puis Arrivée / Taxe ou
+   Dépôt / Codes en lignes « titre … valeur », résumé en entier. La case
+   « Fait » sert à cocher au stylo sur la feuille : masquée à l'écran. */
+@media screen and (max-width: 640px) {
+  .arr-toolbar .field { flex: 1 1 calc(50% - 4px); }
+  .arr-toolbar .arr-field-resid { flex: 1 1 100%; }
+  .arr-toolbar .arr-refresh { flex: none; width: var(--tap, 44px); padding: 0; font-size: 20px; }
+  .arr-toolbar .arr-action { flex: 1 1 0; white-space: nowrap; font-size: 14px; padding: 8px 6px; }
+
+  .recap:has(.arr-tbl) .recap-head { flex-direction: row; align-items: center; gap: 12px; padding-bottom: 10px; margin-bottom: 12px; }
+  .recap:has(.arr-tbl) .recap-total { align-self: auto; flex: none; }
+  .recap:has(.arr-tbl) .recap-total .maj { white-space: normal; max-width: 110px; }
+  .recap:has(.arr-tbl) { padding: 10px; }
+
+  .arr-resid { margin-bottom: 16px; }
+  .arr-resid .resid-head { flex-direction: row; align-items: center; border-radius: 8px; margin-bottom: 8px; }
+  .arr-tbl.tbl-cards tr { position: relative; border: 1px solid #c9d1db; box-shadow: 0 1px 2px rgba(15,23,42,.06); padding: 10px 0 8px; }
+  .arr-tbl.tbl-cards tr.alt td { background: transparent; }
+  .arr-tbl.tbl-cards td.card-title { display: flex; align-items: baseline; justify-content: flex-start; gap: 8px; padding-right: 110px !important; }
+  .arr-tbl.tbl-cards .arr-num { font-size: 20px; }
+  .arr-tbl.tbl-cards td.apt .arr-sub { font-size: 13px; margin: 0; }
+  .arr-tbl.tbl-cards td.arr-ota {
+    position: absolute; top: 10px; right: 0; width: auto !important; padding: 2px 14px !important;
+    font-size: 13px;
+  }
+  .arr-tbl.tbl-cards td.arr-ota::before { content: none; }
+  .arr-tbl.tbl-cards td.arr-client-cell { padding-top: 2px !important; padding-bottom: 8px !important; border-bottom: 1px solid #edf0f3 !important; margin-bottom: 4px; }
+  .arr-tbl.tbl-cards .arr-client { font-size: 16px; }
+  .arr-tbl.tbl-cards .arr-client-cell .arr-sub { display: inline; font-size: 13px; }
+  .arr-tbl.tbl-cards .arr-client-cell .arr-sub + .arr-sub::before { content: " · "; }
+  .arr-tbl.tbl-cards td[data-label] { font-size: 15px; }
+  .arr-tbl.tbl-cards td[data-label]::before { font-size: 13px; }
+  .arr-tbl.tbl-cards td.arr-heure { font-size: 16px; }
+  .arr-tbl.tbl-cards td.arr-resume { font-size: 15px; line-height: 1.45; }
+  .arr-tbl.tbl-cards td.arr-resume.alerte { background: var(--warn-bg); border-radius: 6px; margin: 4px 8px 0; width: auto !important; padding: 8px 10px !important; }
+  .arr-tbl.tbl-cards td.arr-taxe .arr-sub, .arr-tbl.tbl-cards td.arr-codes .arr-sub { font-size: 13px; }
+  .arr-tbl.tbl-cards td.arr-codes { font-size: 14px; }
+  .arr-tbl.tbl-cards td.arr-fait { display: none; }
 }
 @media print {
   .tbl .note-col { min-width: 260px; border-left: 1px solid #ccc; }
@@ -979,6 +1051,94 @@ body {
   .facture-menage .fm-hist .fm-row-actions .fm-btn { flex: 1; }
   .facture-menage .fm-hist .fm-row-actions .fm-btn + .fm-btn { margin-left: 0; }
 }
+
+/* --- Téléphone : Ménages (pages/menage.js) et Contrôle facture ménage (Coûts ménage) ---
+   Écran seulement : l'impression garde le tableau d'origine. */
+@media screen and (max-width: 640px) {
+  /* Coûts ménage : contrôle de la facture et coûts l'un sous l'autre (côte à côte, le contrôle sortait de l'écran à gauche). */
+  .couts-page { flex-direction: column; align-items: stretch; gap: 12px; }
+  .couts-page > .recap { margin-bottom: 0 !important; }
+  .menage-jour .recap, .couts-page .recap { padding: 14px 12px; }
+  .menage-jour .resid-head, .facture-menage .resid-head { border-radius: 8px 8px 0 0; }
+
+  /* Ménages : une fiche par départ, sans défilement horizontal.
+     N° en gros à gauche, puis appartement, heure annoncée, client, note. */
+  .menage-jour .tbl-wrap { overflow: visible; background: none; border: 1px solid var(--border); border-top: none; border-radius: 0 0 8px 8px; }
+  .menage-jour .tbl { width: 100%; min-width: 0; }
+  .menage-jour .tbl thead { display: none; }
+  .menage-jour .tbl tbody { display: block; }
+  .menage-jour .tbl tr {
+    display: grid; grid-template-columns: 56px minmax(0, 1fr);
+    grid-template-areas: "apt appart" "apt heure" "apt client" "apt depart" "note note";
+    column-gap: 10px; row-gap: 3px; padding: 10px 12px; border-bottom: 1px solid #e5e9ef;
+  }
+  .menage-jour .tbl tr:last-child { border-bottom: none; }
+  .menage-jour .tbl td { display: block; padding: 0; border: none; white-space: normal; min-width: 0; overflow-wrap: anywhere; }
+  .menage-jour .tbl td:empty { display: none; }
+  .menage-jour .tbl td.apt { grid-area: apt; align-self: center; font-size: 22px; font-weight: 800; color: var(--accent); text-align: center; }
+  .menage-jour .tbl td.m-appart { grid-area: appart; font-size: 15px; font-weight: 700; }
+  .menage-jour .tbl td.heure {
+    grid-area: heure; justify-self: start; font-size: 13px; color: var(--info);
+    background: var(--info-bg); border-radius: 999px; padding: 2px 10px;
+  }
+  .menage-jour .tbl td.heure::before { content: "Départ annoncé : "; font-weight: 500; }
+  .menage-jour .tbl td.m-client { grid-area: client; font-size: 14px; color: #333; }
+  .menage-jour .tbl td.m-depart { grid-area: depart; font-size: 12px; color: var(--muted); }
+  .menage-jour .tbl.un-jour td.m-depart { display: none; } /* un seul jour : la date est déjà sur le bandeau */
+  .menage-jour .tbl td.note-col { grid-area: note; min-width: 0; font-size: 13px; padding-top: 4px; }
+  .menage-jour .tbl .m-fait { display: none; } /* case à cocher à la main : utile seulement sur papier */
+
+  /* Contrôle facture : boutons et champs à 44 px pour le pouce. */
+  .facture-menage .fm-btn { min-height: 44px; }
+  .facture-menage .fm-arrow { width: 44px; height: 44px; flex: 0 0 44px; }
+  .facture-menage .fm-mois input, .facture-menage select { min-height: 44px; }
+  .facture-menage .fm-card-actions .fm-btn { flex: 1 1 auto; justify-content: center; }
+  .facture-menage .fm-res-head .fm-btn { width: 100%; justify-content: center; }
+  .facture-menage .fm-res-head > div { min-width: 0; }
+  .facture-menage .recap-sub { overflow-wrap: anywhere; }
+
+  /* Tableaux du résultat : une fiche par ligne (case à gauche, montant à droite, détail dessous). */
+  .facture-menage .resid .tbl-wrap { overflow: visible; background: none; border: 1px solid var(--border); border-top: none; border-radius: 0 0 8px 8px; }
+  .facture-menage .resid .tbl { width: 100%; min-width: 0; }
+  .facture-menage .resid .tbl thead { display: none; }
+  .facture-menage .resid .tbl tbody { display: block; }
+  .facture-menage .resid .tbl tr {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px;
+    padding: 8px 12px; border-bottom: 1px solid #e5e9ef;
+  }
+  .facture-menage .resid .tbl tr:last-child { border-bottom: none; }
+  .facture-menage .resid .tbl td { display: block; padding: 0; border: none; white-space: normal; min-width: 0; }
+  .facture-menage .resid .tbl td.r { margin-left: auto; font-weight: 700; }
+  .facture-menage .resid .tbl td.r ~ td.r { margin-left: 0; }
+  .facture-menage .resid .tbl td.r[data-label]::before { content: attr(data-label) " "; font-size: 11px; font-weight: 600; color: var(--muted); }
+  .facture-menage .resid .tbl td.fm-detail { flex: 1 0 100%; min-width: 0; font-size: 13px; overflow-wrap: anywhere; }
+  .facture-menage .resid .tbl td.c { flex: 0 0 auto; }
+  .facture-menage .fm-check { min-width: 44px; min-height: 44px; margin: -6px -8px -6px -10px; }
+  .facture-menage .resid .fm-note { padding: 0 2px; }
+
+  /* Coûts ménage : une fiche par départ (total à droite, détail ménage / amenities dessous). */
+  .couts-page > .recap:not(.facture-menage) .tbl-wrap { overflow: visible; background: none; border: 1px solid var(--border); border-top: none; border-radius: 0 0 8px 8px; }
+  .couts-page > .recap:not(.facture-menage) .tbl { width: 100%; min-width: 0; }
+  .couts-page > .recap:not(.facture-menage) .tbl thead { display: none; }
+  .couts-page > .recap:not(.facture-menage) .tbl tbody { display: block; }
+  .couts-page > .recap:not(.facture-menage) .tbl tr {
+    display: grid; grid-template-columns: 48px minmax(0, 1fr) auto;
+    grid-template-areas: "apt appart total" "apt depart depart" "apt men men" "apt amen amen";
+    column-gap: 10px; row-gap: 2px; padding: 9px 12px; border-bottom: 1px solid #e5e9ef;
+  }
+  .couts-page > .recap:not(.facture-menage) .tbl tr:last-child { border-bottom: none; }
+  .couts-page > .recap:not(.facture-menage) .tbl td { display: block; padding: 0; border: none; white-space: normal; min-width: 0; text-align: left; }
+  .couts-page > .recap:not(.facture-menage) .tbl td.apt { grid-area: apt; align-self: center; text-align: center; font-size: 18px; font-weight: 800; color: var(--accent); }
+  .couts-page > .recap:not(.facture-menage) .tbl td.m-appart { grid-area: appart; font-weight: 700; }
+  .couts-page > .recap:not(.facture-menage) .tbl td.m-depart { grid-area: depart; font-size: 12px; color: var(--muted); }
+  .couts-page > .recap:not(.facture-menage) .tbl.un-jour td.m-depart { display: none; }
+  .couts-page > .recap:not(.facture-menage) .tbl td.m-total { grid-area: total; font-weight: 800; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .couts-page > .recap:not(.facture-menage) .tbl td.m-menage { grid-area: men; font-size: 12px; color: var(--muted); }
+  .couts-page > .recap:not(.facture-menage) .tbl td.m-menage::before { content: "Ménage "; }
+  .couts-page > .recap:not(.facture-menage) .tbl td.m-amen { grid-area: amen; font-size: 12px; color: var(--muted); }
+  .couts-page > .recap:not(.facture-menage) .tbl td.m-amen::before { content: "Amenities "; }
+  .couts-page > .recap:not(.facture-menage) .tbl td.m-vide { display: none; }
+}
 .inc-reserves { background: #fdecea; border: 1px solid #f5b7b1; border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; }
 .inc-reserve { padding: 6px 0; border-top: 1px solid #f0c9c4; font-size: 13px; cursor: pointer; }
 .inc-reserve:first-of-type { border-top: none; }
@@ -1038,6 +1198,108 @@ body {
   .facture-linge .fm-net.big .fm-net-v { font-size: 26px; }
   .facture-linge .fm-calc td:first-child { white-space: normal; }
   .facture-linge .fl-cards { grid-template-columns: 1fr; }
+}
+
+/* ============================================================
+   COMMANDE LINGE SUR TÉLÉPHONE (pages/commande-linge.js,
+   components/FactureLinge.js). Écran seulement ; le bureau et
+   l'impression ne changent pas. Fiches plus denses que .tbl-cards
+   (3 colonnes) : un historique a 7 articles par ligne.
+   ============================================================ */
+/* Champ de quantité avec − et + (les boutons n'existent que sur téléphone). */
+.qty-step { display: flex; align-items: stretch; justify-content: center; }
+.qty-step .qty-btn { display: none; }
+.qty-step.qty-tbl input { width: 70px; text-align: center; }
+
+@media screen and (max-width: 640px) {
+  .cl-page .recap { padding: 12px; }
+  .cl-page .recap-head .primary, .cl-page .recap-head > button { width: 100%; }
+  /* Cibles tactiles de 44 px minimum, champs date et listes compris. */
+  .cl-page button, .cl-page .fm-btn { min-height: 44px; }
+  .cl-page button.icon-btn { min-width: 44px; font-size: 18px; }
+  .cl-page :is(input, select):not([type=checkbox], [type=radio], [type=file]) { min-height: 44px; }
+  .cl-page .note button.ghost { padding: 0 10px; }
+
+  /* Saisie au pouce : une ligne par article, nom à gauche, − [n] + à droite. */
+  .cl-page .linen-qty-grid { grid-template-columns: 1fr; gap: 0; }
+  .cl-page .qty-cell {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 6px 0; border-bottom: 1px solid #e6e9ee; font-size: 14px;
+  }
+  .cl-page .qty-cell:last-child { border-bottom: none; }
+  .cl-page .qty-cell span { align-self: center; color: var(--ink); font-weight: 600; flex: 1; min-width: 0; }
+  .qty-step .qty-btn {
+    display: flex; align-items: center; justify-content: center; flex: none;
+    width: 44px; min-width: 44px; min-height: 44px; padding: 0; margin: 0;
+    font-size: 22px; font-weight: 600; line-height: 1; color: var(--accent);
+    background: #fff; border: 1px solid var(--field-border); border-radius: 8px;
+    touch-action: manipulation; user-select: none; -webkit-user-select: none;
+  }
+  .qty-step .qty-btn:active { background: var(--info-bg); }
+  .qty-step input, .cl-page .qty-cell .qty-step input, .qty-step.qty-tbl input {
+    width: 60px; flex: none; min-height: 44px; margin: 0 6px; padding: 4px;
+    text-align: center; font-size: 17px; font-weight: 700; border-radius: 8px;
+    -moz-appearance: textfield;
+  }
+  .qty-step input::-webkit-outer-spin-button, .qty-step input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+  /* Tableaux -> fiches : plus de défilement horizontal ni de boutons cachés à droite. */
+  .tbl.cl-cards { width: 100%; min-width: 0; }
+  .tbl-wrap:has(> .cl-cards) { overflow: visible; background: none; }
+  .cl-cards, .cl-cards tbody { display: block; }
+  .cl-cards thead { display: none; }
+  .cl-cards tbody tr {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 10px;
+    border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px;
+  }
+  .cl-cards tbody tr:not([style*="background"]) { background: #fff; }
+  .cl-cards td, .tbl.cl-cards td {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 1px;
+    border: none; padding: 0; white-space: normal; text-align: left; min-width: 0;
+    font-size: 15px; font-variant-numeric: tabular-nums; border-radius: 4px;
+  }
+  .cl-cards td[data-label]::before {
+    content: attr(data-label); font-size: 11.5px; font-weight: 600; color: var(--muted);
+    line-height: 1.2; text-transform: none;
+  }
+  .cl-cards td.cl-head { grid-column: 1 / -1; font-size: 15px; font-weight: 700; }
+  .cl-cards td.cl-full { grid-column: 1 / -1; }
+  .cl-cards td.cl-key { font-size: 17px; }
+  .cl-cards td.empty-state { grid-column: 1 / -1; display: block; text-align: center; padding: 20px; }
+  .cl-cards tbody tr:has(> td.empty-state) { display: block; }
+  /* Valeur + champ côte à côte quand une ligne entière lui est donnée. */
+  .cl-cards td.cl-full:has(.qty-step), .cl-cards td.cl-recu {
+    flex-direction: row; align-items: center; justify-content: space-between;
+  }
+  .cl-cards td.cl-recu { grid-column: 1 / -1; padding-top: 4px; border-top: 1px solid #eef0f3; }
+  .cl-cards td.cl-recu::before { font-size: 14px; color: var(--ink); }
+  .cl-cards td.cl-ecart { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; align-items: center; font-size: 17px; }
+  .cl-cards td.cl-ecart::before { font-size: 14px; color: var(--ink); }
+  .cl-cards .qty-step { justify-content: flex-end; }
+
+  /* Historiques (commandes, réceptions, linge utilisé, défectueux) :
+     en-tête date/type/statut/actions, puis les quantités sur 3 colonnes. */
+  .cl-hist tbody tr { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 0; }
+  .cl-hist tbody tr::before { content: ""; flex: 0 0 100%; order: 2; }
+  .cl-hist td.cl-head { order: 0; flex: 0 0 auto; margin-right: 10px; font-size: 15px; }
+  .cl-hist td.cl-type { font-weight: 600; color: var(--muted); }
+  .cl-hist td.cl-status { order: 1; margin-left: auto; }
+  .cl-hist td.cl-actions { order: 5; flex: 0 0 100%; align-items: flex-end; padding-top: 6px; border-top: 1px solid #eef0f3; }
+  .cl-hist td.cl-art { order: 3; flex: 0 0 33.333%; align-self: stretch; justify-content: space-between; padding-right: 6px; font-weight: 600; }
+  .cl-hist td.cl-full { order: 4; flex: 0 0 100%; flex-direction: row; gap: 6px; align-items: baseline; }
+  .cl-hist td.cl-full[data-label]::before { content: attr(data-label) " :"; }
+  .cl-hist .row-actions { flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+  .cl-hist .row-actions > span { flex: 1 1 auto; align-self: center; }
+
+  /* Formulaire de commande : pastille et bouton calés à gauche, pleine largeur. */
+  .cl-page .linen-form-row > .pill { align-self: flex-start; }
+  .cl-page .linen-form-row > button, .cl-page .linen-form > button.primary { width: 100%; }
+
+  /* Coût linge : facture et estimation en fiches. */
+  .facture-linge .cl-cout td.r { text-align: left; }
+  .facture-linge .cl-cout .fl-input { width: 100%; max-width: 140px; min-height: 44px; font-size: 16px; }
+  .facture-linge .cl-cout td.cl-full .fl-input { max-width: 160px; }
+  .facture-linge .fl-autre td { font-size: 13px; }
 }
 
 /* ============================================================
