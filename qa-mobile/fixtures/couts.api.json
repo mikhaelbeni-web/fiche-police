@@ -1,0 +1,287 @@
+{
+  "/api/departures": {
+    "from": "2026-11-08",
+    "to": "2026-11-08",
+    "total": 19,
+    "reservations": 19,
+    "residences": [
+      "Belleville",
+      "Lantiez",
+      "Sans résidence",
+      "Villiers"
+    ],
+    "groups": [
+      {
+        "residence": "Belleville",
+        "count": 12,
+        "items": [
+          {
+            "listingId": "567572",
+            "reservationId": "R56757220261108",
+            "appartement": "PMR 01",
+            "unitNumber": "01",
+            "depart": "2026-11-08",
+            "arrivee": "2026-11-05",
+            "client": "QA Client",
+            "reservation": "HTL-QA-567572",
+            "voyageurs": 2,
+            "menageHT": 23,
+            "amenitiesHT": null
+          },
+          {
+            "listingId": "567560",
+            "reservationId": "R56756020261108",
+            "appartement": "DEEP 02",
+            "unitNumber": "02",
+            "depart": "2026-11-08",
+            "arrivee": "2026-11-05",
+            "client": "QA Client",
+            "reservation": "HTL-QA-567560",
+            "voyageurs": 2,
+            "menageHT": 33,
+            "amenitiesHT": null
+          },
+          {
+            "listingId": "80082",
+            "reservationId": "R8008220261108",
+            "appartement": "COSY 10",
+            "unitNumber": "10",
+            "depart": "2026-11-08",
+            "arrivee": "2026-11-05",
+            "client": "Marie-Christine Dupont-Delacroix de la Fontaine-Saint-Germain",
+            "reservation": "HTL-QA-80082",
+            "voyageurs": 2,
+            "menageHT": 23,
+            "amenitiesHT": null
+          },
+          {
+            "listingId": "80087",
+            "reservationId": "R8008720261108",
+            "appartement": "CONFORT 11",
+            "unitNumber": "11",
+            "depart": "2026-11-08",
+            "arrivee": "2026-11-05",
+            "client": "QA Client",
+            "reservation": "HTL-QA-80087",
+            "voyageurs": 2,
+            "menageHT": 23,
+            "amenitiesHT": null
+          },
+          {
+            "listingId": "80092",
+            "reservationId": "R8009220261108",
+            "appartement": "CHIC 12",
+            "unitNumber": "12",
+            "depart": "2026-11-08",
+            "arrivee": "2026-11-05",
+            "client": "QA Client",
+            "reservation": "HTL-QA-80092",
+            "voyageurs": 2,
+            "menageHT": 23,
+            "amenitiesHT": null
+          },
+          {
+            "listingId": "80083",
+            "reservationId": "R8008320261108",
+            "appartement": "COSY 20",
+            "unitNumber": "20",
+            "depart": "2026-11-08",
+            "arrivee": "2026-11-05",
+            "client": "QA Client",
+            "reservation": "HTL-QA-80083",
+            "voyageurs": 2,
+            "menageHT": 23,
+            "amenitiesHT": null
+          },
+          {
+            "listingId": "80088",
+            "reservationId": "R8008820261108",
+            "appartement": "CONFORT 21",
+            "unitNumber": "21",
+            "depart": "2026-11-08",
+            "arrivee": "2026-11-05",
+            "client": "QA Client",
+            "reservation": "HTL-QA-80088",
+            "voyageurs": 2,
+            "menageHT": 23,
+            "amenitiesHT": null
+          },
+          {
+            "listingId": "80095",
+            "reservationId": "R8009520261108",
+            "appartement": "CHIC 42",
+            "unitNumber": "42",
+            "depart": "2026-11-08",
+            "arrivee": "2026-11-05",
+            "client": "QA Client",
+            "reservation": "HTL-QA-80095",
+            "voyageurs": 2,
+            "menageHT": 23,
+            "amenitiesHT": null
+          },
+          {
+            "listingId": "567569",
+            "reservationId": "R56756920261108",
+            "appartement": "ÉLÉGANCE 60",
+            "unitNumber": "60",
+            "depart": "2026-11-08",
+            "arrivee": "2026-11-05",
+            "client": "QA Client",
+            "reservation": "HTL-QA-567569",
+            "voyageurs": 2,
+            "menageHT": 23,
+            "amenitiesHT": null
+          },
+          {
+            "listingId": "567570",
+            "reservationId": "R56757020261108",
+            "appartement": "ÉVASION 61",
+            "unitNumber": "61",
+            "depart": "2026-11-08",
+            "arrivee": "2026-11-05",
+            "client": "QA Client",
+            "reservation": "HTL-QA-567570",
+            "voyageurs": 2,
+            "menageHT": 23,
+            "amenitiesHT": null
+          },
+          {
+            "listingId": "567568",
+            "reservationId": "R56756820261108",
+            "appartement": "ZEN 62",
+            "unitNumber": "62",
+            "depart": "2026-11-08",
+            "arrivee": "2026-11-05",
+            "client": "QA Client",
+            "reservation": "HTL-QA-567568",
+            "voyageurs": 2,
+            "menageHT": 23,
+            "amenitiesHT": null
+          },
+          {
+            "listingId": "567563",
+            "reservationId": "R56756320261108",
+            "appartement": "Belleville - Appartement parent multi-unit non résolu (nom très long)",
+            "unitNumber": "?",
+            "depart": "2026-11-08",
+            "arrivee": "2026-11-05",
+            "client": "QA Client",
+            "reservation": "HTL-QA-567563",
+            "voyageurs": 2,
+            "menageHT": 23,
+            "amenitiesHT": null
+          }
+        ]
+      },
+      {
+        "residence": "Lantiez",
+        "count": 3,
+        "items": [
+          {
+            "listingId": "371952",
+            "reservationId": "R37195220261108",
+            "appartement": "A1",
+            "unitNumber": "A1",
+            "depart": "2026-11-08",
+            "arrivee": "2026-11-05",
+            "client": "QA Client",
+            "reservation": "HTL-QA-371952",
+            "voyageurs": 2,
+            "menageHT": 90,
+            "amenitiesHT": 10
+          },
+          {
+            "listingId": "372410",
+            "reservationId": "R37241020261108",
+            "appartement": "Studio A5",
+            "unitNumber": "A5",
+            "depart": "2026-11-08",
+            "arrivee": "2026-11-05",
+            "client": "QA Client",
+            "reservation": "HTL-QA-372410",
+            "voyageurs": 2,
+            "menageHT": 53,
+            "amenitiesHT": 10
+          },
+          {
+            "listingId": "372420",
+            "reservationId": "R37242020261108",
+            "appartement": "A8",
+            "unitNumber": "A8",
+            "depart": "2026-11-08",
+            "arrivee": "2026-11-05",
+            "client": "QA Client",
+            "reservation": "HTL-QA-372420",
+            "voyageurs": 2,
+            "menageHT": 70,
+            "amenitiesHT": 10
+          }
+        ]
+      },
+      {
+        "residence": "Sans résidence",
+        "count": 1,
+        "items": [
+          {
+            "listingId": "999001",
+            "reservationId": "R99900120261108",
+            "appartement": "Listing Hostaway inconnu — Duplex rue des Cascades avec terrasse",
+            "unitNumber": "",
+            "depart": "2026-11-08",
+            "arrivee": "2026-11-05",
+            "client": "QA Client",
+            "reservation": "HTL-QA-999001",
+            "voyageurs": 2,
+            "menageHT": null,
+            "amenitiesHT": null
+          }
+        ]
+      },
+      {
+        "residence": "Villiers",
+        "count": 3,
+        "items": [
+          {
+            "listingId": "445498",
+            "reservationId": "R44549820261108",
+            "appartement": "V1",
+            "unitNumber": "V1",
+            "depart": "2026-11-08",
+            "arrivee": "2026-11-05",
+            "client": "QA Client",
+            "reservation": "HTL-QA-445498",
+            "voyageurs": 2,
+            "menageHT": 74,
+            "amenitiesHT": 7.5
+          },
+          {
+            "listingId": "446874",
+            "reservationId": "R44687420261108",
+            "appartement": "Studio V3",
+            "unitNumber": "V3",
+            "depart": "2026-11-08",
+            "arrivee": "2026-11-05",
+            "client": "QA Client",
+            "reservation": "HTL-QA-446874",
+            "voyageurs": 2,
+            "menageHT": 53,
+            "amenitiesHT": 7.5
+          },
+          {
+            "listingId": "446877",
+            "reservationId": "R44687720261108",
+            "appartement": "V7",
+            "unitNumber": "V7",
+            "depart": "2026-11-08",
+            "arrivee": "2026-11-05",
+            "client": "QA Client",
+            "reservation": "HTL-QA-446877",
+            "voyageurs": 2,
+            "menageHT": 74,
+            "amenitiesHT": 7.5
+          }
+        ]
+      }
+    ]
+  }
+}

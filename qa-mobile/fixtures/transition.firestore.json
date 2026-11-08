@@ -1,0 +1,416 @@
+{
+  "shift_reports": {
+    "2026-11-08": {
+      "date": "2026-11-08",
+      "author": "Jean-Baptiste",
+      "residences": {
+        "Lantiez": {
+          "arrivees": "4",
+          "codesNonConfirmes": "M. Ferreira-Oliveira (apt L3) — relancé par SMS à 09h12, pas de réponse",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "",
+          "invitesIndesirables": "",
+          "autre": ""
+        },
+        "Belleville": {
+          "arrivees": "2",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Fuite importante sous l'évier de l'appartement B12 signalée par le client à 21h40 : seau posé, eau coupée au robinet d'arrêt, plombier fictif « Plomberie Martin & Fils » (06 00 00 00 02) prévenu pour passage demain 8h30. Prévoir de libérer le B14 en solution de repli si l'intervention dépasse midi, et prévenir le ménage que le B12 ne sera pas disponible avant 15h.",
+          "aSavoirDemain": "Arrivée tardive prévue vers 23h45 (Mme Kowalczyk-Nguyen, apt B7)",
+          "invitesIndesirables": "Non",
+          "autre": ""
+        },
+        "Villiers": {
+          "arrivees": "",
+          "codesNonConfirmes": "",
+          "urgenceTechnicien": "",
+          "aSavoirDemain": "",
+          "invitesIndesirables": "",
+          "autre": ""
+        }
+      }
+    },
+    "2026-11-07": {
+      "date": "2026-11-07",
+      "author": "Marie-Christine Delacroix-Beaumont",
+      "residences": {
+        "Lantiez": {
+          "arrivees": "6",
+          "codesNonConfirmes": "Famille Abdelkader-Lemoine (L5)",
+          "urgenceTechnicien": "Fuite importante sous l'évier de l'appartement B12 signalée par le client à 21h40 : seau posé, eau coupée au robinet d'arrêt, plombier fictif « Plomberie Martin & Fils » (06 00 00 00 02) prévenu pour passage demain 8h30. Prévoir de libérer le B14 en solution de repli si l'intervention dépasse midi, et prévenir le ménage que le B12 ne sera pas disponible avant 15h.",
+          "aSavoirDemain": "Livraison de 40 draps Elis attendue entre 7h et 9h — quelqu'un doit être présent pour signer le bon.",
+          "invitesIndesirables": "Non",
+          "autre": "RAS"
+        },
+        "Belleville": {
+          "arrivees": "1",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Non",
+          "invitesIndesirables": "Groupe de 6 personnes refoulé à 01h15 (fête non autorisée apt B3), voisins prévenus, photos dans le dossier partagé.",
+          "autre": ""
+        },
+        "Villiers": {
+          "arrivees": "0",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Non",
+          "invitesIndesirables": "Non",
+          "autre": "Non"
+        }
+      }
+    },
+    "2026-11-06": {
+      "date": "2026-11-06",
+      "author": "Inès",
+      "residences": {
+        "Lantiez": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Non",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        },
+        "Belleville": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Non",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        },
+        "Villiers": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Non",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        }
+      }
+    },
+    "2026-11-05": {
+      "date": "2026-11-05",
+      "author": "",
+      "residences": {
+        "Lantiez": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Non",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        },
+        "Belleville": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Non",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        },
+        "Villiers": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Chaudière collective en maintenance de 9h à 12h, prévenir les clients.",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        }
+      }
+    },
+    "2026-11-04": {
+      "date": "2026-11-04",
+      "author": "Karim",
+      "residences": {
+        "Lantiez": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Non",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        },
+        "Belleville": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Non",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        },
+        "Villiers": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Non",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        }
+      }
+    },
+    "2026-11-03": {
+      "date": "2026-11-03",
+      "author": "Sophie",
+      "residences": {
+        "Lantiez": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Non",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        },
+        "Belleville": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Non",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        },
+        "Villiers": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Chaudière collective en maintenance de 9h à 12h, prévenir les clients.",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        }
+      }
+    },
+    "2026-11-02": {
+      "date": "2026-11-02",
+      "author": "Léo",
+      "residences": {
+        "Lantiez": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Non",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        },
+        "Belleville": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Non",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        }
+      }
+    },
+    "2026-11-01": {
+      "date": "2026-11-01",
+      "author": "Aïcha",
+      "residences": {
+        "Lantiez": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Non",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        },
+        "Belleville": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Non",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        },
+        "Villiers": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Non",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        }
+      }
+    },
+    "2026-10-31": {
+      "date": "2026-10-31",
+      "author": "Marie-Christine Delacroix-Beaumont",
+      "residences": {
+        "Lantiez": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Non",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        },
+        "Belleville": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Non",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        },
+        "Villiers": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Chaudière collective en maintenance de 9h à 12h, prévenir les clients.",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        }
+      }
+    },
+    "2026-10-30": {
+      "date": "2026-10-30",
+      "author": "Thibault",
+      "residences": {
+        "Lantiez": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Non",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        },
+        "Belleville": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Non",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        },
+        "Villiers": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Non",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        }
+      }
+    },
+    "2026-10-29": {
+      "date": "2026-10-29",
+      "author": "Zoé",
+      "residences": {
+        "Lantiez": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Non",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        },
+        "Belleville": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Non",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        },
+        "Villiers": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Non",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        }
+      }
+    },
+    "2026-10-28": {
+      "date": "2026-10-28",
+      "author": "Inès",
+      "residences": {
+        "Lantiez": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Non",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        },
+        "Belleville": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Non",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        },
+        "Villiers": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Chaudière collective en maintenance de 9h à 12h, prévenir les clients.",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        }
+      }
+    },
+    "2026-10-27": {
+      "date": "2026-10-27",
+      "author": "Karim",
+      "residences": {
+        "Lantiez": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Non",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        },
+        "Belleville": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Non",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        },
+        "Villiers": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Non",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        }
+      }
+    },
+    "2026-10-26": {
+      "date": "2026-10-26",
+      "author": "Léo",
+      "residences": {
+        "Lantiez": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Non",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        },
+        "Belleville": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Non",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        },
+        "Villiers": {
+          "arrivees": "3",
+          "codesNonConfirmes": "Non",
+          "urgenceTechnicien": "Non",
+          "aSavoirDemain": "Non",
+          "invitesIndesirables": "Aucun",
+          "autre": "non."
+        }
+      }
+    }
+  }
+}

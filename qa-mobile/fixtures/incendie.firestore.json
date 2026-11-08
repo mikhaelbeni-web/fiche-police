@@ -1,0 +1,583 @@
+{
+ "incendie_config": {
+  "acces": {
+   "hash": "c78cd5f4b6d043a1ad2f6767193bb7960ec6815e9a193194c419e7268a60d523",
+   "majLe": "2026-01-01T00:00:00.000Z"
+  }
+ },
+ "incendie_types": {
+  "ssi": {
+   "nom": "SSI (détection / alarme)",
+   "ordre": 1,
+   "periodiciteMois": 6
+  },
+  "desenfumage": {
+   "nom": "Désenfumage",
+   "ordre": 2,
+   "periodiciteMois": 12
+  },
+  "extincteurs": {
+   "nom": "Extincteurs",
+   "ordre": 3,
+   "periodiciteMois": 12
+  },
+  "baes": {
+   "nom": "Blocs secours (BAES)",
+   "ordre": 4,
+   "periodiciteMois": 12
+  },
+  "colonne-seche": {
+   "nom": "Colonne sèche",
+   "ordre": 5,
+   "periodiciteMois": 12
+  },
+  "electricite": {
+   "nom": "Installations électriques",
+   "ordre": 6,
+   "periodiciteMois": 12
+  },
+  "portes-coupe-feu": {
+   "nom": "Portes coupe-feu",
+   "ordre": 7,
+   "periodiciteMois": 12
+  },
+  "vmc": {
+   "nom": "VMC",
+   "ordre": 8,
+   "periodiciteMois": 12
+  },
+  "plan-evacuation": {
+   "nom": "Plan d'évacuation",
+   "ordre": 9,
+   "periodiciteMois": null
+  },
+  "telesurveillance": {
+   "nom": "Télésurveillance / astreinte",
+   "ordre": 10,
+   "periodiciteMois": null
+  },
+  "ascenseurs": {
+   "nom": "Ascenseurs et monte-charges – contrôle technique quinquennal réglementaire",
+   "ordre": 11,
+   "periodiciteMois": 60
+  },
+  "hotte-cuisine": {
+   "nom": "Cuisine – hotte et conduits d'extraction",
+   "ordre": 12,
+   "periodiciteMois": 18
+  }
+ },
+ "incendie_verifications": {
+  "v-ssi-1": {
+   "typeId": "ssi",
+   "date": "2026-06-15",
+   "organisme": "FINSECUR",
+   "resultat": "sans_reserve",
+   "reserves": "",
+   "contreVisiteDe": null,
+   "compteEcheance": true,
+   "note": "",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "v-ssi-2": {
+   "typeId": "ssi",
+   "date": "2025-12-10",
+   "organisme": "FINSECUR",
+   "resultat": "sans_reserve",
+   "reserves": "",
+   "contreVisiteDe": null,
+   "compteEcheance": true,
+   "note": "",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "v-ssi-3": {
+   "typeId": "ssi",
+   "date": "2025-06-05",
+   "organisme": "FINSECUR",
+   "resultat": "sans_reserve",
+   "reserves": "",
+   "contreVisiteDe": null,
+   "compteEcheance": true,
+   "note": "",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "v-des-1": {
+   "typeId": "desenfumage",
+   "date": "2026-03-12",
+   "organisme": "SOCOTEC Bâtiment & Infrastructures – Agence Île-de-France Nord",
+   "resultat": "avec_reserves",
+   "reserves": "Volet de désenfumage du palier R+3 bloqué en position fermée ; commande manuelle du hall inaccessible (encombrée par du mobilier) ; absence d'affichage de la consigne au rez-de-chaussée ; câble d'alimentation du coffret de relayage non protégé mécaniquement sur 2 m.",
+   "contreVisiteDe": null,
+   "compteEcheance": true,
+   "note": "",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "v-des-2": {
+   "typeId": "desenfumage",
+   "date": "2025-03-10",
+   "organisme": "SOCOTEC",
+   "resultat": "sans_reserve",
+   "reserves": "",
+   "contreVisiteDe": null,
+   "compteEcheance": true,
+   "note": "",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "v-ext-1": {
+   "typeId": "extincteurs",
+   "date": "2025-09-20",
+   "organisme": "CASI",
+   "resultat": "sans_reserve",
+   "reserves": "",
+   "contreVisiteDe": null,
+   "compteEcheance": true,
+   "note": "Remplacement de 2 extincteurs CO2 au sous-sol.",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "v-ext-2": {
+   "typeId": "extincteurs",
+   "date": "2023-05-01",
+   "organisme": "CASI",
+   "resultat": "sans_reserve",
+   "reserves": "",
+   "contreVisiteDe": null,
+   "compteEcheance": true,
+   "note": "",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "v-ext-3": {
+   "typeId": "extincteurs",
+   "date": "2022-04-28",
+   "organisme": "CASI",
+   "resultat": "sans_reserve",
+   "reserves": "",
+   "contreVisiteDe": null,
+   "compteEcheance": true,
+   "note": "",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "v-baes-1": {
+   "typeId": "baes",
+   "date": "2026-02-03",
+   "organisme": "Bureau Veritas",
+   "resultat": "avec_reserves",
+   "reserves": "3 blocs BAES hors service (couloir R+1, R+2, local poubelles).",
+   "contreVisiteDe": null,
+   "compteEcheance": true,
+   "note": "",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "v-baes-2": {
+   "typeId": "baes",
+   "date": "2026-03-01",
+   "organisme": "Électricité Martin & Fils",
+   "resultat": "sans_reserve",
+   "reserves": "",
+   "contreVisiteDe": "v-baes-1",
+   "compteEcheance": false,
+   "note": "Remplacement des 3 blocs.",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "v-elec-1": {
+   "typeId": "electricite",
+   "date": "2026-01-20",
+   "organisme": "APAVE",
+   "resultat": "sans_reserve",
+   "reserves": "",
+   "contreVisiteDe": null,
+   "compteEcheance": true,
+   "note": "",
+   "createdAt": "2026-01-01T00:00:00.000Z",
+   "dateAConfirmer": true
+  },
+  "v-elec-2": {
+   "typeId": "electricite",
+   "date": "2025-02-10",
+   "organisme": "APAVE",
+   "resultat": "sans_reserve",
+   "reserves": "",
+   "contreVisiteDe": "v-elec-3",
+   "compteEcheance": true,
+   "note": "",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "v-elec-3": {
+   "typeId": "electricite",
+   "date": "2025-01-15",
+   "organisme": "APAVE",
+   "resultat": "avec_reserves",
+   "reserves": "Différentiel 30 mA défaillant tableau divisionnaire T2.",
+   "contreVisiteDe": null,
+   "compteEcheance": true,
+   "note": "",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "v-pcf-1": {
+   "typeId": "portes-coupe-feu",
+   "date": "2026-10-02",
+   "organisme": "",
+   "resultat": "sans_reserve",
+   "reserves": "",
+   "contreVisiteDe": null,
+   "compteEcheance": true,
+   "note": "",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "v-vmc-1": {
+   "typeId": "vmc",
+   "date": "2025-12-01",
+   "organisme": "Aéraulique Services",
+   "resultat": "sans_reserve",
+   "reserves": "",
+   "contreVisiteDe": null,
+   "compteEcheance": true,
+   "note": "",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "v-asc-1": {
+   "typeId": "ascenseurs",
+   "date": "2022-05-10",
+   "organisme": "Organisme de contrôle agréé – Groupement Européen d'Inspection Technique",
+   "resultat": "sans_reserve",
+   "reserves": "",
+   "contreVisiteDe": null,
+   "compteEcheance": true,
+   "note": "",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "v-hot-1": {
+   "typeId": "hotte-cuisine",
+   "date": "2025-04-15",
+   "organisme": "Ramonage Express",
+   "resultat": "sans_reserve",
+   "reserves": "",
+   "contreVisiteDe": null,
+   "compteEcheance": true,
+   "note": "",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  }
+ },
+ "incendie_documents": {
+  "d-ssi-1": {
+   "typeId": "ssi",
+   "verificationId": "v-ssi-1",
+   "date": "2026-06-15",
+   "nature": "Rapport de vérification",
+   "reference": "RV-2026-0615",
+   "objet": "",
+   "fichierUrl": "https://files.example.com/incendie/rapport_ssi_2026-06-15.pdf",
+   "fichierNom": "rapport_ssi_2026-06-15.pdf",
+   "lien": "",
+   "lienGmail": "",
+   "fournisseur": "FINSECUR",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "d-ssi-2": {
+   "typeId": "ssi",
+   "verificationId": "v-ssi-2",
+   "date": "2025-12-10",
+   "nature": "Rapport de vérification",
+   "reference": "RV-2025-1210",
+   "objet": "",
+   "fichierUrl": "",
+   "fichierNom": "",
+   "lien": "https://drive.example.com/file/d/FAKE-SSI-2025",
+   "lienGmail": "",
+   "fournisseur": "FINSECUR",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "d-des-1": {
+   "typeId": "desenfumage",
+   "verificationId": "v-des-1",
+   "date": "2026-03-12",
+   "nature": "Rapport de vérification",
+   "reference": "SOC-2026-000312-DES-IDF-NORD-RAPPORT-COMPLET",
+   "objet": "",
+   "fichierUrl": "https://files.example.com/incendie/rapport_desenfumage_avec_reserves_2026-03-12_version_definitive_signee.pdf",
+   "fichierNom": "rapport_desenfumage_avec_reserves_2026-03-12_version_definitive_signee.pdf",
+   "lien": "",
+   "lienGmail": "https://mail.example.com/mail/u/0/#inbox/fakeinc01",
+   "fournisseur": "SOCOTEC",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "d-des-2": {
+   "typeId": "desenfumage",
+   "verificationId": null,
+   "date": "2026-04-02",
+   "nature": "Devis",
+   "reference": "DV-2026-118",
+   "objet": "Remise en état du volet R+3 et protection du câble d'alimentation du coffret de relayage",
+   "fichierUrl": "https://files.example.com/incendie/devis_desenfumage.pdf",
+   "fichierNom": "devis_desenfumage.pdf",
+   "lien": "",
+   "lienGmail": "",
+   "fournisseur": "",
+   "createdAt": "2026-01-01T00:00:00.000Z",
+   "montantTTC": 1846.8
+  },
+  "d-baes-1": {
+   "typeId": "baes",
+   "verificationId": "v-baes-1",
+   "date": "2026-02-03",
+   "nature": "Rapport de vérification",
+   "reference": "BV-2026-0203",
+   "objet": "",
+   "fichierUrl": "https://files.example.com/incendie/baes.pdf",
+   "fichierNom": "baes.pdf",
+   "lien": "",
+   "lienGmail": "",
+   "fournisseur": "",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "d-baes-2": {
+   "typeId": "baes",
+   "verificationId": "v-baes-2",
+   "date": "2026-03-01",
+   "nature": "Facture",
+   "reference": "F-2026-031",
+   "objet": "Remplacement 3 BAES",
+   "fichierUrl": "https://files.example.com/incendie/facture_baes.pdf",
+   "fichierNom": "facture_baes.pdf",
+   "lien": "",
+   "lienGmail": "",
+   "fournisseur": "",
+   "createdAt": "2026-01-01T00:00:00.000Z",
+   "montantTTC": 412.5
+  },
+  "d-plan-1": {
+   "typeId": "plan-evacuation",
+   "verificationId": null,
+   "date": "2026-09-01",
+   "nature": "Document",
+   "reference": "",
+   "objet": "Plan d'évacuation mis à jour – tous niveaux",
+   "fichierUrl": "https://files.example.com/incendie/plan_evacuation_2026.pdf",
+   "fichierNom": "plan_evacuation_2026.pdf",
+   "lien": "",
+   "lienGmail": "",
+   "fournisseur": "",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "d-plan-2": {
+   "typeId": "plan-evacuation",
+   "verificationId": null,
+   "date": "2024-05-12",
+   "nature": "Document",
+   "reference": "",
+   "objet": "Ancienne version",
+   "fichierUrl": "",
+   "fichierNom": "",
+   "lien": "https://drive.example.com/file/d/FAKE-PLAN-2024",
+   "lienGmail": "",
+   "fournisseur": "",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "d-tel-1": {
+   "typeId": "telesurveillance",
+   "verificationId": null,
+   "date": "2026-01-05",
+   "nature": "Contrat",
+   "reference": "CT-TS-2026-0001",
+   "objet": "Contrat de télésurveillance et astreinte 24/7 – renouvellement annuel tacite",
+   "fichierUrl": "https://files.example.com/incendie/contrat_telesurveillance.pdf",
+   "fichierNom": "contrat_telesurveillance.pdf",
+   "lien": "",
+   "lienGmail": "https://mail.example.com/mail/u/0/#inbox/fakeinc02",
+   "fournisseur": "",
+   "createdAt": "2026-01-01T00:00:00.000Z",
+   "montantTTC": 1980
+  },
+  "d-ext-1": {
+   "typeId": "extincteurs",
+   "verificationId": "v-ext-1",
+   "date": "2025-09-20",
+   "nature": "Rapport de vérification",
+   "reference": "CASI-25-0920",
+   "objet": "",
+   "fichierUrl": "https://files.example.com/incendie/ext.pdf",
+   "fichierNom": "ext.pdf",
+   "lien": "",
+   "lienGmail": "",
+   "fournisseur": "",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  }
+ },
+ "incendie_factures": {
+  "f01": {
+   "date": "2026-10-02",
+   "fournisseur": "Portes & Fermetures Île-de-France SARL",
+   "typeId": "portes-coupe-feu",
+   "categorie": "verification",
+   "objet": "Contrôle annuel des portes coupe-feu (14 portes, tous niveaux)",
+   "reference": "FA-2026-10-0021",
+   "montantTTC": 540,
+   "montantHT": 450,
+   "lien": "",
+   "fichierUrl": "https://files.example.com/incendie/fa_pcf.pdf",
+   "fichierNom": "fa_pcf.pdf",
+   "lienGmail": "",
+   "note": "",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "f02": {
+   "date": "2026-06-15",
+   "fournisseur": "FINSECUR",
+   "typeId": "ssi",
+   "categorie": "verification",
+   "objet": "Contrat maintenance SSI – 1er semestre",
+   "reference": "FS-260615",
+   "montantTTC": 1320,
+   "montantHT": 1100,
+   "lien": "",
+   "fichierUrl": "",
+   "fichierNom": "",
+   "lienGmail": "",
+   "note": "",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "f03": {
+   "date": "2026-04-20",
+   "fournisseur": "SOCOTEC",
+   "typeId": "desenfumage",
+   "categorie": "intervention",
+   "objet": "Remise en état volet R+3",
+   "reference": "SOC-INT-0420",
+   "montantTTC": 1846.8,
+   "montantHT": 1539,
+   "lien": "https://drive.example.com/file/d/FAKE-F03",
+   "fichierUrl": "",
+   "fichierNom": "",
+   "lienGmail": "",
+   "note": "Paiement en deux fois, solde à la levée des réserves.",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "f04": {
+   "date": "2026-03-01",
+   "fournisseur": "Électricité Martin & Fils",
+   "typeId": "baes",
+   "categorie": "intervention",
+   "objet": "Remplacement 3 BAES",
+   "reference": "F-2026-031",
+   "montantTTC": 412.5,
+   "montantHT": null,
+   "lien": "",
+   "fichierUrl": "https://files.example.com/incendie/facture_baes.pdf",
+   "fichierNom": "facture_baes.pdf",
+   "lienGmail": "",
+   "note": "",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "f05": {
+   "date": "2026-02-14",
+   "fournisseur": "Quincaillerie du Centre",
+   "typeId": null,
+   "categorie": "travaux",
+   "objet": "Achat de 6 détecteurs de fumée autonomes pour les studios du 1er étage et piles de rechange",
+   "reference": "",
+   "montantTTC": 239.94,
+   "montantHT": 199.95,
+   "lien": "",
+   "fichierUrl": "",
+   "fichierNom": "",
+   "lienGmail": "https://mail.example.com/mail/u/0/#inbox/fakeinc03",
+   "note": "",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "f06": {
+   "date": "2026-01-05",
+   "fournisseur": "Télésurveillance Sécurité Plus",
+   "typeId": "telesurveillance",
+   "categorie": "verification",
+   "objet": "Abonnement annuel 2026",
+   "reference": "TSP-2026-001",
+   "montantTTC": 1980,
+   "montantHT": 1650,
+   "lien": "",
+   "fichierUrl": "",
+   "fichierNom": "",
+   "lienGmail": "",
+   "note": "",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "f07": {
+   "date": "2025-12-10",
+   "fournisseur": "FINSECUR",
+   "typeId": "ssi",
+   "categorie": "verification",
+   "objet": "Contrat maintenance SSI – 2e semestre",
+   "reference": "FS-251210",
+   "montantTTC": 1320,
+   "montantHT": 1100,
+   "lien": "",
+   "fichierUrl": "",
+   "fichierNom": "",
+   "lienGmail": "",
+   "note": "",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "f08": {
+   "date": "2025-09-20",
+   "fournisseur": "CASI",
+   "typeId": "extincteurs",
+   "categorie": "verification",
+   "objet": "Vérification annuelle + 2 CO2",
+   "reference": "CASI-25-0920",
+   "montantTTC": 685.2,
+   "montantHT": 571,
+   "lien": "",
+   "fichierUrl": "",
+   "fichierNom": "",
+   "lienGmail": "",
+   "note": "",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "f09": {
+   "date": "2025-04-15",
+   "fournisseur": "Ramonage Express",
+   "typeId": "hotte-cuisine",
+   "categorie": "verification",
+   "objet": "Nettoyage hotte",
+   "reference": "",
+   "montantTTC": 360,
+   "montantHT": 300,
+   "lien": "",
+   "fichierUrl": "",
+   "fichierNom": "",
+   "lienGmail": "",
+   "note": "",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "f10": {
+   "date": "2024-11-30",
+   "fournisseur": "Bureau d'études techniques et de conseil en sécurité incendie Durand-Lefèvre Associés",
+   "typeId": null,
+   "categorie": "travaux",
+   "objet": "Audit global",
+   "reference": "BET-2024-1130-AUDIT-GLOBAL-SECURITE-INCENDIE",
+   "montantTTC": 12450,
+   "montantHT": 10375,
+   "lien": "",
+   "fichierUrl": "",
+   "fichierNom": "",
+   "lienGmail": "",
+   "note": "Audit préalable à la commission de sécurité.",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "f11": {
+   "date": "2024-03-03",
+   "fournisseur": "",
+   "typeId": null,
+   "categorie": "intervention",
+   "objet": "Dépannage alarme nuit",
+   "reference": "",
+   "montantTTC": 95,
+   "montantHT": null,
+   "lien": "",
+   "fichierUrl": "",
+   "fichierNom": "",
+   "lienGmail": "",
+   "note": "",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  }
+ }
+}

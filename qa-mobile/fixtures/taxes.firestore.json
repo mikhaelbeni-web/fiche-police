@@ -1,0 +1,257 @@
+{
+  "staff_members": {
+    "Amina": {
+      "name": "Amina"
+    },
+    "Bastien": {
+      "name": "Bastien"
+    },
+    "Claire-Élisabeth": {
+      "name": "Claire-Élisabeth"
+    },
+    "Dmitri": {
+      "name": "Dmitri"
+    },
+    "Évelyne-Marguerite Van den Broeck": {
+      "name": "Évelyne-Marguerite Van den Broeck"
+    },
+    "Yasmine": {
+      "name": "Yasmine"
+    }
+  },
+  "cash_entries": {
+    "ce01": {
+      "type": "client",
+      "date": "2026-11-08",
+      "amount": 6.4,
+      "designation": "Taxe de séjour",
+      "saisiPar": "Amina",
+      "recoveryId": null,
+      "createdAt": "2026-11-08T09:15:00.000Z",
+      "client": "Marie-Christine Dupont-Delacroix de la Fontaine-Saint-Germain",
+      "appartement": "10",
+      "arrivalDate": "2026-07-14"
+    },
+    "ce02": {
+      "type": "expense",
+      "date": "2026-11-08",
+      "amount": 37.85,
+      "designation": "fournitures ménage (éponges, produit vitres, sacs poubelle 100 L)",
+      "saisiPar": "Bastien",
+      "recoveryId": null,
+      "createdAt": "2026-11-08T09:15:00.000Z",
+      "fournisseur": "Monoprix Belleville"
+    },
+    "ce03": {
+      "type": "client",
+      "date": "2026-11-07",
+      "amount": 22.4,
+      "designation": "Taxe de séjour",
+      "saisiPar": "Claire-Élisabeth",
+      "recoveryId": null,
+      "createdAt": "2026-11-07T09:15:00.000Z",
+      "client": "Jo Li",
+      "appartement": "21",
+      "arrivalDate": "2026-08-02"
+    },
+    "ce04": {
+      "type": "client",
+      "date": "2026-11-07",
+      "amount": 150.0,
+      "designation": "Late check-out + parking",
+      "saisiPar": "Dmitri",
+      "recoveryId": null,
+      "createdAt": "2026-11-07T09:15:00.000Z",
+      "client": "Bartholomew Fitzgerald-Worthington III",
+      "appartement": "A1",
+      "arrivalDate": "2026-11-04"
+    },
+    "ce05": {
+      "type": "expense",
+      "date": "2026-11-06",
+      "amount": 4.5,
+      "designation": "",
+      "saisiPar": "Amina",
+      "recoveryId": null,
+      "createdAt": "2026-11-06T09:15:00.000Z",
+      "fournisseur": ""
+    },
+    "ce06": {
+      "type": "client",
+      "date": "2026-11-06",
+      "amount": 1234.56,
+      "designation": "Taxe de séjour",
+      "saisiPar": "Évelyne-Marguerite Van den Broeck",
+      "recoveryId": null,
+      "createdAt": "2026-11-06T09:15:00.000Z",
+      "client": "Wei Zhang",
+      "appartement": "62",
+      "arrivalDate": "2026-11-06"
+    },
+    "ce07": {
+      "type": "expense",
+      "date": "2026-11-05",
+      "amount": 129.99,
+      "designation": "réparation serrure porte d'entrée hall B",
+      "saisiPar": "Yasmine",
+      "recoveryId": null,
+      "createdAt": "2026-11-05T09:15:00.000Z",
+      "fournisseur": "Leroy Merlin Paris 19 Flandre"
+    },
+    "ce08": {
+      "type": "client",
+      "date": "2026-11-05",
+      "amount": 10.0,
+      "designation": "",
+      "saisiPar": "",
+      "recoveryId": null,
+      "createdAt": "2026-11-05T09:15:00.000Z",
+      "client": "",
+      "appartement": "",
+      "arrivalDate": ""
+    },
+    "ce09": {
+      "type": "client",
+      "date": "2026-11-04",
+      "amount": 3.2,
+      "designation": "taxe de sejour",
+      "saisiPar": "Bastien",
+      "recoveryId": null,
+      "createdAt": "2026-11-04T09:15:00.000Z",
+      "client": "Hans-Jürgen Oberkirchner",
+      "appartement": "01",
+      "arrivalDate": "2026-10-12"
+    },
+    "ce10": {
+      "type": "expense",
+      "date": "2026-11-03",
+      "amount": 12.0,
+      "designation": "ampoules",
+      "saisiPar": "Dmitri",
+      "recoveryId": null,
+      "createdAt": "2026-11-03T09:15:00.000Z",
+      "fournisseur": "Bricorama"
+    },
+    "ce11": {
+      "type": "client",
+      "date": "2026-11-02",
+      "amount": 45.0,
+      "designation": "Vente bouteille de vin",
+      "saisiPar": "Amina",
+      "recoveryId": null,
+      "createdAt": "2026-11-02T09:15:00.000Z",
+      "client": "Ana Sofía García Márquez",
+      "appartement": "02",
+      "arrivalDate": "2026-10-30"
+    },
+    "ce12": {
+      "type": "client",
+      "date": "2026-11-01",
+      "amount": 9.6,
+      "designation": "Taxe de séjour",
+      "saisiPar": "Claire-Élisabeth",
+      "recoveryId": null,
+      "createdAt": "2026-11-01T09:15:00.000Z",
+      "client": "Aleksandr Konstantinopolsky",
+      "appartement": "42",
+      "arrivalDate": "2026-09-05"
+    },
+    "ce90": {
+      "type": "client",
+      "date": "2026-10-20",
+      "amount": 80.0,
+      "designation": "Taxe de séjour",
+      "saisiPar": "Amina",
+      "recoveryId": "rec_qa_02",
+      "createdAt": "2026-10-20T10:00:00.000Z",
+      "client": "Fatou Ndiaye",
+      "appartement": "60",
+      "arrivalDate": "2026-09-28"
+    },
+    "ce91": {
+      "type": "expense",
+      "date": "2026-10-18",
+      "amount": 25.0,
+      "designation": "produits ménage",
+      "saisiPar": "Amina",
+      "recoveryId": "rec_qa_02",
+      "createdAt": "2026-10-18T10:00:00.000Z",
+      "fournisseur": "Carrefour City"
+    },
+    "ce92": {
+      "type": "client",
+      "date": "2026-09-30",
+      "amount": 60.0,
+      "designation": "Taxe de séjour",
+      "saisiPar": "Amina",
+      "recoveryId": "rec_qa_01",
+      "createdAt": "2026-09-30T10:00:00.000Z",
+      "client": "Olivier Martin",
+      "appartement": "A5",
+      "arrivalDate": "2026-07-22"
+    }
+  },
+  "cash_recoveries": {
+    "rec_qa_03": {
+      "date": "2026-10-31",
+      "amountRecovered": 1850.0,
+      "amountLeftInBox": 200.0,
+      "note": "Récupération Mikhael fin octobre — enveloppe remise en main propre, recompté à deux personnes",
+      "totalAvant": 2050.0,
+      "entryIds": [],
+      "createdAt": "2026-10-31T18:42:00.000Z"
+    },
+    "rec_qa_02": {
+      "date": "2026-10-21",
+      "amountRecovered": 455.0,
+      "amountLeftInBox": 100.0,
+      "note": "",
+      "totalAvant": 555.0,
+      "entryIds": [
+        "ce90",
+        "ce91"
+      ],
+      "createdAt": "2026-10-21T17:00:00.000Z"
+    },
+    "rec_qa_01": {
+      "date": "2026-10-01",
+      "amountRecovered": 0,
+      "amountLeftInBox": 500.0,
+      "note": "Solde de départ",
+      "totalAvant": 500.0,
+      "entryIds": [
+        "ce92"
+      ],
+      "createdAt": "2026-10-01T08:00:00.000Z"
+    }
+  },
+  "taxes_masquees": {
+    "tm_qa_01": {
+      "reservation": "HTL-QA-1004",
+      "client": "Aleksandr Konstantinopolsky",
+      "residence": "Belleville",
+      "appartement": "CHIC 42",
+      "arrivee": "2026-09-05",
+      "taxeSejour": 9.6,
+      "maskedAt": "2026-11-07T15:20:00.000Z"
+    },
+    "tm_qa_02": {
+      "reservation": "HTL-QA-0777",
+      "client": "Pénélope-Augustine Rochefoucauld d'Harcourt",
+      "residence": "Villiers",
+      "appartement": "Studio V3",
+      "arrivee": "2026-08-11",
+      "taxeSejour": 14.3,
+      "maskedAt": "2026-10-02T09:00:00.000Z"
+    },
+    "tm_qa_03": {
+      "reservation": "",
+      "client": "Sans réservation",
+      "residence": "Lantiez",
+      "appartement": "A4",
+      "arrivee": "2026-07-15",
+      "taxeSejour": null,
+      "maskedAt": "2026-07-20T11:11:00.000Z"
+    }
+  }
+}

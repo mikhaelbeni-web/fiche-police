@@ -1,0 +1,107 @@
+{
+  "/api/linen": {
+    "day": "2026-11-08",
+    "items": [
+      {
+        "listingId": "567572",
+        "appartement": "PMR 01",
+        "unitNumber": "01",
+        "attendu": 1
+      },
+      {
+        "listingId": "567560",
+        "appartement": "DEEP 02",
+        "unitNumber": "02",
+        "attendu": null
+      },
+      {
+        "listingId": "80082",
+        "appartement": "COSY 10",
+        "unitNumber": "10",
+        "attendu": 2
+      },
+      {
+        "listingId": "80087",
+        "appartement": "CONFORT 11",
+        "unitNumber": "11",
+        "attendu": 3
+      },
+      {
+        "listingId": "80092",
+        "appartement": "CHIC 12",
+        "unitNumber": "12",
+        "attendu": 4
+      },
+      {
+        "listingId": "80083",
+        "appartement": "COSY 20",
+        "unitNumber": "20",
+        "attendu": 5
+      },
+      {
+        "listingId": "80088",
+        "appartement": "CONFORT 21",
+        "unitNumber": "21",
+        "attendu": 0
+      },
+      {
+        "listingId": "80093",
+        "appartement": "CHIC 22",
+        "unitNumber": "22",
+        "attendu": 2
+      },
+      {
+        "listingId": "80084",
+        "appartement": "COSY 30",
+        "unitNumber": "30",
+        "attendu": 6
+      },
+      {
+        "listingId": "80089",
+        "appartement": "CONFORT 31",
+        "unitNumber": "31",
+        "attendu": 2
+      },
+      {
+        "listingId": "80095",
+        "appartement": "CHIC 42",
+        "unitNumber": "42",
+        "attendu": 1
+      },
+      {
+        "listingId": "80086",
+        "appartement": "COSY 50",
+        "unitNumber": "50",
+        "attendu": 2
+      },
+      {
+        "listingId": "567569",
+        "appartement": "ÉLÉGANCE 60",
+        "unitNumber": "60",
+        "attendu": null
+      },
+      {
+        "listingId": "567570",
+        "appartement": "ÉVASION 61",
+        "unitNumber": "61",
+        "attendu": 3
+      },
+      {
+        "listingId": "567563",
+        "appartement": "Belleville - parent non résolu",
+        "unitNumber": "?",
+        "attendu": null
+      }
+    ],
+    "unresolved": [
+      {
+        "listingId": "999002",
+        "listingName": null
+      },
+      {
+        "listingId": "999003",
+        "listingName": "Listing mystère"
+      }
+    ]
+  }
+}

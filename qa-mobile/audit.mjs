@@ -19,7 +19,7 @@ const NOW = new Date("2026-11-08T10:00:00+01:00");
 
 // Pages de ce thread (Sinistres et pages hors des autres threads).
 const ALL_PAGES = [
-  "sinistres", "incendie", "checklist", "linge", "transition", "couts",
+  "sinistres", "incendie", "checklist", "linge", "transition",
   "taxes", "taches", "consignes", "contacts", "codes",
 ];
 const PAGES = process.argv.slice(2).length ? process.argv.slice(2) : ALL_PAGES;
@@ -178,7 +178,10 @@ async function settle(page) {
 
 async function runStep(page, step) {
   if (step.click) await page.locator(step.click).first().click({ timeout: 5000 });
-  if (step.fill) await page.locator(step.fill).first().fill(step.value ?? "", { timeout: 5000 });
+  if (step.fill) {
+    const f = typeof step.fill === "string" ? { selector: step.fill, value: step.value } : step.fill;
+    await page.locator(f.selector).first().fill(String(f.value ?? ""), { timeout: 5000 });
+  }
   if (step.select) await page.locator(step.select).first().selectOption(step.value, { timeout: 5000 });
   if (step.code) {
     // Fenêtre de code (CodeModal) : saisie du code de test puis validation.

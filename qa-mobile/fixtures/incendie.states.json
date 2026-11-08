@@ -1,0 +1,319 @@
+[
+ {
+  "name": "incendie-ecran-verrou",
+  "steps": []
+ },
+ {
+  "name": "incendie-verifications",
+  "steps": [
+   {
+    "fill": "input[type=password]",
+    "value": "4321"
+   },
+   {
+    "click": "button[type=submit]:has-text(\"Ouvrir\")"
+   },
+   {
+    "wait": 600
+   }
+  ]
+ },
+ {
+  "name": "incendie-ligne-desenfumage-non-conforme",
+  "steps": [
+   {
+    "fill": "input[type=password]",
+    "value": "4321"
+   },
+   {
+    "click": "button[type=submit]:has-text(\"Ouvrir\")"
+   },
+   {
+    "wait": 600
+   },
+   {
+    "click": "tr.inc-row:has-text(\"Désenfumage\")"
+   }
+  ]
+ },
+ {
+  "name": "incendie-ligne-extincteurs-trou",
+  "steps": [
+   {
+    "fill": "input[type=password]",
+    "value": "4321"
+   },
+   {
+    "click": "button[type=submit]:has-text(\"Ouvrir\")"
+   },
+   {
+    "wait": 600
+   },
+   {
+    "click": "tr.inc-row:has-text(\"Extincteurs\")"
+   }
+  ]
+ },
+ {
+  "name": "incendie-ligne-baes-corrective",
+  "steps": [
+   {
+    "fill": "input[type=password]",
+    "value": "4321"
+   },
+   {
+    "click": "button[type=submit]:has-text(\"Ouvrir\")"
+   },
+   {
+    "wait": 600
+   },
+   {
+    "click": "tr.inc-row:has-text(\"BAES\")"
+   }
+  ]
+ },
+ {
+  "name": "incendie-ligne-ascenseurs-nom-long",
+  "steps": [
+   {
+    "fill": "input[type=password]",
+    "value": "4321"
+   },
+   {
+    "click": "button[type=submit]:has-text(\"Ouvrir\")"
+   },
+   {
+    "wait": 600
+   },
+   {
+    "click": "tr.inc-row:has-text(\"Ascenseurs\")"
+   }
+  ]
+ },
+ {
+  "name": "incendie-ligne-plan-evacuation-docs",
+  "steps": [
+   {
+    "fill": "input[type=password]",
+    "value": "4321"
+   },
+   {
+    "click": "button[type=submit]:has-text(\"Ouvrir\")"
+   },
+   {
+    "wait": 600
+   },
+   {
+    "click": "tr.inc-row:has-text(\"Plan d'évacuation\")"
+   }
+  ]
+ },
+ {
+  "name": "incendie-formulaire-verification",
+  "steps": [
+   {
+    "fill": "input[type=password]",
+    "value": "4321"
+   },
+   {
+    "click": "button[type=submit]:has-text(\"Ouvrir\")"
+   },
+   {
+    "wait": 600
+   },
+   {
+    "click": "tr.inc-row:has-text(\"Désenfumage\")"
+   },
+   {
+    "click": "text=+ Ajouter une vérification"
+   }
+  ]
+ },
+ {
+  "name": "incendie-formulaire-verification-avec-reserves",
+  "steps": [
+   {
+    "fill": "input[type=password]",
+    "value": "4321"
+   },
+   {
+    "click": "button[type=submit]:has-text(\"Ouvrir\")"
+   },
+   {
+    "wait": 600
+   },
+   {
+    "click": "tr.inc-row:has-text(\"SSI\")"
+   },
+   {
+    "click": "text=+ Ajouter une vérification"
+   },
+   {
+    "click": "label.inc-radio:has-text(\"Avec réserves\")"
+   }
+  ]
+ },
+ {
+  "name": "incendie-formulaire-contre-visite",
+  "steps": [
+   {
+    "fill": "input[type=password]",
+    "value": "4321"
+   },
+   {
+    "click": "button[type=submit]:has-text(\"Ouvrir\")"
+   },
+   {
+    "wait": 600
+   },
+   {
+    "click": "tr.inc-row:has-text(\"Désenfumage\")"
+   },
+   {
+    "click": "text=+ Ajouter une vérification"
+   },
+   {
+    "click": "label.inc-radio:has-text(\"Sans réserve\")"
+   }
+  ]
+ },
+ {
+  "name": "incendie-formulaire-document",
+  "steps": [
+   {
+    "fill": "input[type=password]",
+    "value": "4321"
+   },
+   {
+    "click": "button[type=submit]:has-text(\"Ouvrir\")"
+   },
+   {
+    "wait": 600
+   },
+   {
+    "click": "tr.inc-row:has-text(\"VMC\")"
+   },
+   {
+    "click": "text=+ Autre document (devis, facture…)"
+   }
+  ]
+ },
+ {
+  "name": "incendie-formulaire-nouveau-controle",
+  "steps": [
+   {
+    "fill": "input[type=password]",
+    "value": "4321"
+   },
+   {
+    "click": "button[type=submit]:has-text(\"Ouvrir\")"
+   },
+   {
+    "wait": 600
+   },
+   {
+    "click": "text=+ Nouveau contrôle"
+   }
+  ]
+ },
+ {
+  "name": "incendie-factures",
+  "steps": [
+   {
+    "fill": "input[type=password]",
+    "value": "4321"
+   },
+   {
+    "click": "button[type=submit]:has-text(\"Ouvrir\")"
+   },
+   {
+    "wait": 600
+   },
+   {
+    "click": "text=Factures et coûts"
+   }
+  ]
+ },
+ {
+  "name": "incendie-factures-annee-2026",
+  "steps": [
+   {
+    "fill": "input[type=password]",
+    "value": "4321"
+   },
+   {
+    "click": "button[type=submit]:has-text(\"Ouvrir\")"
+   },
+   {
+    "wait": 600
+   },
+   {
+    "click": "text=Factures et coûts"
+   },
+   {
+    "select": ".inc-line select",
+    "value": "2026"
+   }
+  ]
+ },
+ {
+  "name": "incendie-factures-formulaire",
+  "steps": [
+   {
+    "fill": "input[type=password]",
+    "value": "4321"
+   },
+   {
+    "click": "button[type=submit]:has-text(\"Ouvrir\")"
+   },
+   {
+    "wait": 600
+   },
+   {
+    "click": "text=Factures et coûts"
+   },
+   {
+    "click": "text=+ Ajouter une facture"
+   }
+  ]
+ },
+ {
+  "name": "incendie-changer-code",
+  "steps": [
+   {
+    "fill": "input[type=password]",
+    "value": "4321"
+   },
+   {
+    "click": "button[type=submit]:has-text(\"Ouvrir\")"
+   },
+   {
+    "wait": 600
+   },
+   {
+    "click": "text=Changer le code"
+   }
+  ]
+ },
+ {
+  "name": "incendie-code-modal-suppression",
+  "steps": [
+   {
+    "fill": "input[type=password]",
+    "value": "4321"
+   },
+   {
+    "click": "button[type=submit]:has-text(\"Ouvrir\")"
+   },
+   {
+    "wait": 600
+   },
+   {
+    "click": "tr.inc-row:has-text(\"VMC\")"
+   },
+   {
+    "click": ".inc-hist button.ghost >> nth=0"
+   }
+  ]
+ }
+]

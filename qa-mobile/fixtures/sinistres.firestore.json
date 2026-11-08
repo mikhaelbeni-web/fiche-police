@@ -1,0 +1,188 @@
+{
+  "sinistres": {
+    "sin01": {
+      "date": "2026-11-07", "clientMode": "hostaway",
+      "client": "Marie-Christine Delacroix-Vandenberghe de la Rochefoucauld",
+      "residence": "Lantiez", "appartement": "Duplex 4B – terrasse panoramique", "unitNumber": "L4B",
+      "arrivee": "2026-11-02", "depart": "2026-11-06", "reservation": "HA-90000001",
+      "motif": "Chauffage en panne pendant deux nuits consécutives, la cliente a dû dormir avec trois couvertures supplémentaires et demande un geste commercial conséquent sur l'ensemble du séjour",
+      "montant": 1250.5, "origine": "plateforme", "canal": "booking",
+      "problemeRegle": false, "reponseRapide": true, "statutPlateforme": "ouvert",
+      "note": "Rappeler le chauffagiste (devis demandé le 07/11). Cliente très mécontente, a laissé un avis 3/10 sur Booking.com, attendre la réponse du service litiges avant tout remboursement.",
+      "createdAt": "2026-11-07T09:12:00.000Z"
+    },
+    "sin02": {
+      "date": "2026-11-06", "clientMode": "manuel", "client": "Jean Dupont",
+      "residence": "", "appartement": "", "unitNumber": "", "arrivee": "", "depart": "", "reservation": "",
+      "motif": "Bruit voisins", "montant": null, "origine": "direct", "canal": null,
+      "problemeRegle": true, "reponseRapide": false, "statutPlateforme": "non_ouvert", "note": "",
+      "createdAt": "2026-11-06T15:40:00.000Z"
+    },
+    "sin03": {
+      "date": "2026-11-05", "clientMode": "hostaway", "client": "Sophie Martin",
+      "residence": "Villiers", "appartement": "Studio 12", "unitNumber": "V12",
+      "arrivee": "2026-11-01", "depart": "2026-11-04", "reservation": "HA-90000002",
+      "motif": "Ménage insuffisant à l'arrivée (salle de bain)", "montant": 45, "origine": "plateforme", "canal": "airbnb",
+      "problemeRegle": true, "reponseRapide": true, "statutPlateforme": "ferme", "note": "Remboursement partiel validé par Airbnb.",
+      "createdAt": "2026-11-05T10:00:00.000Z"
+    },
+    "sin04": {
+      "date": "2026-11-04", "clientMode": "hostaway", "client": "Wolfgang Schneidermann-Oberhauser",
+      "residence": "Belleville", "appartement": "T3 – 2e étage cour", "unitNumber": "B23",
+      "arrivee": "2026-10-28", "depart": "2026-11-03", "reservation": "HA-90000003",
+      "motif": "Wifi coupé tout le séjour", "montant": 0, "origine": "plateforme", "canal": "autre",
+      "problemeRegle": false, "reponseRapide": false, "statutPlateforme": "non_ouvert", "note": "",
+      "createdAt": "2026-11-04T08:30:00.000Z"
+    },
+    "sin05": {
+      "date": "2026-11-03", "clientMode": "hostaway", "client": "Lucas Bernard",
+      "residence": "Lantiez", "appartement": "Studio 2", "unitNumber": "L2",
+      "arrivee": "2026-10-30", "depart": "2026-11-02", "reservation": "HA-90000004",
+      "motif": "Clés introuvables dans la boîte à clés", "montant": 30, "origine": "booking",
+      "problemeRegle": true, "reponseRapide": true, "statutBooking": "ferme", "note": "Ancien format (origine booking, statutBooking).",
+      "createdAt": "2026-11-03T18:00:00.000Z"
+    },
+    "sin06": {
+      "date": "2026-11-02", "clientMode": "manuel", "client": "Aïcha Benali-Fernandes",
+      "residence": "", "appartement": "", "unitNumber": "", "arrivee": "", "depart": "", "reservation": "",
+      "motif": "Fuite d'eau sous l'évier de la cuisine, dégât sur les affaires personnelles du client (valise et vêtements), demande d'indemnisation",
+      "montant": 380.75, "origine": "direct", "canal": null,
+      "problemeRegle": false, "reponseRapide": true, "statutPlateforme": "non_ouvert",
+      "note": "Photos reçues par mail : client.tres.long.nom.de.famille.pour.test@example.com",
+      "createdAt": "2026-11-02T11:20:00.000Z"
+    },
+    "sin07": {
+      "date": "2026-10-30", "clientMode": "hostaway", "client": "Emma Petit",
+      "residence": "Villiers", "appartement": "Appartement familial 5 pièces avec mezzanine", "unitNumber": "V50",
+      "arrivee": "2026-10-25", "depart": "2026-10-29", "reservation": "HA-90000005",
+      "motif": "Odeur de tabac", "montant": 120, "origine": "plateforme", "canal": "booking",
+      "problemeRegle": false, "reponseRapide": false, "statutPlateforme": "ouvert", "note": "",
+      "createdAt": "2026-10-30T09:00:00.000Z"
+    },
+    "sin08": {
+      "date": "2026-10-28", "clientMode": "hostaway", "client": "Thomas Leroy",
+      "residence": "Belleville", "appartement": "Studio 1", "unitNumber": "B1",
+      "arrivee": "2026-10-20", "depart": "2026-10-27", "reservation": "HA-90000006",
+      "motif": "TV en panne", "montant": 15, "origine": "plateforme", "canal": "airbnb",
+      "problemeRegle": true, "reponseRapide": false, "statutPlateforme": "ferme", "note": "",
+      "createdAt": "2026-10-28T09:00:00.000Z"
+    },
+    "sin09": {
+      "date": "2026-10-25", "clientMode": "manuel", "client": "Nguyen Thi Minh Khai",
+      "residence": "", "appartement": "", "unitNumber": "", "arrivee": "", "depart": "", "reservation": "",
+      "motif": "Annulation tardive suite à travaux de façade non signalés", "montant": 2499.99, "origine": "plateforme", "canal": "booking",
+      "problemeRegle": false, "reponseRapide": true, "statutPlateforme": "ouvert",
+      "note": "Dossier transmis au service juridique Booking (réf. litige BK-LIT-000000-FAKE).",
+      "createdAt": "2026-10-25T09:00:00.000Z"
+    },
+    "sin10": {
+      "date": "2026-10-20", "clientMode": "hostaway", "client": "Camille Roux",
+      "residence": "Lantiez", "appartement": "T2 rue", "unitNumber": "L7",
+      "arrivee": "2026-10-15", "depart": "2026-10-19", "reservation": "HA-90000007",
+      "motif": "Ascenseur en panne (4e étage)", "origine": "plateforme", "canal": "booking",
+      "problemeRegle": true, "reponseRapide": true, "statutPlateforme": "ferme", "note": "",
+      "createdAt": "2026-10-20T09:00:00.000Z"
+    },
+    "sin11": {
+      "date": "2026-10-12", "clientMode": "hostaway", "client": "Hugo Fontaine",
+      "residence": "Villiers", "appartement": "Studio 8", "unitNumber": "V8",
+      "arrivee": "2026-10-08", "depart": "2026-10-11", "reservation": "HA-90000008",
+      "motif": "Draps tachés", "montant": 20, "origine": "plateforme", "canal": "autre",
+      "problemeRegle": false, "reponseRapide": false, "statutPlateforme": "ouvert", "note": "",
+      "createdAt": "2026-10-12T09:00:00.000Z"
+    },
+    "sin12": {
+      "date": "2026-10-01", "clientMode": "manuel", "client": "Louise",
+      "residence": "", "appartement": "", "unitNumber": "", "arrivee": "", "depart": "", "reservation": "",
+      "motif": "Check-in retardé de 3 h", "montant": null, "origine": "direct", "canal": null,
+      "problemeRegle": true, "reponseRapide": true, "statutPlateforme": "non_ouvert", "note": "",
+      "createdAt": "2026-10-01T09:00:00.000Z"
+    }
+  },
+  "reclamations_gmail": {
+    "gmail_fake0001": {
+      "threadId": "fake0001", "gmailUrl": "https://mail.example.com/mail/u/0/#inbox/fake0001",
+      "dateRecu": "2026-11-08", "client": "Marie-Christine Delacroix-Vandenberghe",
+      "logement": "Lantiez – Duplex 4B terrasse panoramique", "reservation": "BK-4400000001",
+      "plateforme": "booking", "type": "remboursement",
+      "resume": "La cliente réclame le remboursement de deux nuits suite à une panne de chauffage et menace de laisser un avis très négatif si aucune solution n'est proposée sous 48 heures.",
+      "citation": "Nous avons eu froid toute la nuit, c'est inadmissible pour le prix payé, je veux être remboursée intégralement des nuits du 3 et du 4 novembre.",
+      "montantDemande": 640, "motifSuggere": "Chauffage en panne",
+      "detectedAt": "2026-11-08T06:00:00.000Z", "source": "routine-gmail", "traite": false
+    },
+    "gmail_fake0002": {
+      "threadId": "fake0002", "gmailUrl": "https://mail.example.com/mail/u/0/#inbox/fake0002",
+      "dateRecu": "2026-11-07", "client": "Paul Girard", "logement": "Villiers – Studio 12",
+      "reservation": "HMXYZ00002", "plateforme": "airbnb", "type": "mecontentement",
+      "resume": "Client mécontent de la propreté.", "citation": "", "montantDemande": null,
+      "motifSuggere": "Ménage insuffisant", "detectedAt": "2026-11-07T06:00:00.000Z", "source": "routine-gmail", "traite": false
+    },
+    "gmail_fake0003": {
+      "threadId": "fake0003", "gmailUrl": "https://mail.example.com/mail/u/0/#inbox/fake0003",
+      "dateRecu": "2026-11-06", "client": "", "logement": "", "reservation": "",
+      "plateforme": "direct", "type": "litige",
+      "resume": "Contestation d'un prélèvement de caution de 300 € par un expéditeur non identifié (adresse.expediteur.tres.longue.sans.espace.pour.test@example-domaine-client.fr).",
+      "citation": "Je conteste formellement ce débit.", "montantDemande": 300,
+      "motifSuggere": "", "detectedAt": "2026-11-06T06:00:00.000Z", "source": "routine-gmail", "traite": false
+    },
+    "gmail_fake0004": {
+      "threadId": "fake0004", "gmailUrl": "https://mail.example.com/mail/u/0/#inbox/fake0004",
+      "dateRecu": "2026-11-05", "client": "Isabelle Moreau", "logement": "Belleville – T3",
+      "reservation": "EXP-7700000004", "plateforme": "expedia", "type": "avis_negatif",
+      "resume": "Avis 2/5 mentionnant le bruit de la rue.", "citation": "Impossible de dormir avant 2 h du matin.",
+      "montantDemande": null, "motifSuggere": "Bruit", "detectedAt": "2026-11-05T06:00:00.000Z", "source": "routine-gmail", "traite": false
+    },
+    "gmail_fake0005": {
+      "threadId": "fake0005", "gmailUrl": "",
+      "dateRecu": "2026-11-04", "client": "Bartholomew Featherstonehaugh-Cholmondeley", "logement": "Lantiez – Studio 2",
+      "reservation": "4400000005", "plateforme": "vrbo", "type": "reclamation_inconnue",
+      "resume": "Type et plateforme non reconnus par l'interface (rendu brut).", "citation": "",
+      "montantDemande": 89.9, "motifSuggere": "Clés", "detectedAt": "2026-11-04T06:00:00.000Z", "source": "routine-gmail", "traite": false
+    },
+    "gmail_fake0006": {
+      "threadId": "fake0006", "gmailUrl": "https://mail.example.com/mail/u/0/#inbox/fake0006",
+      "dateRecu": "2026-11-03", "client": "Chloé Lambert", "logement": "Villiers – Studio 8",
+      "reservation": "BK-4400000006", "plateforme": "booking", "type": "remboursement",
+      "resume": "Demande de remboursement du ménage.", "citation": "Le logement n'était pas propre.",
+      "montantDemande": 60, "motifSuggere": "Ménage insuffisant", "detectedAt": "2026-11-03T06:00:00.000Z", "source": "routine-gmail",
+      "traite": true, "rembourse": "oui", "montantRembourse": 60, "plateformeRemboursement": "booking",
+      "motif": "Ménage insuffisant", "note": "Validé par la direction.", "traiteLe": "2026-11-04T09:15:00.000Z", "traitePar": "Fatou"
+    },
+    "gmail_fake0007": {
+      "threadId": "fake0007", "gmailUrl": "https://mail.example.com/mail/u/0/#inbox/fake0007",
+      "dateRecu": "2026-11-01", "client": "Antoine Mercier", "logement": "Belleville – Studio 1",
+      "reservation": "HMXYZ00007", "plateforme": "airbnb", "type": "mecontentement",
+      "resume": "Client gêné par l'odeur de peinture.", "citation": "",
+      "montantDemande": null, "motifSuggere": "Travaux", "detectedAt": "2026-11-01T06:00:00.000Z", "source": "routine-gmail",
+      "traite": true, "rembourse": "non", "montantRembourse": null, "plateformeRemboursement": "airbnb",
+      "motif": "Travaux dans l'immeuble", "note": "", "traiteLe": "2026-11-02T10:00:00.000Z", "traitePar": "Karim"
+    },
+    "gmail_fake0008": {
+      "threadId": "fake0008", "gmailUrl": "https://mail.example.com/mail/u/0/#inbox/fake0008",
+      "dateRecu": "2026-10-29", "client": "Julie Fournier", "logement": "Lantiez – T2 rue",
+      "reservation": "BK-4400000008", "plateforme": "booking", "type": "litige",
+      "resume": "Litige sur des frais de nettoyage supplémentaires facturés après le départ ; la cliente fournit des photos et conteste l'intégralité du montant.",
+      "citation": "Les photos prouvent que l'appartement a été rendu propre.", "montantDemande": 150,
+      "motifSuggere": "Frais de ménage contestés", "detectedAt": "2026-10-29T06:00:00.000Z", "source": "routine-gmail",
+      "traite": true, "rembourse": "oui", "montantRembourse": 1234.56, "plateformeRemboursement": "direct",
+      "motif": "Geste commercial après litige", "note": "Virement effectué depuis le compte de l'hôtel, référence VIR-FAKE-0008, confirmation envoyée par mail.",
+      "traiteLe": "2026-10-30T16:45:00.000Z", "traitePar": "Marie-Hélène"
+    },
+    "gmail_fake0009": {
+      "threadId": "fake0009", "gmailUrl": "https://mail.example.com/mail/u/0/#inbox/fake0009",
+      "dateRecu": "2026-10-25", "client": "Nicolas Garnier", "logement": "Villiers – Appartement familial 5 pièces avec mezzanine",
+      "reservation": "", "plateforme": "autre", "type": "avis_negatif",
+      "resume": "Avis négatif publié sur un site tiers.", "citation": "", "montantDemande": null,
+      "motifSuggere": "", "detectedAt": "2026-10-25T06:00:00.000Z", "source": "routine-gmail", "traite": false
+    },
+    "gmail_fake0010": {
+      "threadId": "fake0010", "gmailUrl": "https://mail.example.com/mail/u/0/#inbox/fake0010",
+      "dateRecu": "2026-10-20", "client": "Sarah Cohen", "logement": "Belleville – T3",
+      "reservation": "BK-4400000010", "plateforme": "booking", "type": "remboursement",
+      "resume": "Demande de remboursement d'une nuit (arrivée tardive impossible).", "citation": "",
+      "montantDemande": 95, "motifSuggere": "Check-in impossible", "detectedAt": "2026-10-20T06:00:00.000Z", "source": "routine-gmail",
+      "traite": true, "rembourse": "oui", "montantRembourse": 95, "plateformeRemboursement": "booking",
+      "motif": "Check-in impossible", "note": "", "traiteLe": "2026-10-21T08:00:00.000Z", "traitePar": ""
+    }
+  }
+}

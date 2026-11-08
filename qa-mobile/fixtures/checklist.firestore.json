@@ -1,0 +1,353 @@
+{
+  "checklist_tasks_morning": {
+    "m01": {
+      "time": "08h30",
+      "task": "Rentrer les poubelles + Consulter la boîte aux lettres"
+    },
+    "m02": {
+      "time": "08h35",
+      "task": "Vérifier les fiches des arrivées autonomes de la nuit dernière"
+    },
+    "m03": {
+      "time": "08h40",
+      "task": "Mettre à jour le planning ménage du jour pour LEVLOFT, Villier & RLB (google sheet)"
+    },
+    "m04": {
+      "time": "08h45",
+      "task": "Vérifier l'état des batteries des serrures NUKI (Levloft, Villier & Le Deep)"
+    },
+    "m04b": {
+      "time": "08h50",
+      "task": "Appeler le serrurier fictif « Serrures Dupont-Lefèvre & Associés » au 06 00 00 00 01 pour le remplacement du cylindre de la porte principale (bâtiment B, 3e étage, porte de gauche) et confirmer le créneau d'intervention par WhatsApp avant 11h"
+    },
+    "m05": {
+      "time": "09h00",
+      "task": "Répondre aux e-mails et messages WhatsApp (Hostway, RLB, Airbnb…)"
+    },
+    "m06": {
+      "time": "09h15",
+      "task": "Gérer les overbookings dans Chloé pour les 30 prochains jours"
+    },
+    "m07": {
+      "time": "09h45",
+      "task": "Contacter les clients arrivés en autonome la nuit dernière + Paiement taxe de séjour"
+    },
+    "m08": {
+      "time": "09h55",
+      "task": "Déclarer les NoShow si absence de présentation sur Booking"
+    },
+    "m09": {
+      "time": "10h05",
+      "task": "Imprimer les fiches des arrivées du jour"
+    },
+    "m10": {
+      "time": "10h20",
+      "task": "Envoyer l'« Heure d'arrivée » et le « lien de paiement » pour les arrivées tardives du jour"
+    },
+    "m11": {
+      "time": "10h30",
+      "task": "Ajouter les recouches et les demandes de lit bébé dans Quire&Chloé / Note sur Hostaway"
+    },
+    "m12": {
+      "time": "10h50",
+      "task": "Vérifier les départs des clients"
+    },
+    "m13": {
+      "time": "11h30",
+      "task": "Inspection des appartements déjà nettoyés"
+    },
+    "m14": {
+      "time": "11h45",
+      "task": "Vérifier que les lumières et chauffages sont éteints/allumés selon la saison"
+    },
+    "m15": {
+      "time": "12h30",
+      "task": "Vérifier les profils Portails Voyageurs et l'accessibilité du code (Hostaway)"
+    },
+    "m16": {
+      "time": "12h45",
+      "task": "Relancer les clients de demain des résidences pour ETA / Compléter leur profil par WhatsApp"
+    }
+  },
+  "checklist_tasks_afternoon": {
+    "a01": {
+      "time": "14h30",
+      "task": "Contrôle des ménages pour les appartements avec check-in aujourd'hui"
+    },
+    "a02": {
+      "time": "15h00",
+      "task": "Rapporter toutes anomalies ou manquements sur QUIRE & Hostaway pour suivi"
+    },
+    "a03": {
+      "time": "15h20",
+      "task": "Répondre aux commentaires (LEVLOFT / Villiers / RLB / Google Reviews)"
+    },
+    "a04": {
+      "time": "15h40",
+      "task": "Réapprovisionner le stock de matériel pour les femmes de ménage"
+    },
+    "a05": {
+      "time": "17h00",
+      "task": "Compléter la planche des ménages RLB du lendemain + Envoi au groupe WhatsApp"
+    },
+    "a06": {
+      "time": "17h15",
+      "task": "Vérifier les e-mails auto des codes RLB / Envoi des codes manuellement si nécessaire"
+    },
+    "a07": {
+      "time": "18h00",
+      "task": "Vérifier les sorties de secours + Fermer tous les placards à linge / Ranger les chariots"
+    },
+    "a08": {
+      "time": "18h10",
+      "task": "Sortir le(s) poubelle(s)"
+    },
+    "a09": {
+      "time": "18h25",
+      "task": "Envoyer le rapport du jour à Zack pour la permanence de nuit"
+    },
+    "a10": {
+      "time": "18h40",
+      "task": "Faire le tour complet des parties communes des trois résidences (hall, cages d'escalier, local vélos, local poubelles, buanderie) et noter dans le cahier de liaison toute anomalie constatée : ampoule grillée, porte coupe-feu bloquée, extincteur déplacé"
+    }
+  },
+  "checklist_tasks_weekly": {
+    "w-lun-1": {
+      "weekday": 1,
+      "task": "Contacter Expertéo pour les tarifs des appartements J-4 sans réservation"
+    },
+    "w-lun-2": {
+      "weekday": 1,
+      "task": "Rentrer (verte) et sortir les poubelles (jaune & verte)"
+    },
+    "w-lun-3": {
+      "weekday": 1,
+      "task": "Remise en banque des réservations totalement encaissées"
+    },
+    "w-lun-4": {
+      "weekday": 1,
+      "task": "Descendre le linge sale au rez-de-chaussée pour ramassage Elis"
+    },
+    "w-mar-1": {
+      "weekday": 2,
+      "task": "Clôture des préautorisations clients + sortir la poubelle"
+    },
+    "w-mar-2": {
+      "weekday": 2,
+      "task": "Compter le linge reçu et le ranger dans les placards"
+    },
+    "w-mar-3": {
+      "weekday": 2,
+      "task": "Envoyer le bon de ramassage ELIS avant midi"
+    },
+    "w-mer-1": {
+      "weekday": 3,
+      "task": "Descendre le linge sale au rez-de-chaussée pour ramassage Elis"
+    },
+    "w-mer-2": {
+      "weekday": 3,
+      "task": "Rentrer (verte) et sortir les poubelles (jaune & verte)"
+    },
+    "w-jeu-1": {
+      "weekday": 4,
+      "task": "Envoyer le bon de ramassage ELIS avant midi"
+    },
+    "w-jeu-2": {
+      "weekday": 4,
+      "task": "Compter le linge reçu et le ranger dans les placards"
+    },
+    "w-ven-1": {
+      "weekday": 5,
+      "task": "Mettre à jour le planning du ménage de la semaine d'après (google sheet RLB de Bridge Street)"
+    },
+    "w-ven-2": {
+      "weekday": 5,
+      "task": "Rentrer (verte) et sortir les poubelles (jaune & verte)"
+    },
+    "w-sam-1": {
+      "weekday": 6,
+      "task": "Clôturer les préautorisations des clients"
+    },
+    "w-dim-1": {
+      "weekday": 7,
+      "task": "Gérer les No Show / Annulations dans Chloé"
+    },
+    "w-dim-2": {
+      "weekday": 7,
+      "task": "Vérifier l'ensemble des réservations de la semaine à venir sur Booking, Airbnb et Expedia, rapprocher avec Hostaway et signaler tout écart de tarif ou de nombre de voyageurs au responsable d'exploitation avant 18h"
+    },
+    "w-dim-3": {
+      "weekday": 7,
+      "task": "Arroser les plantes du hall"
+    }
+  },
+  "staff_members": {
+    "Léo": {
+      "name": "Léo"
+    },
+    "Inès": {
+      "name": "Inès"
+    },
+    "Karim": {
+      "name": "Karim"
+    },
+    "Sophie": {
+      "name": "Sophie"
+    },
+    "Marie-Christine Delacroix-Beaumont": {
+      "name": "Marie-Christine Delacroix-Beaumont"
+    },
+    "Jean-Baptiste": {
+      "name": "Jean-Baptiste"
+    },
+    "Aïcha": {
+      "name": "Aïcha"
+    },
+    "Thibault": {
+      "name": "Thibault"
+    },
+    "Zoé": {
+      "name": "Zoé"
+    }
+  },
+  "daily_checklist": {
+    "2026-11-08": {
+      "tasks": {
+        "m01": {
+          "done": true,
+          "by": "Marie-Christine Delacroix-Beaumont",
+          "at": "08h31"
+        },
+        "m02": {
+          "done": true,
+          "by": "Léo",
+          "at": "08h38"
+        },
+        "m03": {
+          "done": false,
+          "by": "Léo",
+          "at": "08h52"
+        },
+        "m04": {
+          "done": true,
+          "by": "Inès",
+          "at": "08h47"
+        },
+        "m04b": {
+          "done": true,
+          "by": "Marie-Christine Delacroix-Beaumont",
+          "at": "09h05"
+        },
+        "m06": {
+          "done": true,
+          "by": "Karim",
+          "at": "09h20"
+        },
+        "w-dim-1": {
+          "done": true,
+          "by": "Aïcha",
+          "at": "09h41"
+        }
+      }
+    },
+    "2026-11-07": {
+      "tasks": {
+        "m01": {
+          "done": true,
+          "by": "Léo",
+          "at": "08h00"
+        },
+        "m02": {
+          "done": true,
+          "by": "Inès",
+          "at": "08h07"
+        },
+        "m04": {
+          "done": true,
+          "by": "Sophie",
+          "at": "09h21"
+        },
+        "m04b": {
+          "done": true,
+          "by": "Marie-Christine Delacroix-Beaumont",
+          "at": "09h28"
+        },
+        "m06": {
+          "done": true,
+          "by": "Aïcha",
+          "at": "10h42"
+        },
+        "m07": {
+          "done": true,
+          "by": "Thibault",
+          "at": "10h49"
+        },
+        "m09": {
+          "done": true,
+          "by": "Léo",
+          "at": "11h03"
+        },
+        "m10": {
+          "done": true,
+          "by": "Inès",
+          "at": "11h10"
+        },
+        "m12": {
+          "done": true,
+          "by": "Sophie",
+          "at": "12h24"
+        },
+        "m13": {
+          "done": true,
+          "by": "Marie-Christine Delacroix-Beaumont",
+          "at": "12h31"
+        },
+        "m15": {
+          "done": true,
+          "by": "Aïcha",
+          "at": "13h45"
+        },
+        "m16": {
+          "done": true,
+          "by": "Thibault",
+          "at": "13h52"
+        },
+        "a02": {
+          "done": true,
+          "by": "Léo",
+          "at": "14h06"
+        },
+        "a03": {
+          "done": true,
+          "by": "Inès",
+          "at": "14h13"
+        },
+        "a05": {
+          "done": true,
+          "by": "Sophie",
+          "at": "15h27"
+        },
+        "a06": {
+          "done": true,
+          "by": "Marie-Christine Delacroix-Beaumont",
+          "at": "15h34"
+        },
+        "a08": {
+          "done": true,
+          "by": "Aïcha",
+          "at": "16h48"
+        },
+        "a09": {
+          "done": true,
+          "by": "Thibault",
+          "at": "16h55"
+        },
+        "w-sam-1": {
+          "done": true,
+          "by": "Thibault",
+          "at": "16h12"
+        }
+      }
+    }
+  }
+}

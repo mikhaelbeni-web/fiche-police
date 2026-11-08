@@ -1,0 +1,10 @@
+[
+  {
+    "name": "afficher-taches-faites",
+    "steps": [
+      {
+        "click": "text=\"Masquer les tâches faites\""
+      }
+    ]
+  }
+]

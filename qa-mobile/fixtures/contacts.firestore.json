@@ -1,0 +1,119 @@
+{
+ "contacts": {
+  "ct01": {
+   "nom": "Ahmed Benkirane",
+   "societe": "Plomberie Benkirane & Fils",
+   "telephones": [
+    "06 12 34 56 78",
+    "01 23 45 67 89"
+   ],
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "ct02": {
+   "nom": "Bernadette",
+   "societe": "",
+   "telephones": [
+    "07 00 00 00 01"
+   ],
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "ct03": {
+   "nom": "Christophe Lemoine-Dubois de Saint-Exupéry",
+   "societe": "Société Générale de Maintenance Technique et de Dépannage Multiservices Île-de-France",
+   "telephones": [
+    "+33 6 00 00 00 02",
+    "+33 1 00 00 00 03",
+    "+33 6 00 00 00 04",
+    "0800 000 000 (astreinte 24h/24 – demander le service technique)"
+   ],
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "ct04": {
+   "nom": "Dépannage serrurerie",
+   "societe": "Serrures Express",
+   "telephones": [
+    "01 00 00 00 05"
+   ],
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "ct05": {
+   "nom": "Élodie Garnier",
+   "societe": "Blanchisserie du Parc",
+   "telephones": [
+    "06 00 00 00 06"
+   ],
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "ct06": {
+   "nom": "Fabrice",
+   "societe": "Ascenseurs Durand",
+   "telephones": [],
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "ct07": {
+   "nom": "Gardien Villiers",
+   "societe": "",
+   "telephones": [
+    "06 00 00 00 07",
+    "06 00 00 00 08"
+   ],
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "ct08": {
+   "nom": "Hôtel de police – commissariat du 11e arrondissement (accueil)",
+   "societe": "Police nationale",
+   "telephones": [
+    "17",
+    "01 00 00 00 09"
+   ],
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "ct09": {
+   "nom": "Isabelle Roche",
+   "societe": "Agence immobilière Roche",
+   "telephones": [
+    "06 00 00 00 10"
+   ],
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "ct10": {
+   "nom": "Jardinier",
+   "societe": "Les Jardins Verts",
+   "telephones": [
+    "0600000011"
+   ],
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "ct11": {
+   "nom": "Karim Haddad",
+   "societe": "Électricité Haddad",
+   "telephones": [
+    "06 00 00 00 12"
+   ],
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "ct12": {
+   "nom": "Laverie",
+   "societe": "",
+   "telephones": [],
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "ct13": {
+   "nom": "Mme Nguyen",
+   "societe": "Syndic Lantiez – Cabinet Nguyen Gestion",
+   "telephones": [
+    "01 00 00 00 13",
+    "contact-syndic-lantiez-tres-long@example.com"
+   ],
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "ct14": {
+   "nom": "Zoé Martin",
+   "societe": "Ménage Pro",
+   "telephones": [
+    "06 00 00 00 14"
+   ],
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  }
+ }
+}
