@@ -6,7 +6,8 @@ import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
 import { LINEN_ARTICLES, emptyQuantities, expectedReception, orderWindow, sumUsage, computeDefectSettlements, PANTIN_CODES, PANTIN_CLIENT, ELIS_INVOICE_ARTICLES } from "../lib/linen";
 import FactureLinge from "../components/FactureLinge";
-import { isFirebaseConfigured } from "../lib/firebase";
+import { isFirebaseConfigured } from "../lib/firebaseApp";
+import { loadLite, makePrefetch } from "../lib/firestoreLite";
 
 // « Grande serviette (Drap bain) » -> « Grande serviette » (fiches sur téléphone).
 const court = label => label.split(" (")[0];
@@ -36,6 +37,28 @@ function QtyInput({ value, onChange, label, className = "", style }) {
   );
 }
 
+// Les 8 lectures du chargement, lancées EN PARALLÈLE (avant : l'une après
+// l'autre, 8 allers-retours réseau à la suite).
+const DEFAULT_PRICES = { drap: 1.804, grande_serviette: 1.157, housse: 3.788, petite_serviette: 0.545, taie: 0.558, tapis_bain: 0.759, torchon: 0.651 };
+async function fetchLinenData(api) {
+  const list = (col, field) => api.getDocs(api.query(api.collection(api.db, col), api.orderBy(field, "desc")))
+    .then(snap => snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  const one = (col, id) => api.getDoc(api.doc(api.db, col, id)).then(snap => (snap.exists() ? snap.data() : null));
+  const [stock, thresholds, orders, receptions, usage, defects, invoices, prices] = await Promise.all([
+    one("linen_stock", "belleville"),
+    one("linen_thresholds", "belleville"),
+    list("linen_orders", "date"),
+    list("linen_receptions", "date"),
+    list("linen_used", "date"),
+    list("linen_defects", "date"),
+    list("linen_invoices", "periodFrom"),
+    one("linen_prices", "belleville"),
+  ]);
+  return { stock, thresholds, orders, receptions, usage, defects, invoices, prices };
+}
+const prefetch = makePrefetch(fetchLinenData);
+if (isFirebaseConfigured()) prefetch.start();
+
 function CommandeLinge() {
   const [tab, setTab] = useState("position");
   const [ready, setReady] = useState(false);
@@ -55,6 +78,19 @@ function CommandeLinge() {
   // Firestore helpers chargés dynamiquement (évite le SSR sur firebase)
   const [fs, setFs] = useState(null);
 
+  function apply(data) {
+    setStock(data.stock ? { ...emptyQuantities(), ...data.stock } : emptyQuantities());
+    setThresholds(data.thresholds || {});
+    setOrders(data.orders);
+    setReceptions(data.receptions);
+    setUsage(data.usage);
+    setDefects(data.defects);
+    setInvoices(data.invoices);
+    // Prix par défaut, extraits de la facture Elis (identiques pour les
+    // variantes Cocoon/Horizon, donc un seul prix par catégorie suffit).
+    setPrices(data.prices || DEFAULT_PRICES);
+  }
+
   useEffect(() => {
     if (!isFirebaseConfigured()) {
       setConfigured(false);
@@ -63,14 +99,17 @@ function CommandeLinge() {
     }
     let alive = true;
     (async () => {
-      const { db } = await import("../lib/firebase");
-      const {
-        collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, query, orderBy,
-      } = await import("firebase/firestore");
-      if (!alive) return;
-      const api = { db, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, query, orderBy };
-      setFs(api);
-      await loadAll(api);
+      try {
+        const dataP = prefetch.take();
+        const api = await loadLite();
+        if (!alive) return;
+        setFs(api);
+        const data = await dataP;
+        if (!alive) return;
+        apply(data);
+      } catch (err) {
+        if (alive) setStatus("Erreur Firestore : " + err.message);
+      }
       if (alive) setReady(true);
     })();
     return () => { alive = false; };
@@ -79,35 +118,7 @@ function CommandeLinge() {
   async function loadAll(api) {
     try {
       setStatus("Chargement…");
-      // Stock : document unique "belleville"
-      const stockSnap = await api.getDoc(api.doc(api.db, "linen_stock", "belleville"));
-      if (stockSnap.exists()) setStock({ ...emptyQuantities(), ...stockSnap.data() });
-
-      const thrSnap = await api.getDoc(api.doc(api.db, "linen_thresholds", "belleville"));
-      if (thrSnap.exists()) setThresholds(thrSnap.data());
-
-      const ordSnap = await api.getDocs(api.query(api.collection(api.db, "linen_orders"), api.orderBy("date", "desc")));
-      setOrders(ordSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-
-      const recSnap = await api.getDocs(api.query(api.collection(api.db, "linen_receptions"), api.orderBy("date", "desc")));
-      setReceptions(recSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-
-      const useSnap = await api.getDocs(api.query(api.collection(api.db, "linen_used"), api.orderBy("date", "desc")));
-      setUsage(useSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-
-      const defSnap = await api.getDocs(api.query(api.collection(api.db, "linen_defects"), api.orderBy("date", "desc")));
-      setDefects(defSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-
-      const invSnap = await api.getDocs(api.query(api.collection(api.db, "linen_invoices"), api.orderBy("periodFrom", "desc")));
-      setInvoices(invSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-
-      const priceSnap = await api.getDoc(api.doc(api.db, "linen_prices", "belleville"));
-      if (priceSnap.exists()) setPrices(priceSnap.data());
-      else {
-        // Prix par défaut, extraits de la facture Elis (identiques pour les
-        // variantes Cocoon/Horizon, donc un seul prix par catégorie suffit).
-        setPrices({ drap: 1.804, grande_serviette: 1.157, housse: 3.788, petite_serviette: 0.545, taie: 0.558, tapis_bain: 0.759, torchon: 0.651 });
-      }
+      apply(await fetchLinenData(api));
       setStatus("");
     } catch (err) {
       setStatus("Erreur Firestore : " + err.message);
