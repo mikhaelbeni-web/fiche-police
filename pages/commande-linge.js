@@ -638,7 +638,7 @@ function ReceptionsTab({ fs, orders, receptions, defects, reload, setStatus }) {
           {receptions.map(r => (
             <tr key={r.id}>
               <td className="cl-head cl-date">{fmtFr(r.date)}</td>
-              <td className="cl-head cl-type">{r.orderDate ? `cmd ${fmtFr(r.orderDate)} ${r.orderType || ""}` : "libre"}</td>
+              <td className="cl-head cl-type" title="Commande">{r.orderDate ? `${fmtFr(r.orderDate)} ${r.orderType || ""}` : "libre"}</td>
               {LINEN_ARTICLES.map(a => {
                 const val = r.quantities?.[a.key] || 0;
                 const ec = r.ecart?.[a.key];
