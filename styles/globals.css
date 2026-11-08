@@ -1037,6 +1037,108 @@ body {
 }
 
 /* ============================================================
+   COMMANDE LINGE SUR TÉLÉPHONE (pages/commande-linge.js,
+   components/FactureLinge.js). Écran seulement ; le bureau et
+   l'impression ne changent pas. Fiches plus denses que .tbl-cards
+   (3 colonnes) : un historique a 7 articles par ligne.
+   ============================================================ */
+/* Champ de quantité avec − et + (les boutons n'existent que sur téléphone). */
+.qty-step { display: flex; align-items: stretch; justify-content: center; }
+.qty-step .qty-btn { display: none; }
+.qty-step.qty-tbl input { width: 70px; text-align: center; }
+
+@media screen and (max-width: 640px) {
+  .cl-page .recap { padding: 12px; }
+  .cl-page .recap-head .primary, .cl-page .recap-head > button { width: 100%; }
+  /* Cibles tactiles de 44 px minimum, champs date et listes compris. */
+  .cl-page button, .cl-page .fm-btn { min-height: 44px; }
+  .cl-page button.icon-btn { min-width: 44px; font-size: 18px; }
+  .cl-page :is(input, select):not([type=checkbox], [type=radio], [type=file]) { min-height: 44px; }
+  .cl-page .note button.ghost { padding: 0 10px; }
+
+  /* Saisie au pouce : une ligne par article, nom à gauche, − [n] + à droite. */
+  .cl-page .linen-qty-grid { grid-template-columns: 1fr; gap: 0; }
+  .cl-page .qty-cell {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 6px 0; border-bottom: 1px solid #e6e9ee; font-size: 14px;
+  }
+  .cl-page .qty-cell:last-child { border-bottom: none; }
+  .cl-page .qty-cell span { align-self: center; color: var(--ink); font-weight: 600; flex: 1; min-width: 0; }
+  .qty-step .qty-btn {
+    display: flex; align-items: center; justify-content: center; flex: none;
+    width: 44px; min-width: 44px; min-height: 44px; padding: 0; margin: 0;
+    font-size: 22px; font-weight: 600; line-height: 1; color: var(--accent);
+    background: #fff; border: 1px solid var(--field-border); border-radius: 8px;
+    touch-action: manipulation; user-select: none; -webkit-user-select: none;
+  }
+  .qty-step .qty-btn:active { background: var(--info-bg); }
+  .qty-step input, .cl-page .qty-cell .qty-step input, .qty-step.qty-tbl input {
+    width: 60px; flex: none; min-height: 44px; margin: 0 6px; padding: 4px;
+    text-align: center; font-size: 17px; font-weight: 700; border-radius: 8px;
+    -moz-appearance: textfield;
+  }
+  .qty-step input::-webkit-outer-spin-button, .qty-step input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+  /* Tableaux -> fiches : plus de défilement horizontal ni de boutons cachés à droite. */
+  .tbl.cl-cards { width: 100%; min-width: 0; }
+  .tbl-wrap:has(> .cl-cards) { overflow: visible; background: none; }
+  .cl-cards, .cl-cards tbody { display: block; }
+  .cl-cards thead { display: none; }
+  .cl-cards tbody tr {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 10px;
+    border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px;
+  }
+  .cl-cards tbody tr:not([style*="background"]) { background: #fff; }
+  .cl-cards td, .tbl.cl-cards td {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 1px;
+    border: none; padding: 0; white-space: normal; text-align: left; min-width: 0;
+    font-size: 15px; font-variant-numeric: tabular-nums; border-radius: 4px;
+  }
+  .cl-cards td[data-label]::before {
+    content: attr(data-label); font-size: 11.5px; font-weight: 600; color: var(--muted);
+    line-height: 1.2; text-transform: none;
+  }
+  .cl-cards td.cl-head { grid-column: 1 / -1; font-size: 15px; font-weight: 700; }
+  .cl-cards td.cl-full { grid-column: 1 / -1; }
+  .cl-cards td.cl-key { font-size: 17px; }
+  .cl-cards td.empty-state { grid-column: 1 / -1; display: block; text-align: center; padding: 20px; }
+  .cl-cards tbody tr:has(> td.empty-state) { display: block; }
+  /* Valeur + champ côte à côte quand une ligne entière lui est donnée. */
+  .cl-cards td.cl-full:has(.qty-step), .cl-cards td.cl-recu {
+    flex-direction: row; align-items: center; justify-content: space-between;
+  }
+  .cl-cards td.cl-recu { grid-column: 1 / -1; padding-top: 4px; border-top: 1px solid #eef0f3; }
+  .cl-cards td.cl-recu::before { font-size: 14px; color: var(--ink); }
+  .cl-cards td.cl-ecart { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; align-items: center; font-size: 17px; }
+  .cl-cards td.cl-ecart::before { font-size: 14px; color: var(--ink); }
+  .cl-cards .qty-step { justify-content: flex-end; }
+
+  /* Historiques (commandes, réceptions, linge utilisé, défectueux) :
+     en-tête date/type/statut/actions, puis les quantités sur 3 colonnes. */
+  .cl-hist tbody tr { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 0; }
+  .cl-hist tbody tr::before { content: ""; flex: 0 0 100%; order: 2; }
+  .cl-hist td.cl-head { order: 0; flex: 0 0 auto; margin-right: 10px; font-size: 15px; }
+  .cl-hist td.cl-type { font-weight: 600; color: var(--muted); }
+  .cl-hist td.cl-status { order: 1; margin-left: auto; }
+  .cl-hist td.cl-actions { order: 5; flex: 0 0 100%; align-items: flex-end; padding-top: 6px; border-top: 1px solid #eef0f3; }
+  .cl-hist td.cl-art { order: 3; flex: 0 0 33.333%; align-self: stretch; justify-content: space-between; padding-right: 6px; font-weight: 600; }
+  .cl-hist td.cl-full { order: 4; flex: 0 0 100%; flex-direction: row; gap: 6px; align-items: baseline; }
+  .cl-hist td.cl-full[data-label]::before { content: attr(data-label) " :"; }
+  .cl-hist .row-actions { flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+  .cl-hist .row-actions > span { flex: 1 1 auto; align-self: center; }
+
+  /* Formulaire de commande : pastille et bouton calés à gauche, pleine largeur. */
+  .cl-page .linen-form-row > .pill { align-self: flex-start; }
+  .cl-page .linen-form-row > button, .cl-page .linen-form > button.primary { width: 100%; }
+
+  /* Coût linge : facture et estimation en fiches. */
+  .facture-linge .cl-cout td.r { text-align: left; }
+  .facture-linge .cl-cout .fl-input { width: 100%; max-width: 140px; min-height: 44px; font-size: 16px; }
+  .facture-linge .cl-cout td.cl-full .fl-input { max-width: 160px; }
+  .facture-linge .fl-autre td { font-size: 13px; }
+}
+
+/* ============================================================
    BASE COMMUNE — écran seulement (@media screen) : l'impression
    (fiches A4, Arrivées et Ménages en paysage) n'est pas touchée.
    Toutes les règles passent par :where() (spécificité nulle) : toute
