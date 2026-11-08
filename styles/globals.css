@@ -978,18 +978,16 @@ body {
 
 /* --- Téléphone : Ménages (pages/menage.js) et Contrôle facture ménage (Coûts ménage) ---
    Écran seulement : l'impression garde le tableau d'origine. */
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 640px) {
   /* Coûts ménage : contrôle de la facture et coûts l'un sous l'autre (côte à côte, le contrôle sortait de l'écran à gauche). */
   .couts-page { flex-direction: column; align-items: stretch; gap: 12px; }
   .couts-page > .recap { margin-bottom: 0 !important; }
-}
-@media screen and (max-width: 640px) {
   .menage-jour .recap, .couts-page .recap { padding: 14px 12px; }
   .menage-jour .resid-head, .facture-menage .resid-head { border-radius: 8px 8px 0 0; }
 
   /* Ménages : une fiche par départ, sans défilement horizontal.
      N° en gros à gauche, puis appartement, heure annoncée, client, note. */
-  .menage-jour .tbl-wrap { overflow: visible; border: 1px solid var(--border); border-top: none; border-radius: 0 0 8px 8px; }
+  .menage-jour .tbl-wrap { overflow: visible; background: none; border: 1px solid var(--border); border-top: none; border-radius: 0 0 8px 8px; }
   .menage-jour .tbl { width: 100%; min-width: 0; }
   .menage-jour .tbl thead { display: none; }
   .menage-jour .tbl tbody { display: block; }
@@ -1024,7 +1022,7 @@ body {
   .facture-menage .recap-sub { overflow-wrap: anywhere; }
 
   /* Tableaux du résultat : une fiche par ligne (case à gauche, montant à droite, détail dessous). */
-  .facture-menage .resid .tbl-wrap { overflow: visible; border: 1px solid var(--border); border-top: none; border-radius: 0 0 8px 8px; }
+  .facture-menage .resid .tbl-wrap { overflow: visible; background: none; border: 1px solid var(--border); border-top: none; border-radius: 0 0 8px 8px; }
   .facture-menage .resid .tbl { width: 100%; min-width: 0; }
   .facture-menage .resid .tbl thead { display: none; }
   .facture-menage .resid .tbl tbody { display: block; }
@@ -1043,7 +1041,7 @@ body {
   .facture-menage .resid .fm-note { padding: 0 2px; }
 
   /* Coûts ménage : une fiche par départ (total à droite, détail ménage / amenities dessous). */
-  .couts-page > .recap:not(.facture-menage) .tbl-wrap { overflow: visible; border: 1px solid var(--border); border-top: none; border-radius: 0 0 8px 8px; }
+  .couts-page > .recap:not(.facture-menage) .tbl-wrap { overflow: visible; background: none; border: 1px solid var(--border); border-top: none; border-radius: 0 0 8px 8px; }
   .couts-page > .recap:not(.facture-menage) .tbl { width: 100%; min-width: 0; }
   .couts-page > .recap:not(.facture-menage) .tbl thead { display: none; }
   .couts-page > .recap:not(.facture-menage) .tbl tbody { display: block; }
