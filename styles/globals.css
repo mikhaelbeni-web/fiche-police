@@ -16,12 +16,16 @@
   --nav-h: 47px;
 }
 * { box-sizing: border-box; }
-html { overflow-x: hidden; width: 100%; }
+html { overflow-x: hidden; width: 100%; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+/* clip (et non hidden) quand le navigateur le connaît : ne crée pas de zone de
+   défilement, donc les barres collantes (position: sticky) continuent de coller. */
+@media screen { @supports (overflow: clip) { html { overflow-x: clip; } } }
 body {
   font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
   margin: 0; background: var(--bg); color: var(--ink);
   overflow-x: hidden; width: 100%; max-width: 100vw;
 }
+@media screen { @supports (overflow: clip) { body { overflow-x: clip; } } }
 
 .toolbar {
   background: var(--accent); color: #fff; padding: 16px 20px;
@@ -131,7 +135,7 @@ body {
 /* Masqué à l'impression, sur TOUTES les pages — la barre de navigation
    (logos + onglets) ne doit jamais apparaître sur une fiche imprimée. */
 @media print {
-  .main-nav { display: none !important; }
+  .main-nav, .mobile-nav, .mobile-nav-overlay { display: none !important; }
 }
 
 @media print {
@@ -1411,4 +1415,206 @@ body {
 @media screen and (max-width: 768px) {
   .fl-pdf-overlay { padding: 0; }
   .fl-pdf { height: 100%; max-width: none; border-radius: 0; }
+}
+
+/* ============================================================
+   TÉLÉPHONE (≤ 640 px) — base commune. Écran seulement : aucune
+   règle ici ne touche l'impression (fiches A4 portrait, Arrivées
+   et Ménages en paysage). Motifs à réutiliser dans les pages :
+   voir docs/mobile-motifs.md.
+   ============================================================ */
+
+/* Barre compacte du téléphone : cachée sur ordinateur. */
+.mobile-nav, .mobile-nav-overlay { display: none; }
+
+@media screen and (max-width: 640px) {
+  :root { --tap: 44px; --page-pad: 12px; }
+
+  /* --- Navigation : « Menu » + nom de la page, panneau plein écran --- */
+  .main-nav { display: none; }
+  .mobile-nav {
+    display: flex; align-items: center; gap: 10px;
+    position: sticky; top: 0; z-index: 50;
+    background: var(--accent); color: #fff;
+    min-height: 52px; padding: 4px max(8px, env(safe-area-inset-right)) 4px max(8px, env(safe-area-inset-left));
+    padding-top: max(4px, env(safe-area-inset-top));
+    border-bottom: 2px solid rgba(255,255,255,.15);
+  }
+  .mobile-nav-btn {
+    display: inline-flex; align-items: center; gap: 8px; flex: none;
+    min-height: var(--tap); padding: 0 14px; border-radius: 8px;
+    border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.1); color: #fff;
+    font: inherit; font-size: 15px; font-weight: 600; cursor: pointer;
+  }
+  .mobile-nav-btn:active { background: rgba(255,255,255,.22); }
+  .mobile-nav-burger { display: inline-flex; flex-direction: column; gap: 3px; }
+  .mobile-nav-burger i { display: block; width: 16px; height: 2px; border-radius: 1px; background: currentColor; }
+  .mobile-nav-title {
+    flex: 1; min-width: 0; font-size: 16px; font-weight: 700;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .mobile-nav-overlay {
+    display: block; position: fixed; inset: 0; z-index: 1100;
+    background: rgba(15, 23, 42, .5);
+  }
+  .mobile-nav-sheet {
+    position: absolute; top: 0; left: 0; bottom: 0; width: min(88vw, 340px);
+    background: #fff; overflow-y: auto; overscroll-behavior: contain;
+    padding: env(safe-area-inset-top) 0 max(12px, env(safe-area-inset-bottom)) env(safe-area-inset-left);
+    box-shadow: 4px 0 24px rgba(0,0,0,.2);
+  }
+  .mobile-nav-sheet-head {
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; background: #fff; z-index: 1;
+    padding: 6px 6px 6px 16px; border-bottom: 1px solid var(--border);
+    font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--muted);
+  }
+  .mobile-nav-close {
+    width: var(--tap); height: var(--tap); border: none; background: none; border-radius: 8px;
+    font-size: 18px; color: var(--muted); cursor: pointer;
+  }
+  .mobile-nav-link {
+    display: flex; align-items: center; min-height: 48px; padding: 0 16px;
+    color: var(--ink); text-decoration: none; font-size: 16px; font-weight: 500;
+    border-bottom: 1px solid #f0f2f5; border-left: 4px solid transparent;
+  }
+  .mobile-nav-link:active { background: #f4f6f8; }
+  .mobile-nav-link.active { border-left-color: var(--accent); background: var(--info-bg); color: var(--accent); font-weight: 700; }
+
+  /* --- Barre d'outils (bleue, en haut de chaque page) --- */
+  .toolbar { padding: 10px var(--page-pad); gap: 8px; align-items: stretch; }
+  .toolbar > * { max-width: 100%; }
+  .toolbar button, .toolbar select, .toolbar input:not([type=checkbox], [type=radio]) {
+    min-height: var(--tap); font-size: 15px; padding: 8px 12px;
+  }
+  .toolbar button { display: inline-flex; align-items: center; justify-content: center; }
+  .toolbar button.arrow { width: var(--tap); height: var(--tap); padding: 0; font-size: 22px; flex: none; }
+  .daynav { flex: 1 1 100%; justify-content: space-between; }
+  .daynav .daylabel { flex: 1; font-size: 14px; }
+  .field { flex: 1 1 140px; min-width: 0; }
+  .field label { font-size: 11px; }
+  .token-setup { flex-wrap: wrap; width: 100%; }
+  .token-setup input, .token-setup input.acc { min-width: 0; flex: 1 1 100%; }
+  .status { font-size: 13px; }
+  .navlink { min-height: var(--tap); display: inline-flex; align-items: center; font-size: 14px; }
+
+  /* Sous-onglets (.quick.tabs, .tabs) : une seule ligne qui défile au doigt
+     au lieu de s'empiler sur plusieurs lignes. */
+  .tabs.tabs, .toolbar .quick.tabs {
+    display: flex; flex-wrap: nowrap; overflow-x: auto; max-width: 100%;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none; scroll-snap-type: x proximity;
+  }
+  .toolbar .quick.tabs { flex: 1 1 100%; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tabs.tabs button { flex: none; white-space: nowrap; scroll-snap-align: start; min-height: var(--tap); }
+  .quick:not(.tabs) { flex-wrap: wrap; }
+  .quick:not(.tabs) button { flex: 1 1 auto; min-height: var(--tap); }
+
+  /* --- Boutons et champs hors barre d'outils : zone tactile 44 px --- */
+  :where(button:not([class]), button[class=""], button.primary, button.ghost, button.danger, button.icon-btn):where(:not(.main-nav *)) {
+    min-height: var(--tap);
+  }
+  button.icon-btn { min-width: var(--tap); }
+  :where(input:not([type=checkbox], [type=radio], [type=file], [type=range], [type=color]), select):where(:not(.gate *)) {
+    min-height: var(--tap); max-width: 100%;
+  }
+  :where(textarea) { max-width: 100%; }
+  :where(input[type=checkbox], input[type=radio]) { width: 22px; height: 22px; }
+  /* Une case seule dans une cellule ou un label : toute la ligne est cliquable. */
+  .check { min-height: var(--tap); }
+  :where(label:has(> input[type=checkbox], > input[type=radio])) { min-height: var(--tap); display: inline-flex; align-items: center; gap: 8px; }
+
+  /* Médias : jamais plus larges que l'écran. */
+  img, svg, video, canvas, iframe { max-width: 100%; }
+  img, video, canvas { height: auto; }
+
+  /* --- Tableaux --- */
+  /* 1) Par défaut : défilement horizontal DANS le tableau (.tbl-wrap), avec une
+        ombre au bord droit pour montrer qu'il reste des colonnes. */
+  .tbl-wrap {
+    overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%;
+    background:
+      linear-gradient(to right, #fff 30%, rgba(255,255,255,0)) left / 24px 100% no-repeat local,
+      linear-gradient(to left, #fff 30%, rgba(255,255,255,0)) right / 24px 100% no-repeat local,
+      radial-gradient(farthest-side at 0 50%, rgba(0,0,0,.14), transparent) left / 10px 100% no-repeat scroll,
+      radial-gradient(farthest-side at 100% 50%, rgba(0,0,0,.14), transparent) right / 10px 100% no-repeat scroll;
+  }
+  /* 2) Motif « cartes » : ajouter class="tbl-cards" sur le <table> et
+        data-label="Titre de colonne" sur chaque <td>. Chaque ligne devient
+        une carte, chaque cellule une ligne « Titre : valeur ». */
+  table.tbl-cards, .tbl-cards tbody, .tbl-cards tfoot, .tbl-cards tr, .tbl-cards td {
+    display: block; width: 100% !important; min-width: 0 !important; white-space: normal !important;
+  }
+  table.tbl-cards { table-layout: auto; }
+  .tbl-cards thead { display: none; }
+  .tbl-cards tr {
+    background: #fff; border: 1px solid var(--border); border-radius: 10px;
+    margin-bottom: 10px; padding: 8px 0;
+  }
+  .tbl-cards tr.alt td { background: transparent; }
+  .tbl-cards td {
+    display: flex; gap: 10px; align-items: baseline; justify-content: space-between;
+    padding: 6px 14px !important; border: none !important; text-align: right;
+    overflow-wrap: anywhere;
+  }
+  .tbl-cards td[data-label]::before {
+    content: attr(data-label); flex: none; max-width: 45%;
+    font-size: 12px; font-weight: 600; color: var(--muted); text-align: left;
+  }
+  .tbl-cards td:not([data-label]), .tbl-cards td.card-title {
+    display: block; text-align: left;
+  }
+  .tbl-cards td.card-title { font-size: 16px; font-weight: 700; padding-bottom: 2px !important; }
+  .tbl-cards td.card-title::before { content: none; }
+  .tbl-cards td.card-full { display: block; text-align: left; }
+  .tbl-cards td.card-full::before { display: block; max-width: none; margin-bottom: 2px; }
+  .tbl-cards td:empty { display: none; }
+  .tbl-wrap:has(> .tbl-cards) { overflow: visible; background: none; }
+
+  /* --- Fenêtres (modales) : feuille en bas d'écran, défile à l'intérieur --- */
+  .code-modal-overlay, .modal-overlay { align-items: flex-end; padding: 0; }
+  .code-modal, .modal-box {
+    max-width: none; width: 100%; border-radius: 14px 14px 0 0;
+    max-height: calc(100vh - 40px); max-height: calc(100dvh - 40px); overflow-y: auto;
+    padding: 18px 16px max(16px, env(safe-area-inset-bottom));
+  }
+  .code-modal-actions, .modal-actions { flex-direction: row-reverse; }
+  .code-modal-actions button, .modal-actions button { flex: 1; min-height: 48px; }
+  .fl-pdf { height: 100vh; height: 100dvh; }
+
+  /* --- Écran de code d'accès --- */
+  .gate { min-height: 100vh; min-height: 100dvh; padding: 16px; }
+  .gate-box button { min-height: 48px; font-size: 16px; }
+
+  /* --- Barre « Qui es-tu ? » --- */
+  .staffbar, .present-bar { padding: 8px var(--page-pad); }
+  .staff-chip, .staffbar-switch, .staff-add button { min-height: var(--tap); padding: 0 14px; font-size: 14px; }
+  .staff-chip-del { min-width: var(--tap); min-height: var(--tap); font-size: 18px; margin-left: -6px; }
+  .staff-add input { min-height: var(--tap); font-size: 16px; }
+
+  /* --- Bouton Notes flottant : ne cache plus le bas de page --- */
+  .notes-fab {
+    right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom));
+    width: 48px; height: 48px; opacity: .7;
+  }
+  body { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
+  .notes-panel { padding-top: max(16px, env(safe-area-inset-top)); padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+  .notes-panel-close { width: var(--tap); height: var(--tap); font-size: 18px; }
+  .notes-panel-textarea { font-size: 16px; }
+
+  /* --- Conteneurs de page : marges réduites, rien ne dépasse --- */
+  .menage-page, .linge-page { padding: 10px 8px; }
+  .recap, .linge-sheet { padding: 12px; border-radius: 8px; }
+  .resid-head { padding: 10px 12px; }
+  .alert-banner, .msg, .panel { font-size: 14px; }
+  .more-dropdown { max-width: calc(100vw - 16px); }
+
+  /* Pièges courants : colonnes fixes en grille, mots très longs. */
+  .card, .panel, .linen-form, .inc-detail { overflow-wrap: anywhere; }
+  .card-controls > *, .inline-field.grow { min-width: 0; flex: 1 1 100%; }
+}
+
+/* Paysage sur téléphone : la barre compacte ne colle plus, pour garder de la hauteur. */
+@media screen and (max-width: 940px) and (max-height: 480px) and (orientation: landscape) {
+  .main-nav, .mobile-nav { position: static; }
 }

@@ -10,6 +10,10 @@ export default function App({ Component, pageProps }) {
   return (
     <>
       <Head>
+        {/* viewport-fit=cover : les marges env(safe-area-inset-*) des iPhone à encoche
+            sont prises en compte (voir globals.css). Le zoom reste autorisé. */}
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" key="viewport" />
+        <meta name="theme-color" content="#1f3a5f" />
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" type="image/png" sizes="32x32" href="/icon-32.png" />
         <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
