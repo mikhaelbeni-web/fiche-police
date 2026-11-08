@@ -1,0 +1,60 @@
+[
+ {
+  "name": "codes-liste",
+  "steps": []
+ },
+ {
+  "name": "codes-formulaire-nouveau",
+  "steps": [
+   {
+    "click": "text=+ Nouveau code"
+   }
+  ]
+ },
+ {
+  "name": "codes-formulaire-nouveau-autre-residence",
+  "steps": [
+   {
+    "click": "text=+ Nouveau code"
+   },
+   {
+    "select": ".linen-form select",
+    "value": "Autre"
+   }
+  ]
+ },
+ {
+  "name": "codes-formulaire-modifier",
+  "steps": [
+   {
+    "click": "tr:has-text(\"Garde-bagages\") >> button:has-text(\"Modifier\")"
+   }
+  ]
+ },
+ {
+  "name": "codes-formulaire-modifier-residence-libre",
+  "steps": [
+   {
+    "click": "tr:has-text(\"Parking sous-sol\") >> button:has-text(\"Modifier\")"
+   }
+  ]
+ },
+ {
+  "name": "codes-recherche",
+  "steps": [
+   {
+    "fill": ".toolbar input[type=text]",
+    "value": "boîte"
+   }
+  ]
+ },
+ {
+  "name": "codes-recherche-vide",
+  "steps": [
+   {
+    "fill": ".toolbar input[type=text]",
+    "value": "zzzz"
+   }
+  ]
+ }
+]

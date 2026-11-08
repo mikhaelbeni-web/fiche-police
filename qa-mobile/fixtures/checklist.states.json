@@ -1,0 +1,62 @@
+[
+  {
+    "name": "voir-toute-la-semaine",
+    "steps": [
+      {
+        "click": "text=\"Voir toute la semaine\""
+      }
+    ]
+  },
+  {
+    "name": "jour-precedent-lecture-seule",
+    "steps": [
+      {
+        "click": "button.arrow >> nth=0"
+      }
+    ]
+  },
+  {
+    "name": "changer-utilisateur-liste-prenoms",
+    "steps": [
+      {
+        "click": "button.staffbar-switch"
+      }
+    ]
+  },
+  {
+    "name": "ajout-prenom-input",
+    "steps": [
+      {
+        "click": "button.staffbar-switch"
+      },
+      {
+        "click": "text=\"+ Ajouter mon prénom\""
+      }
+    ]
+  },
+  {
+    "name": "code-modal-admin",
+    "steps": [
+      {
+        "click": "text=\"Mode admin\""
+      }
+    ]
+  },
+  {
+    "name": "mode-admin-actif",
+    "steps": [
+      {
+        "click": "text=\"Mode admin\""
+      },
+      {
+        "fill": {
+          "selector": ".code-modal-input",
+          "value": "2305"
+        }
+      },
+      {
+        "click": "text=\"Valider\""
+      }
+    ]
+  }
+]

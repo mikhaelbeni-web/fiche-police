@@ -1,0 +1,51 @@
+[
+ {
+  "name": "contacts-liste",
+  "steps": []
+ },
+ {
+  "name": "contacts-formulaire-nouveau",
+  "steps": [
+   {
+    "click": "text=+ Nouveau contact"
+   }
+  ]
+ },
+ {
+  "name": "contacts-formulaire-nouveau-2-numeros",
+  "steps": [
+   {
+    "click": "text=+ Nouveau contact"
+   },
+   {
+    "click": "text=+ Ajouter un numéro"
+   }
+  ]
+ },
+ {
+  "name": "contacts-formulaire-modifier-4-numeros",
+  "steps": [
+   {
+    "click": "tr:has-text(\"Christophe Lemoine\") >> button:has-text(\"Modifier\")"
+   }
+  ]
+ },
+ {
+  "name": "contacts-recherche",
+  "steps": [
+   {
+    "fill": ".toolbar input[type=text]",
+    "value": "06"
+   }
+  ]
+ },
+ {
+  "name": "contacts-recherche-vide",
+  "steps": [
+   {
+    "fill": ".toolbar input[type=text]",
+    "value": "zzzz"
+   }
+  ]
+ }
+]

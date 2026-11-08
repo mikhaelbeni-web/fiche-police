@@ -3,11 +3,19 @@
 // numéros de téléphone. Création, consultation, modification, suppression à tout moment.
 // Persistance Firebase.
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Head from "next/head";
 
 function emptyForm() {
   return { nom: "", societe: "", telephones: [""] };
+}
+
+// Lien d'appel pour un numéro affiché (téléphone : appel en un tap).
+// Retourne null si la valeur ne ressemble pas à un numéro (ex. un e-mail).
+function telHref(t) {
+  if (!t || /[@a-z]/i.test(t)) return null;
+  const n = t.replace(/[^\d+]/g, "");
+  return n.replace(/\D/g, "").length >= 3 ? "tel:" + n : null;
 }
 
 function Contacts() {
@@ -21,6 +29,16 @@ function Contacts() {
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState(null);
   const [form, setForm] = useState(emptyForm());
+  const formRef = useRef(null);
+
+  // Téléphone : le formulaire s'ouvre en haut de la liste — on le ramène à
+  // l'écran après « Modifier » sur une ligne basse (présentation seulement).
+  useEffect(() => {
+    if (!showForm || !formRef.current || typeof window === "undefined") return;
+    if (window.matchMedia && window.matchMedia("(max-width: 640px)").matches) {
+      formRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [showForm, editId]);
 
   useEffect(() => {
     (async () => {
@@ -119,7 +137,7 @@ function Contacts() {
   return (
     <>
       <Head><title>Contacts</title></Head>
-      <div className="toolbar">
+      <div className="toolbar contacts-toolbar">
         <h1>Contacts</h1>
         <div className="field">
           <label>Rechercher</label>
@@ -129,10 +147,10 @@ function Contacts() {
         <span className="status">{status}</span>
       </div>
 
-      <div className="menage-page">
+      <div className="menage-page contacts-page">
         <div className="recap">
           {showForm && (
-            <div className="linen-form" style={{ marginBottom: 18 }}>
+            <div className="linen-form contacts-form" ref={formRef} style={{ marginBottom: 18 }}>
               <div className="form-title">
                 {editId ? "Modifier le contact" : "Nouveau contact"}
               </div>
@@ -145,31 +163,47 @@ function Contacts() {
                 {form.telephones.map((t, i) => (
                   <div key={i} className="phone-row" style={{ display: "flex", gap: 6, marginBottom: 6 }}>
                     <input type="text" value={t} onChange={e => updatePhone(i, e.target.value)} placeholder="06 12 34 56 78" style={{ width: 180 }} />
-                    <button onClick={() => removePhoneField(i)} className="ghost danger" title="Supprimer" aria-label="Supprimer">✕</button>
+                    <button onClick={() => removePhoneField(i)} className="ghost danger icon-btn" title="Supprimer" aria-label="Supprimer">✕</button>
                   </div>
                 ))}
                 <button onClick={addPhoneField} className="ghost">+ Ajouter un numéro</button>
               </div>
-              <div style={{ display: "flex", gap: 8 }}>
+              <div className="contacts-form-actions" style={{ display: "flex", gap: 8 }}>
                 <button className="primary" onClick={save}>Enregistrer</button>
                 <button onClick={() => setShowForm(false)}>Annuler</button>
               </div>
+              {status && <div className="contacts-form-status">{status}</div>}
             </div>
           )}
 
-          <div className="tbl-wrap"><table className="tbl">
+          <div className="tbl-wrap"><table className="tbl tbl-cards contacts-tbl">
             <thead>
               <tr><th>Nom</th><th>Société</th><th>Téléphone(s)</th><th></th></tr>
             </thead>
             <tbody>
               {filtered.map(c => (
                 <tr key={c.id}>
-                  <td className="apt">{c.nom}</td>
-                  <td>{c.societe || "—"}</td>
-                  <td>{(c.telephones || []).length ? c.telephones.join(" · ") : "—"}</td>
-                  <td style={{ whiteSpace: "nowrap" }}>
+                  <td className="apt card-title">{c.nom}</td>
+                  <td data-label="Société">{c.societe || "—"}</td>
+                  <td data-label="Téléphone(s)" className="card-full contacts-tels">
+                    {(c.telephones || []).length ? (
+                      <>
+                        {/* Ordinateur / impression : texte inchangé. Téléphone : un bouton d'appel par numéro. */}
+                        <span className="contacts-tel-plain">{c.telephones.join(" · ")}</span>
+                        <span className="contacts-tel-links">
+                          {c.telephones.map((t, i) => {
+                            const href = telHref(t);
+                            return href
+                              ? <a key={i} href={href} className="contacts-tel-link">📞 {t}</a>
+                              : <span key={i} className="contacts-tel-text">{t}</span>;
+                          })}
+                        </span>
+                      </>
+                    ) : "—"}
+                  </td>
+                  <td className="contacts-actions" style={{ whiteSpace: "nowrap" }}>
                     <button onClick={() => openEdit(c)} className="ghost">Modifier</button>
-                    <button onClick={() => del(c.id)} className="ghost danger" title="Supprimer" aria-label="Supprimer">✕</button>
+                    <button onClick={() => del(c.id)} className="ghost danger icon-btn" title="Supprimer" aria-label="Supprimer">✕</button>
                   </td>
                 </tr>
               ))}

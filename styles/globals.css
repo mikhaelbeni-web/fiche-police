@@ -1690,3 +1690,414 @@ body {
 @media screen and (max-width: 940px) and (max-height: 480px) and (orientation: landscape) {
   .main-nav, .mobile-nav { position: static; }
 }
+
+/* =====================================================================
+   TÉLÉPHONE — pages Sinistres, Incendie, Check-list, Linge Belleville,
+   Transition, Taxes/Espèces, Tâches, Consignes, Contacts, Codes.
+   Écran seulement : l'impression ne change pas.
+   ===================================================================== */
+.linge-mobile-list { display: none; }
+
+@media screen and (max-width: 640px) {
+  /* --- Linge Belleville --- */
+  .linge-page { flex-direction: column; align-items: stretch; gap: 12px; }
+  .linge-page > * { min-width: 0; max-width: 100%; }
+  .linge-page .linen-form { order: 3; margin-bottom: 0 !important; }
+  .linge-page .noshow-hidden-box { order: 1; }
+  .linge-mobile-list { order: 0; display: block; background: #fff; border-radius: 8px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+  .linge-sheet { order: 2; }
+  .linge-mobile-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid #eef0f3; }
+  .linge-mobile-row:first-of-type { border-top: none; }
+  .linge-mobile-apt { flex: none; min-width: 48px; text-align: center; font-weight: 800; font-size: 18px; color: #fff; background: var(--accent); border-radius: 6px; padding: 6px 8px; }
+  .linge-mobile-info { flex: 1; min-width: 0; font-size: 14px; overflow-wrap: anywhere; }
+  .linge-mobile-row button { flex: none; }
+  .linge-page select { min-width: 0 !important; width: 100%; max-width: 100%; }
+  .linge-tbl th.rowlabel, .linge-tbl td.rowlabel { position: sticky; left: 0; z-index: 1; background: #f4f4f4; width: 120px; min-width: 120px; white-space: normal; box-shadow: 2px 0 3px rgba(0,0,0,.08); }
+  .linge-tbl tr.no-print { display: none; } /* No-show : boutons de la liste ci-dessus */
+  .noshow-hidden-box table { margin-top: 8px; }
+  .noshow-unhide { width: 100%; }
+}
+
+/* ---- sinistres-incendie ---- */
+/* =====================================================================
+   TÉLÉPHONE — Sinistres (pages/sinistres.js, components/ReclamationsGmail.js)
+   et Sécurité incendie (pages/incendie.js, components/IncendieAcces.js,
+   components/IncendieImport.js). Écran ≤ 640 px seulement : ordinateur et
+   impression (incendie en A4 paysage) inchangés.
+   Portées : .sin-toolbar / .sinistres-page / .sin-card / .recl-card
+             .inc-toolbar / .incendie-page / .inc-acces
+   ===================================================================== */
+@media screen and (max-width: 640px) {
+
+  /* ---------- Sinistres : barre d'outils ---------- */
+  /* Le nom de la page est déjà dans la barre « Menu ». */
+  .toolbar.sin-toolbar h1 { display: none; }
+  .toolbar.sin-toolbar > button.primary { flex: 1 1 100%; }
+
+  /* ---------- Sinistres : formulaire de création ---------- */
+  /* minWidth 320 / 260 en ligne (sinistres.js) : neutralisé sur téléphone. */
+  .sinistres-page .linen-form-row > label { min-width: 0 !important; }
+  /* La règle « input 100 % » des formulaires ne doit pas étirer les cases. */
+  .sinistres-page .linen-form-row input:is([type=checkbox], [type=radio]) {
+    width: 22px !important; min-width: 22px !important; flex: none;
+  }
+  /* Résultats de la recherche client : lignes de 44 px, texte lisible. */
+  .sinistres-page .sin-results { max-height: 50vh !important; overscroll-behavior: contain; }
+  .sinistres-page .sin-result {
+    min-height: var(--tap); padding: 10px 12px !important; font-size: 15px !important;
+    line-height: 1.35; overflow-wrap: anywhere;
+  }
+  .sinistres-page .sin-result .card-meta { font-size: 13px; margin-top: 2px; }
+  .sinistres-page .pick-ok { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  /* Enregistrer / Annuler : pleine largeur, l'un sous l'autre. */
+  .sinistres-page .linen-form > button { width: 100%; margin: 10px 0 0 !important; }
+
+  /* ---------- Sinistres / Réclamations : cartes ---------- */
+  .sinistres-page .card-head > div:first-child { flex: 1 1 auto; min-width: 0; }
+  .sinistres-page .card-controls .inline-field :is(input, select) { width: 100% !important; }
+  /* Sinistre : pastille + ✕ écartés, ✕ en 44 × 44. */
+  .sinistres-page .sin-card .row-actions { gap: 12px; margin-left: auto; }
+  .sinistres-page .sin-card .row-actions button { min-width: var(--tap); min-height: var(--tap); }
+  /* Réclamation Gmail : pastilles qui passent à la ligne, lien en vrai bouton. */
+  .sinistres-page .recl-filtres { gap: 8px; }
+  .sinistres-page .recl-card .row-actions { flex: 1 1 100%; flex-wrap: wrap; gap: 8px; }
+  .sinistres-page .recl-card .pill { white-space: normal; text-align: left; max-width: 100%; }
+  .sinistres-page .recl-card .card-link {
+    flex: 1 1 100%; display: inline-flex; align-items: center; justify-content: center;
+    min-height: var(--tap); padding: 0 12px; border: 1px solid currentColor; border-radius: 8px;
+    font-size: 14px; text-decoration: none;
+  }
+
+  /* ---------- Incendie : barre d'outils (7 contrôles → 3 rangées) ---------- */
+  .toolbar.inc-toolbar h1 { display: none; }
+  .toolbar.inc-toolbar > button,
+  .toolbar.inc-toolbar > .inc-import {
+    flex: 1 1 calc(50% - 4px); min-width: 0; min-height: var(--tap);
+    padding: 8px 10px; font-size: 14px; line-height: 1.2; white-space: normal; text-align: center;
+  }
+  .toolbar.inc-toolbar > .inc-import { display: inline-flex; align-items: center; justify-content: center; }
+  /* Vue Factures et écran du code : « Importer » seul sur sa ligne. */
+  .toolbar.inc-toolbar:not(:has(> button.primary)) > .inc-import { flex-basis: 100%; }
+
+  /* ---------- Incendie : bandeau d'alertes et réserves ---------- */
+  .incendie-page .inc-alert { padding: 10px 12px; }
+  .incendie-page .inc-alert > strong { flex: 1 1 100%; }
+  .incendie-page .inc-chip {
+    flex: 1 1 100%; min-height: var(--tap); padding: 8px 12px; border-radius: 10px;
+    font-size: 14px; line-height: 1.3; text-align: left; white-space: normal; overflow-wrap: anywhere;
+  }
+  .incendie-page .inc-reserve { min-height: var(--tap); padding: 10px 0; overflow-wrap: anywhere; }
+
+  /* ---------- Incendie : cartes des contrôles ---------- */
+  .incendie-page .inc-tbl tr.inc-row { position: relative; }
+  .incendie-page .inc-tbl tr.inc-row:has(+ tr.inc-detail-row) { margin-bottom: 4px; }
+  .incendie-page .inc-tbl tr.inc-row td.apt { padding-right: 52px; overflow-wrap: anywhere; }
+  /* ▼ / ▲ en haut à droite de la carte au lieu d'une ligne seule. */
+  .incendie-page .inc-tbl tr.inc-row td.inc-open {
+    position: absolute; top: 4px; right: 4px; width: var(--tap); height: var(--tap);
+    padding: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--accent);
+  }
+  .incendie-page .inc-detail { padding: 10px; }
+  .incendie-page .inc-line label { display: flex; flex-direction: column; gap: 4px; }
+  .incendie-page .inc-line select { width: 100%; }
+  .incendie-page .inc-line button { min-height: var(--tap); font-size: 15px; white-space: normal; }
+
+  /* Historique, factures : ✕ séparé du contenu, en 44 × 44 à droite. */
+  .incendie-page :is(.inc-hist, .inc-fact) tbody td.no-print {
+    text-align: right; margin-top: 4px; padding-top: 6px; border-top: 1px solid #eef0f3 !important;
+  }
+  .incendie-page :is(.inc-hist, .inc-fact) td.no-print button { min-width: var(--tap); min-height: var(--tap); }
+
+  /* Documents : références longues coupées, liens en cibles de 44 px. */
+  .incendie-page .inc-doc { gap: 4px 12px; padding: 4px 0; }
+  .incendie-page .inc-doc > span { min-width: 0; overflow-wrap: anywhere; }
+  .incendie-page .inc-doc > button { min-width: var(--tap); min-height: var(--tap); margin-left: auto; }
+  .incendie-page .inc-link {
+    display: inline-flex; align-items: center; min-height: var(--tap);
+    padding: 0 4px; margin-right: 8px; font-size: 14px;
+  }
+
+  /* ---------- Incendie : formulaires (contrôle, vérification, document, facture, import) ---------- */
+  /* minWidth 240 en ligne (PieceJointe) : neutralisé. */
+  .incendie-page .linen-form-row > label { min-width: 0 !important; }
+  .incendie-page .linen-form-row input:is([type=checkbox], [type=radio]) {
+    width: 22px !important; min-width: 22px !important; flex: none;
+  }
+  .incendie-page .inc-form input[type=file] { width: 100%; min-height: var(--tap); font-size: 14px; }
+  .incendie-page .inc-radio { line-height: 1.3; }
+  .incendie-page .inc-form > button { width: 100%; margin: 10px 0 0 !important; }
+  .incendie-page .inc-form .inc-sub button { display: block; width: 100%; margin-top: 8px; white-space: normal; }
+
+  /* ---------- Incendie : factures et coûts ---------- */
+  .incendie-page .recap-total { text-align: left; }
+  .incendie-page .recap-total .n { font-size: 26px; }
+  .incendie-page .inc-cout-grid { grid-template-columns: minmax(0, 1fr); }
+  .incendie-page .inc-cout-ligne > span { min-width: 0; overflow-wrap: anywhere; }
+  .incendie-page .inc-cout-ligne > strong { flex: none; white-space: nowrap; }
+  /* Total en carte, avec « Total HT : » / « Total TTC : ». */
+  .incendie-page .inc-fact tfoot tr {
+    border: 2px solid var(--line); border-radius: 8px; padding: 6px 4px; background: #fff;
+  }
+  .incendie-page .inc-fact tfoot td { padding: 4px 10px; }
+  .incendie-page .inc-fact tfoot td:empty { display: none; }
+
+  /* ---------- Incendie : écran du code d'accès ---------- */
+  .incendie-page .inc-acces form button { width: 100%; min-height: 48px; margin: 8px 0 0 !important; font-size: 16px; }
+  .incendie-page .inc-acces button.ghost { min-height: var(--tap); }
+}
+
+/* ---- taxes-checklist ---- */
+/* =====================================================================
+   TÉLÉPHONE (≤ 640 px) — Taxes / Espèces (pages/taxes.js, racine
+   .taxes-page) et Check-list (pages/checklist.js + components/StaffBar.js,
+   racine .checklist-page). Écran seulement : bureau et impression
+   inchangés. À fusionner dans styles/globals.css, APRÈS la section
+   « TÉLÉPHONE (≤ 640 px) — base commune » (les règles ici la complètent).
+   ===================================================================== */
+@media screen and (max-width: 640px) {
+
+  /* ---------------- TAXES / ESPÈCES ---------------- */
+
+  /* Barre d'outils : ↻ devient un carré de 44 px ; CSV et Imprimer se
+     partagent la ligne. */
+  .taxes-page .toolbar button.tx-refresh { flex: none; min-width: var(--tap); padding: 0; font-size: 20px; }
+  .taxes-page .toolbar > button:not(.tx-refresh) { flex: 1 1 0; min-width: 0; }
+  .taxes-page .toolbar .status:empty { display: none; }
+
+  /* Gros total : tient sur une ligne à 360 px. */
+  .taxes-page .recap-total .n { font-size: 28px; white-space: nowrap; }
+
+  /* Formulaires : les labels à min-width 300/320 en style en ligne
+     (client taxe, recherche) ne débordent plus. */
+  .taxes-page .linen-form-row label { min-width: 0 !important; }
+  .taxes-page .linen-form-row > div { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+
+  /* Textes d'aide (11 px en ligne) lisibles. */
+  .taxes-page .tx-help { font-size: 13px !important; line-height: 1.4; }
+  .taxes-page button.tx-change { font-size: 14px !important; min-height: var(--tap); margin-top: 4px; border: 1px solid var(--border); }
+
+  /* Liste de résultats « Rechercher un client » : lignes de 44 px au moins. */
+  .taxes-page .tx-search-results { max-height: 50vh !important; }
+  .taxes-page .tx-search-item { min-height: var(--tap); padding: 10px 12px !important; font-size: 15px !important; overflow-wrap: anywhere; }
+
+  /* Rangées de boutons (Excel / Récupération, Enregistrer / Annuler) :
+     un bouton par ligne, pleine largeur. */
+  .taxes-page .tx-btn-row { flex-direction: column; align-items: stretch; gap: 8px !important; }
+  .taxes-page .tx-btn-row > button { width: 100%; }
+
+  /* Liste des réceptionnistes (Gérer la liste) : ✕ de 44 px, espacé. */
+  .taxes-page .panel-row .chip { max-width: 100%; gap: 6px; overflow-wrap: anywhere; }
+  .taxes-page .panel-row .chip-del { min-width: var(--tap); min-height: var(--tap); font-size: 16px; }
+  .taxes-page .panel-row input { flex: 1 1 160px; min-width: 0; }
+
+  /* Tableaux en cartes : la cellule .card-title passe en tête de carte
+     même quand elle n'est pas la première colonne (Client, Désignation). */
+  .taxes-page .tbl-cards tr { display: flex; flex-direction: column; }
+  .taxes-page .tbl-cards td.card-title { order: -1; }
+  /* La case « Réglé » sert au papier : inutile à l'écran du téléphone. */
+  .taxes-page .tbl-cards td.tx-regle { display: none; }
+  /* Actions en bas de carte, à droite, séparées de 8 px. */
+  .taxes-page .tbl-cards td.tx-actions {
+    display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px;
+    padding-top: 8px !important;
+  }
+  .taxes-page .tbl-cards td.tx-actions button { min-height: var(--tap); border: 1px solid var(--border); }
+  .taxes-page .tbl-cards td.tx-actions button:not(.tx-del) { flex: 1 1 auto; }
+  .taxes-page .tbl-cards td.tx-actions button.tx-del { flex: none; min-width: var(--tap); padding: 0; font-size: 18px; }
+  .taxes-page .tbl-cards td.empty-state { padding: 20px 14px !important; text-align: center; }
+
+  /* ---------------- CHECK-LIST ---------------- */
+
+  /* Barre d'outils : jour sur toute la largeur ; « Aujourd'hui » (jours
+     passés) passe dessous ; progression et Mode admin se partagent la ligne. */
+  .checklist-page .toolbar .daynav { flex-wrap: wrap; }
+  .checklist-page .toolbar .daynav button.checklist-today { order: 5; flex: 1 1 100%; }
+  .checklist-page .toolbar .progress { flex: 1 1 110px; margin-left: 0; min-height: var(--tap); padding-right: 12px; }
+  .checklist-page .toolbar .progress-label { font-size: 14px; }
+  .checklist-page .toolbar > button.ghost { flex: 1 1 auto; }
+  .checklist-page .toolbar .status:empty { display: none; }
+
+  /* Barre « Qui es-tu ? » : × de suppression séparé du prénom (8 px),
+     prénoms longs coupés, champ d'ajout sur toute la largeur. */
+  .checklist-page .staff-chip-wrap { display: flex; gap: 8px; max-width: 100%; min-width: 0; }
+  .checklist-page .staff-chip-del { margin-left: 0; border: 1px solid rgba(255,255,255,.25); border-radius: 8px; }
+  .checklist-page .staff-chip { flex: 0 1 auto; max-width: 100%; min-width: 0; text-align: left; overflow-wrap: anywhere; }
+  .checklist-page .staff-chip-del { flex: none; }
+  .checklist-page .staff-add { flex: 1 1 100%; gap: 8px; }
+  .checklist-page .staff-add input { flex: 1; min-width: 0; width: auto; }
+  .checklist-page .staffbar-switch { margin-left: 0; }
+
+  /* Listes de tâches : chaque ligne tient dans l'écran, sans défilement
+     horizontal ; la case à cocher (44 px) est toujours visible à droite. */
+  .checklist-page .tbl-wrap { overflow: visible; background: none; }
+  .checklist-page .tbl { display: block; width: 100%; min-width: 0; }
+  .checklist-page .tbl tbody { display: block; }
+  .checklist-page .tbl td { white-space: normal; overflow-wrap: anywhere; }
+  .checklist-page .tbl tr.task-row {
+    display: flex; flex-wrap: wrap; align-items: center; column-gap: 10px; row-gap: 4px;
+    padding: 8px 10px; border-bottom: 1px solid #eee;
+  }
+  .checklist-page .tbl tr.task-row:last-child { border-bottom: none; }
+  .checklist-page .tbl tr.task-row > td:not(.task-by) { display: block; padding: 0; border: none; }
+  .checklist-page .task-row td.task-time { flex: none; width: 46px; font-size: 13px; }
+  .checklist-page .task-row td.task-text { flex: 1 1 0; min-width: 0; font-size: 15px; line-height: 1.35; }
+  .checklist-page .task-row td.task-check-cell { flex: none; width: auto; }
+  .checklist-page .task-check { width: 48px; height: 48px; font-size: 22px; border-radius: 10px; }
+  /* Qui / quand : réaffiché sous la tâche (masqué ≤ 768 px ailleurs). */
+  .checklist-page .task-row td.task-by:not(:empty) {
+    display: block; flex: 1 1 100%; width: auto; padding: 0; border: none;
+    text-align: left; font-size: 12px; white-space: normal;
+  }
+  .checklist-page .task-row:has(td.task-time) td.task-by:not(:empty) { padding-left: 56px; }
+  /* Boutons d'admin ✎ / ✕ : sous le texte, 44 px, espacés de 8 px. */
+  .checklist-page .task-admin-btns { display: flex; gap: 8px; margin: 8px 0 0; }
+  .checklist-page .task-admin-btn { width: var(--tap); height: var(--tap); font-size: 18px; border-radius: 8px; }
+
+  /* En-têtes de bloc et boutons secondaires lisibles et assez grands. */
+  .checklist-page .resid-head button.ghost {
+    align-self: stretch; min-height: var(--tap); font-size: 14px; padding: 0 14px;
+    border: 1px solid rgba(255,255,255,.4);
+  }
+  .checklist-page button.admin-add { width: 100%; min-height: var(--tap); font-size: 14px; }
+  .checklist-page .full-week-day { flex: 1 1 100%; font-size: 14px; }
+}
+
+/* ---- codes-contacts-consignes-taches-transition ---- */
+/* =====================================================================
+   TÉLÉPHONE — pages Codes, Contacts, Consignes, Tâches, Transition.
+   Écran seulement (≤ 640 px) : ordinateur et impression inchangés.
+   Toutes les règles sont limitées aux classes propres à ces pages
+   (.codes-*, .contacts-*, .consignes-*, .taches-*, .transition-*).
+   ===================================================================== */
+
+/* Éléments réservés au téléphone : cachés par défaut (ordinateur, impression). */
+.codes-form-status, .contacts-form-status, .consignes-form-status, .contacts-tel-links { display: none; }
+
+@media screen and (max-width: 640px) {
+
+  /* --- Codes / Contacts : barre d'outils (recherche + bouton sur une ligne) --- */
+  .codes-toolbar .field, .contacts-toolbar .field { flex: 1 1 0; min-width: 0; }
+  .codes-toolbar .field input, .contacts-toolbar .field input { min-width: 0 !important; width: 100%; }
+  .codes-toolbar > button.primary, .contacts-toolbar > button.primary { flex: none; align-self: flex-end; }
+
+  /* Formulaires : boutons pleine largeur, message d'état visible sous le formulaire. */
+  .codes-form-actions button, .contacts-form-actions button { flex: 1 1 0; min-height: 48px; font-size: 16px; }
+  .codes-form, .contacts-form { scroll-margin-top: 8px; }
+  .codes-form-status, .contacts-form-status, .consignes-form-status {
+    display: block; margin-top: 10px; font-size: 14px; font-weight: 600; color: var(--accent);
+  }
+
+  /* --- Codes : une carte par code, le code en gros --- */
+  .codes-page .resid-name { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+  .codes-tbl td.codes-code {
+    align-items: center;
+    font-size: 24px !important; letter-spacing: 1.5px; color: var(--ink);
+    -webkit-user-select: all; user-select: all;
+  }
+
+  /* Actions des cartes (Codes, Contacts, Historique transition) :
+     bouton principal à gauche, ✕ isolé à droite (pas de tap accidentel). */
+  .codes-tbl td.codes-actions,
+  .contacts-tbl td.contacts-actions,
+  .transition-tbl td.transition-actions {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    margin-top: 4px; padding-top: 10px !important;
+    border-top: 1px solid #eef0f3 !important;
+  }
+  .codes-tbl td.codes-actions button.ghost:not(.danger),
+  .contacts-tbl td.contacts-actions button.ghost:not(.danger),
+  .transition-tbl td.transition-actions button.ghost:not(.danger) {
+    flex: 0 1 auto; min-width: 120px; font-size: 15px;
+    border: 1px solid var(--field-border);
+  }
+  .codes-tbl td.codes-actions button.icon-btn,
+  .contacts-tbl td.contacts-actions button.icon-btn,
+  .transition-tbl td.transition-actions button.icon-btn { flex: none; font-size: 18px; }
+
+  /* --- Contacts : un bouton d'appel par numéro --- */
+  .contacts-tbl td.contacts-tels .contacts-tel-plain { display: none; }
+  .contacts-tbl td.contacts-tels .contacts-tel-links { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+  .contacts-tel-link {
+    display: flex; align-items: center; gap: 8px; min-height: var(--tap); padding: 0 14px;
+    border: 1px solid var(--field-border); border-radius: 8px; background: var(--info-bg);
+    color: var(--accent); font-size: 16px; font-weight: 600; text-decoration: none;
+  }
+  .contacts-tel-link:active { background: #dde8f5; }
+  .contacts-tel-text { font-size: 15px; }
+  .contacts-page .phone-row { gap: 8px !important; margin-bottom: 8px !important; }
+
+  /* --- Consignes : casiers sur 2 colonnes, formulaire, réservations en cartes --- */
+  .consignes-page .locker-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .consignes-page .locker-card { min-width: 0; padding: 10px; overflow-wrap: anywhere; }
+  .consignes-page .locker-card-title { font-size: 14px; }
+  .consignes-page .locker-detail { font-size: 13px; }
+  .consignes-page .locker-detail.small { font-size: 12px; }
+  .consignes-form input[type=date] {
+    display: block; width: 100%; min-height: var(--tap);
+    -webkit-appearance: none; appearance: none; background: #fff; text-align: left;
+  }
+  .consignes-form input[type=date]::-webkit-date-and-time-value { text-align: left; }
+  .consignes-form > button.primary { width: 100%; min-height: 48px; font-size: 16px; }
+  .consignes-tbl.tbl-cards tr { display: flex; flex-direction: column; }
+  .consignes-tbl td.card-title { order: -1; }
+  .consignes-tbl td.consignes-del {
+    display: flex; justify-content: flex-end;
+    margin-top: 6px; padding-top: 10px !important;
+    border-top: 1px dashed var(--border) !important;
+  }
+  .consignes-tbl td.consignes-del button::after { content: " Supprimer"; font-size: 14px; }
+  .consignes-tbl td.consignes-del button { padding: 0 12px; }
+
+  /* --- Tâches : filtres lisibles, tâches en cartes avec description sur plusieurs lignes --- */
+  .taches-toolbar .taches-filters { flex: 1 1 100%; gap: 8px; }
+  .taches-toolbar .taches-filters .field { flex: 1 1 130px; }
+  .taches-toolbar .taches-hide-done {
+    flex: 1 1 180px; min-height: var(--tap);
+    font-size: 15px !important; gap: 10px !important;
+  }
+  .taches-toolbar .taches-filters button.taches-refresh {
+    flex: 0 0 var(--tap); width: var(--tap); padding: 0; font-size: 20px;
+  }
+  .taches-toolbar .taches-filters button.taches-print { flex: 1 1 auto; }
+  .taches-tbl td.taches-task { font-size: 15px; font-weight: 600; }
+  .taches-tbl td.taches-task .card-meta {
+    margin-top: 4px; font-size: 14px; font-weight: 400; line-height: 1.4;
+    white-space: normal; overflow-wrap: anywhere;
+  }
+
+  /* --- Transition : onglets sur une ligne, réponses lisibles en entier --- */
+  .transition-toolbar .quick.tabs button { flex: 1 0 auto; padding: 8px 10px; font-size: 14px; }
+  .transition-page .transition-q { overflow-wrap: anywhere; }
+  .transition-page .transition-q-label { font-size: 13px !important; line-height: 1.3; }
+  .transition-page .transition-q-text { font-size: 15px !important; white-space: pre-line; }
+  .transition-page .transition-answer { gap: 8px !important; align-items: stretch !important; }
+  .transition-page .transition-answer textarea {
+    flex: 1 1 auto; min-width: 0; min-height: 5.5em; line-height: 1.4; padding: 8px 10px;
+  }
+  @supports (field-sizing: content) {
+    /* La zone prend la hauteur de son texte : tout le contenu est visible. */
+    .transition-page .transition-answer textarea { field-sizing: content; min-height: var(--tap); }
+  }
+  .transition-page .transition-answer > button {
+    flex: none; align-self: flex-start; min-width: 56px; min-height: var(--tap);
+    font-size: 15px !important;
+  }
+  .transition-page .transition-save { width: 100%; min-height: 48px; font-size: 16px; }
+}
+
+/* ---- Ajustements après la 2e série de captures ---- */
+@media screen and (max-width: 640px) {
+  .linge-page .tbl-cards button.danger { min-width: var(--tap); min-height: var(--tap); }
+  .toolbar .linge-refresh { min-width: var(--tap); }
+  .taxes-page .tx-search-results { position: static !important; width: auto !important; }
+  .checklist-page span.staff-chip { display: inline-flex; align-items: center; }
+  .checklist-page span.staff-chip.present { min-height: 32px; }
+  .incendie-page .inc-form input:not([type=checkbox]):not([type=radio]) { font-size: 16px; }
+}
+/* Téléphone en paysage (641–940 px) : rien ne doit sortir de l'écran. */
+@media screen and (max-width: 940px) {
+  .linge-page { flex-wrap: wrap; justify-content: stretch; }
+  .linge-page > * { min-width: 0; max-width: 100%; }
+  .taches-toolbar .taches-filters { flex-wrap: wrap; }
+}

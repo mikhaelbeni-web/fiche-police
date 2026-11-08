@@ -1,0 +1,136 @@
+[
+  {
+    "name": "impayees-controle-detail",
+    "steps": [
+      {
+        "click": "text=Voir les 5 cas à vérifier"
+      }
+    ]
+  },
+  {
+    "name": "impayees-taxes-masquees",
+    "steps": [
+      {
+        "click": "text=Voir les 3 taxe(s) masquée(s) manuellement"
+      }
+    ]
+  },
+  {
+    "name": "impayees-filtre-belleville",
+    "steps": [
+      {
+        "select": ".toolbar select",
+        "value": "Belleville"
+      }
+    ]
+  },
+  {
+    "name": "especes",
+    "steps": [
+      {
+        "click": "text=Gestion des espèces"
+      }
+    ]
+  },
+  {
+    "name": "especes-depense",
+    "steps": [
+      {
+        "click": "text=Gestion des espèces"
+      },
+      {
+        "select": ".linen-form select >> nth=1",
+        "value": "expense",
+        "note": "Type select (2nd select in .linen-form; 1st is Réceptionniste)"
+      }
+    ]
+  },
+  {
+    "name": "especes-client-recherche",
+    "steps": [
+      {
+        "click": "text=Gestion des espèces"
+      },
+      {
+        "select": ".linen-form select >> nth=2",
+        "value": "recherche"
+      },
+      {
+        "fill": "input[placeholder='Tape au moins 2 lettres du nom…']",
+        "value": "ma"
+      }
+    ]
+  },
+  {
+    "name": "especes-client-autre",
+    "steps": [
+      {
+        "click": "text=Gestion des espèces"
+      },
+      {
+        "select": ".linen-form select >> nth=2",
+        "value": "autre"
+      }
+    ]
+  },
+  {
+    "name": "especes-solde-depart-form",
+    "steps": [
+      {
+        "click": "text=Gestion des espèces"
+      },
+      {
+        "click": "text=Redéfinir le solde de départ"
+      }
+    ]
+  },
+  {
+    "name": "especes-recuperation-form",
+    "steps": [
+      {
+        "click": "text=Gestion des espèces"
+      },
+      {
+        "click": "text=Récupération des espèces"
+      }
+    ]
+  },
+  {
+    "name": "especes-code-modal-gerer-liste",
+    "steps": [
+      {
+        "click": "text=Gestion des espèces"
+      },
+      {
+        "click": "text=Gérer la liste"
+      }
+    ],
+    "note": "opens CodeModal (screenshot the modal itself)"
+  },
+  {
+    "name": "especes-staff-admin-unlocked",
+    "steps": [
+      {
+        "click": "text=Gestion des espèces"
+      },
+      {
+        "click": "text=Gérer la liste"
+      },
+      {
+        "code": "2305"
+      }
+    ],
+    "note": "CodeModal-guarded, code 2305; only toggles staffAdmin UI (no write)"
+  },
+  {
+    "name": "especes-historique",
+    "steps": [
+      {
+        "click": "text=Gestion des espèces"
+      },
+      {
+        "click": "text=Historique →"
+      }
+    ]
+  }
+]

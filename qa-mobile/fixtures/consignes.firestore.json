@@ -1,0 +1,125 @@
+{
+  "locker_bookings": {
+    "qa-lb-01": {
+      "residence": "Lantiez",
+      "lockerId": "1",
+      "startDate": "2026-11-08",
+      "endDate": "2026-11-08",
+      "bookingType": "checkin",
+      "appartement": "L3 — Duplex",
+      "client": "Marie-Christine Delacroix-Beaumont",
+      "code": "4821",
+      "createdAt": "2026-11-05T14:12:00.000Z"
+    },
+    "qa-lb-02": {
+      "residence": "Lantiez",
+      "lockerId": "1",
+      "startDate": "2026-11-09",
+      "endDate": "2026-11-09",
+      "bookingType": "checkout",
+      "appartement": "L5",
+      "client": "Famille Abdelkader-Lemoine",
+      "code": "",
+      "createdAt": "2026-11-05T14:12:00.000Z"
+    },
+    "qa-lb-03": {
+      "residence": "Lantiez",
+      "lockerId": "1",
+      "startDate": "2026-11-11",
+      "endDate": "2026-11-11",
+      "bookingType": "checkin",
+      "appartement": "",
+      "client": "M. Ferreira-Oliveira",
+      "code": "7350",
+      "createdAt": "2026-11-05T14:12:00.000Z"
+    },
+    "qa-lb-04": {
+      "residence": "Lantiez",
+      "lockerId": "1",
+      "startDate": "2026-11-14",
+      "endDate": "2026-11-14",
+      "bookingType": "checkin",
+      "appartement": "L2",
+      "client": "Mme Kowalczyk-Nguyen",
+      "code": "",
+      "createdAt": "2026-11-05T14:12:00.000Z"
+    },
+    "qa-lb-05": {
+      "residence": "Lantiez",
+      "lockerId": "2",
+      "startDate": "2026-11-10",
+      "endDate": "2026-11-10",
+      "bookingType": "checkout",
+      "appartement": "Penthouse Grand Lantiez 6 couchages",
+      "client": "",
+      "code": "9915",
+      "createdAt": "2026-11-05T14:12:00.000Z"
+    },
+    "qa-lb-06": {
+      "residence": "Lantiez",
+      "lockerId": "3",
+      "startDate": "2026-11-08",
+      "endDate": "2026-11-08",
+      "bookingType": "checkout",
+      "appartement": "L6",
+      "client": "Wang",
+      "code": "0042",
+      "createdAt": "2026-11-05T14:12:00.000Z"
+    },
+    "qa-lb-07": {
+      "residence": "Villiers",
+      "lockerId": "V1",
+      "startDate": "2026-11-07",
+      "endDate": "2026-11-09",
+      "bookingType": "checkin",
+      "appartement": "V2",
+      "client": "Jean-Philippe de La Rochefoucauld-Montbazon",
+      "code": "118833",
+      "createdAt": "2026-11-05T14:12:00.000Z"
+    },
+    "qa-lb-08": {
+      "residence": "Villiers",
+      "lockerId": "V1",
+      "startDate": "2026-11-12",
+      "endDate": "2026-11-12",
+      "bookingType": "checkout",
+      "appartement": "V4",
+      "client": "",
+      "code": "",
+      "createdAt": "2026-11-05T14:12:00.000Z"
+    },
+    "qa-lb-09": {
+      "residence": "Lantiez",
+      "lockerId": "4",
+      "startDate": "2026-11-02",
+      "endDate": "2026-11-02",
+      "bookingType": "checkin",
+      "appartement": "L1",
+      "client": "Durand",
+      "code": "1111",
+      "createdAt": "2026-11-05T14:12:00.000Z"
+    },
+    "qa-lb-10": {
+      "residence": "Lantiez",
+      "lockerId": "2",
+      "startDate": "2026-11-05",
+      "endDate": "2026-11-05",
+      "bookingType": "checkout",
+      "appartement": "L4",
+      "client": "Petit",
+      "code": "",
+      "createdAt": "2026-11-05T14:12:00.000Z"
+    },
+    "qa-lb-11": {
+      "residence": "Villiers",
+      "lockerId": "V1",
+      "startDate": "2026-11-01",
+      "endDate": "2026-11-03",
+      "bookingType": "checkin",
+      "appartement": "V5",
+      "client": "Moreau",
+      "code": "2020",
+      "createdAt": "2026-11-05T14:12:00.000Z"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+[
+  {
+    "name": "panneau-notes-ouvert",
+    "steps": [
+      {
+        "click": "button.notes-fab"
+      }
+    ]
+  }
+]

@@ -1,0 +1,29 @@
+[
+  {
+    "name": "rapport-hier-verrouille",
+    "steps": [
+      {
+        "click": "text=\"Rapport d'hier\""
+      }
+    ]
+  },
+  {
+    "name": "historique-liste",
+    "steps": [
+      {
+        "click": "text=\"Historique\""
+      }
+    ]
+  },
+  {
+    "name": "historique-consulter",
+    "steps": [
+      {
+        "click": "text=\"Historique\""
+      },
+      {
+        "click": "text=\"Consulter\" >> nth=0"
+      }
+    ]
+  }
+]

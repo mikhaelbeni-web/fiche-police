@@ -1,0 +1,104 @@
+[
+ {
+  "name": "sinistres-liste-tous",
+  "steps": []
+ },
+ {
+  "name": "sinistres-filtre-non-regles",
+  "steps": [
+   {
+    "click": "button >> text=\"Non réglés\""
+   }
+  ]
+ },
+ {
+  "name": "sinistres-filtre-regles",
+  "steps": [
+   {
+    "click": "button >> text=\"Réglés\""
+   }
+  ]
+ },
+ {
+  "name": "sinistres-formulaire-nouveau",
+  "steps": [
+   {
+    "click": "text=+ Nouveau sinistre"
+   }
+  ]
+ },
+ {
+  "name": "sinistres-formulaire-saisie-manuelle",
+  "steps": [
+   {
+    "click": "text=+ Nouveau sinistre"
+   },
+   {
+    "select": ".linen-form select >> nth=0",
+    "value": "manuel"
+   }
+  ]
+ },
+ {
+  "name": "sinistres-formulaire-recherche-resultats",
+  "steps": [
+   {
+    "click": "text=+ Nouveau sinistre"
+   },
+   {
+    "fill": "input[placeholder^=\"Tape au moins 2 lettres\"]",
+    "value": "ma"
+   }
+  ]
+ },
+ {
+  "name": "sinistres-ouvrir-select-statut",
+  "steps": [
+   {
+    "click": ".card-controls select >> nth=0"
+   }
+  ]
+ },
+ {
+  "name": "vue-reclamations-a-traiter",
+  "steps": [
+   {
+    "click": "text=/Réclamations Gmail/"
+   }
+  ]
+ },
+ {
+  "name": "vue-reclamations-traitees",
+  "steps": [
+   {
+    "click": "text=/Réclamations Gmail/"
+   },
+   {
+    "click": "button:has-text(\"Traitées\")"
+   }
+  ]
+ },
+ {
+  "name": "vue-reclamations-toutes",
+  "steps": [
+   {
+    "click": "text=/Réclamations Gmail/"
+   },
+   {
+    "click": "button:has-text(\"Toutes\")"
+   }
+  ]
+ },
+ {
+  "name": "vue-reclamations-montant-visible",
+  "steps": [
+   {
+    "click": "text=/Réclamations Gmail/"
+   },
+   {
+    "select": ".card-controls select >> nth=0",
+    "value": "oui"
+   }
+  ]
+ }
+]

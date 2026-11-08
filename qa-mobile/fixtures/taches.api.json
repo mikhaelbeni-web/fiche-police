@@ -1,0 +1,229 @@
+{
+  "/api/tasks": {
+    "total": 18,
+    "items": [
+      {
+        "id": 90001,
+        "residence": "?",
+        "appartement": "Studio Canal Saint-Martin — Duplex terrasse vue sur cour (ancien listing)",
+        "unitNumber": "",
+        "titre": "Vérifier détecteur de fumée",
+        "description": "",
+        "assigne": "",
+        "echeance": "2026-11-09",
+        "statut": "pending",
+        "priorite": ""
+      },
+      {
+        "id": 90002,
+        "residence": "Belleville",
+        "appartement": "B1",
+        "unitNumber": "101",
+        "titre": "Changer l'ampoule de la salle de bain",
+        "description": "",
+        "assigne": "Karim Benali",
+        "echeance": "2026-11-08",
+        "statut": "notStarted",
+        "priorite": "low"
+      },
+      {
+        "id": 90003,
+        "residence": "Belleville",
+        "appartement": "B12",
+        "unitNumber": "304",
+        "titre": "Fuite sous l'évier — intervention plombier",
+        "description": "Le client signale une fuite importante sous l'évier de la cuisine depuis hier soir. Eau coupée au robinet d'arrêt. Le plombier fictif doit passer à 8h30 ; prévoir d'ouvrir l'appartement et de vérifier le parquet du séjour qui a peut-être pris l'eau.",
+        "assigne": "Plomberie Martin & Fils (prestataire)",
+        "echeance": "2026-11-08",
+        "statut": "inProgress",
+        "priorite": "high"
+      },
+      {
+        "id": 90004,
+        "residence": "Belleville",
+        "appartement": "B3",
+        "unitNumber": "",
+        "titre": "Ménage approfondi après départ groupe",
+        "description": "Taches sur le canapé, 3 verres cassés, matelas à aérer.",
+        "assigne": "Équipe ménage Belleville",
+        "echeance": "2026-11-08",
+        "statut": "open",
+        "priorite": "high"
+      },
+      {
+        "id": 90005,
+        "residence": "Belleville",
+        "appartement": "B7",
+        "unitNumber": "207",
+        "titre": "Installer lit bébé",
+        "description": "",
+        "assigne": "Marie-Christine Delacroix-Beaumont",
+        "echeance": "2026-11-10",
+        "statut": "pending",
+        "priorite": ""
+      },
+      {
+        "id": 90006,
+        "residence": "Belleville",
+        "appartement": "B9",
+        "unitNumber": "",
+        "titre": "Remplacer la télécommande TV",
+        "description": "",
+        "assigne": "",
+        "echeance": "",
+        "statut": "",
+        "priorite": ""
+      },
+      {
+        "id": 90007,
+        "residence": "Lantiez",
+        "appartement": "L1",
+        "unitNumber": "1",
+        "titre": "Recoller la plinthe du couloir",
+        "description": "",
+        "assigne": "Sophie",
+        "echeance": "2026-11-07",
+        "statut": "completed",
+        "priorite": "low"
+      },
+      {
+        "id": 90008,
+        "residence": "Lantiez",
+        "appartement": "L2",
+        "unitNumber": "2",
+        "titre": "Détartrer la bouilloire et la machine à café",
+        "description": "",
+        "assigne": "Inès",
+        "echeance": "2026-11-08",
+        "statut": "done",
+        "priorite": ""
+      },
+      {
+        "id": 90009,
+        "residence": "Lantiez",
+        "appartement": "L3",
+        "unitNumber": "3",
+        "titre": "Serrure NUKI : batterie faible (12 %)",
+        "description": "Remplacer les 4 piles AA, vérifier la synchronisation du pont Wi-Fi.",
+        "assigne": "Léo",
+        "echeance": "2026-11-08",
+        "statut": "started",
+        "priorite": "high"
+      },
+      {
+        "id": 90010,
+        "residence": "Lantiez",
+        "appartement": "L4",
+        "unitNumber": "4",
+        "titre": "Réparer le store électrique de la chambre",
+        "description": "Moteur bloqué en position mi-hauteur.",
+        "assigne": "Thibault",
+        "echeance": "2026-11-12",
+        "statut": "waitingParts",
+        "priorite": "medium"
+      },
+      {
+        "id": 90011,
+        "residence": "Lantiez",
+        "appartement": "L5",
+        "unitNumber": "5",
+        "titre": "Inventaire linge",
+        "description": "",
+        "assigne": "Aïcha",
+        "echeance": "2026-11-09",
+        "statut": "pending",
+        "priorite": ""
+      },
+      {
+        "id": 90012,
+        "residence": "Lantiez",
+        "appartement": "L6",
+        "unitNumber": "6",
+        "titre": "Peinture plafond salle d'eau (traces d'humidité)",
+        "description": "",
+        "assigne": "",
+        "echeance": "2026-11-20",
+        "statut": "notStarted",
+        "priorite": ""
+      },
+      {
+        "id": 90013,
+        "residence": "Lantiez",
+        "appartement": "Penthouse Grand Lantiez 6 couchages avec terrasse",
+        "unitNumber": "PH-01",
+        "titre": "Nettoyage vitres terrasse",
+        "description": "",
+        "assigne": "Jean-Baptiste",
+        "echeance": "2026-11-11",
+        "statut": "pending",
+        "priorite": ""
+      },
+      {
+        "id": 90014,
+        "residence": "Villiers",
+        "appartement": "V1",
+        "unitNumber": "10",
+        "titre": "Remplacer joint du réfrigérateur",
+        "description": "",
+        "assigne": "Zoé",
+        "echeance": "2026-11-08",
+        "statut": "closed",
+        "priorite": ""
+      },
+      {
+        "id": 90015,
+        "residence": "Villiers",
+        "appartement": "V2",
+        "unitNumber": "11",
+        "titre": "Contrôle chaudière annuel",
+        "description": "Prestataire fictif ChauffaPro, créneau 9h-12h, prévenir le client de l'arrivée du technicien.",
+        "assigne": "ChauffaPro",
+        "echeance": "2026-11-13",
+        "statut": "pending",
+        "priorite": ""
+      },
+      {
+        "id": 90016,
+        "residence": "Villiers",
+        "appartement": "V3",
+        "unitNumber": "12",
+        "titre": "Wi-Fi instable",
+        "description": "",
+        "assigne": "Karim Benali",
+        "echeance": "2026-11-08",
+        "statut": "inProgress",
+        "priorite": ""
+      },
+      {
+        "id": 90017,
+        "residence": "Villiers",
+        "appartement": "V4",
+        "unitNumber": "",
+        "titre": "Remettre le kit d'accueil",
+        "description": "",
+        "assigne": "Sophie",
+        "echeance": "2026-11-08",
+        "statut": "pending",
+        "priorite": ""
+      },
+      {
+        "id": 90018,
+        "residence": "Villiers",
+        "appartement": "V5",
+        "unitNumber": "14",
+        "titre": "Changer la housse de couette tachée",
+        "description": "",
+        "assigne": "Inès",
+        "echeance": "2026-11-06",
+        "statut": "completed",
+        "priorite": ""
+      }
+    ],
+    "unresolved": [
+      {
+        "listingId": "999001",
+        "listingName": "Studio Canal Saint-Martin — Duplex terrasse vue sur cour (ancien listing)"
+      }
+    ]
+  }
+}

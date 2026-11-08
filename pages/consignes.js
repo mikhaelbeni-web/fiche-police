@@ -103,12 +103,12 @@ function Consignes() {
   return (
     <>
       <Head><title>Consignes à bagages</title></Head>
-      <div className="toolbar">
+      <div className="toolbar consignes-toolbar">
         <h1>Consignes à bagages</h1>
         <span className="status">{status}</span>
       </div>
 
-      <div className="menage-page">
+      <div className="menage-page consignes-page">
         <div className="recap">
           <div className="recap-title">État en temps réel</div>
           <div className="recap-sub">Libération automatique le lendemain de la date de fin — rien à faire manuellement</div>
@@ -157,7 +157,7 @@ function Consignes() {
             </div>
           ))}
 
-          <div className="linen-form" style={{ marginTop: 20 }}>
+          <div className="linen-form consignes-form" style={{ marginTop: 20 }}>
             <div className="form-title">Nouvelle réservation</div>
             <div className="linen-form-row">
               <label>Résidence
@@ -184,24 +184,25 @@ function Consignes() {
               <label>Code envoyé (optionnel) <input type="text" value={code} onChange={e => setCode(e.target.value)} style={{ width: 120 }} /></label>
             </div>
             <button className="primary" onClick={addBooking}>Réserver</button>
+            {status && <div className="consignes-form-status">{status}</div>}
           </div>
 
           <div className="form-title section-gap">Réservations à venir et en cours</div>
-          <div className="tbl-wrap"><table className="tbl">
+          <div className="tbl-wrap"><table className="tbl tbl-cards consignes-tbl">
             <thead>
               <tr><th>Résidence</th><th>Consigne</th><th>Date</th><th>Type</th><th>Appartement</th><th>Client</th><th>Code</th><th></th></tr>
             </thead>
             <tbody>
               {activeAndFuture.sort((a, b) => a.startDate.localeCompare(b.startDate)).map(b => (
                 <tr key={b.id} style={{ background: isOccupied(b, t) ? "var(--warn-bg)" : "transparent" }}>
-                  <td>{b.residence}</td>
-                  <td>{LOCKERS_CONFIG[b.residence]?.bookable.find(l => l.id === b.lockerId)?.label || b.lockerId}</td>
-                  <td>{fmtFr(b.startDate)}</td>
-                  <td>{b.bookingType === "checkout" ? "Check-out" : "Check-in"}</td>
-                  <td>{b.appartement || "—"}</td>
-                  <td>{b.client || "—"}</td>
-                  <td>{b.code || "—"}</td>
-                  <td><button onClick={() => delBooking(b.id)} className="ghost danger" title="Supprimer" aria-label="Supprimer">✕</button></td>
+                  <td data-label="Résidence">{b.residence}</td>
+                  <td className="card-title">{LOCKERS_CONFIG[b.residence]?.bookable.find(l => l.id === b.lockerId)?.label || b.lockerId}</td>
+                  <td data-label="Date">{fmtFr(b.startDate)}</td>
+                  <td data-label="Type">{b.bookingType === "checkout" ? "Check-out" : "Check-in"}</td>
+                  <td data-label="Appartement">{b.appartement || "—"}</td>
+                  <td data-label="Client">{b.client || "—"}</td>
+                  <td data-label="Code">{b.code || "—"}</td>
+                  <td className="consignes-del"><button onClick={() => delBooking(b.id)} className="ghost danger icon-btn" title="Supprimer" aria-label="Supprimer">✕</button></td>
                 </tr>
               ))}
               {activeAndFuture.length === 0 && <tr><td colSpan={8} className="empty-state">Aucune réservation en cours ou à venir.</td></tr>}

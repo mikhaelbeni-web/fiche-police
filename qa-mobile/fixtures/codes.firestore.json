@@ -1,0 +1,88 @@
+{
+ "access_codes": {
+  "code01": {
+   "residence": "Belleville",
+   "emplacement": "Boîte à clés ménage – entrée cour",
+   "code": "4821",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "code02": {
+   "residence": "Belleville",
+   "emplacement": "Portail",
+   "code": "A1234B",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "code03": {
+   "residence": "Belleville",
+   "emplacement": "Local poubelles",
+   "code": "0000",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "code04": {
+   "residence": "Lantiez",
+   "emplacement": "Boîte à clés ménage",
+   "code": "7391",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "code05": {
+   "residence": "Lantiez",
+   "emplacement": "Garde-bagages (placard sous l'escalier, au fond du couloir du rez-de-chaussée à gauche)",
+   "code": "1945#",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "code06": {
+   "residence": "Lantiez",
+   "emplacement": "Digicode immeuble",
+   "code": "B2580",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "code07": {
+   "residence": "LANTIEZ",
+   "emplacement": "Cave n°3 (doublon de casse en base)",
+   "code": "3333",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "code08": {
+   "residence": "lantiez ",
+   "emplacement": "Local vélos",
+   "code": "4455",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "code09": {
+   "residence": "Villiers",
+   "emplacement": "Boîte à clés",
+   "code": "9012",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "code10": {
+   "residence": "Villiers",
+   "emplacement": "Interphone / code d'accès principal du bâtiment C",
+   "code": "*12#3456789012345678",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "code11": {
+   "residence": "Villiers",
+   "emplacement": "Local technique chaufferie",
+   "code": "CODE-TRES-LONG-SANS-ESPACE-0123456789",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "code12": {
+   "residence": "Résidence Les Jardins de la Rue Lecourbe – Bâtiment Nord",
+   "emplacement": "Boîte à clés",
+   "code": "2468",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "code13": {
+   "residence": "Résidence Les Jardins de la Rue Lecourbe – Bâtiment Nord",
+   "emplacement": "Parking sous-sol niveau -2",
+   "code": "13579",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "code14": {
+   "residence": "rue Oberkampf",
+   "emplacement": "Portillon",
+   "code": "8080",
+   "createdAt": "2026-01-01T00:00:00.000Z"
+  }
+ }
+}

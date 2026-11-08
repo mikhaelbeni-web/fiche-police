@@ -1,0 +1,318 @@
+{
+  "/api/tourist-tax": {
+    "from": "2026-07-10",
+    "to": "2026-11-08",
+    "total": 16,
+    "totalTax": 1548.96,
+    "items": [
+      {
+        "residence": "?",
+        "appartement": "Appartement Hostaway non référencé (nom de listing très long QA)",
+        "unitNumber": "",
+        "arrivee": "2026-10-05",
+        "depart": "2026-10-07",
+        "client": "Inconnu Résidence",
+        "reservation": "HTL-QA-9001",
+        "paymentStatus": "Partially paid",
+        "taxeSejour": 8.0,
+        "voyageurs": 2
+      },
+      {
+        "residence": "Belleville",
+        "appartement": "COSY 10",
+        "unitNumber": "10",
+        "arrivee": "2026-07-14",
+        "depart": "2026-07-17",
+        "client": "Marie-Christine Dupont-Delacroix de la Fontaine-Saint-Germain",
+        "reservation": "HTL-QA-1001",
+        "paymentStatus": "Partially paid",
+        "taxeSejour": 6.4,
+        "voyageurs": 2
+      },
+      {
+        "residence": "Belleville",
+        "appartement": "CONFORT 21",
+        "unitNumber": "21",
+        "arrivee": "2026-08-02",
+        "depart": "2026-08-09",
+        "client": "Jo Li",
+        "reservation": "HTL-QA-1002",
+        "paymentStatus": "Partially paid",
+        "taxeSejour": 22.4,
+        "voyageurs": 2
+      },
+      {
+        "residence": "Belleville",
+        "appartement": "COSY 30 + CONFORT 31",
+        "unitNumber": "30+31",
+        "arrivee": "2026-08-21",
+        "depart": "2026-08-25",
+        "client": "Groupe Associação Desportiva Recreativa dos Amigos",
+        "reservation": "HTL-QA-1003",
+        "paymentStatus": "Partially paid",
+        "taxeSejour": 51.2,
+        "voyageurs": 2
+      },
+      {
+        "residence": "Belleville",
+        "appartement": "CHIC 42",
+        "unitNumber": "42",
+        "arrivee": "2026-09-05",
+        "depart": "2026-09-08",
+        "client": "Aleksandr Konstantinopolsky",
+        "reservation": "HTL-QA-1004",
+        "paymentStatus": "Partially paid",
+        "taxeSejour": 9.6,
+        "voyageurs": 2
+      },
+      {
+        "residence": "Belleville",
+        "appartement": "ÉLÉGANCE 60",
+        "unitNumber": "60",
+        "arrivee": "2026-09-28",
+        "depart": "2026-10-03",
+        "client": "Fatou Ndiaye",
+        "reservation": "HTL-QA-1005",
+        "paymentStatus": "Partially paid",
+        "taxeSejour": 16.0,
+        "voyageurs": 2
+      },
+      {
+        "residence": "Belleville",
+        "appartement": "PMR 01",
+        "unitNumber": "01",
+        "arrivee": "2026-10-12",
+        "depart": "2026-10-14",
+        "client": "Hans-Jürgen Oberkirchner",
+        "reservation": "HTL-QA-1006",
+        "paymentStatus": "Partially paid",
+        "taxeSejour": 3.2,
+        "voyageurs": 2
+      },
+      {
+        "residence": "Belleville",
+        "appartement": "DEEP 02",
+        "unitNumber": "02",
+        "arrivee": "2026-10-30",
+        "depart": "2026-11-02",
+        "client": "Ana Sofía García Márquez",
+        "reservation": "HTL-QA-1007",
+        "paymentStatus": "Partially paid",
+        "taxeSejour": 12.8,
+        "voyageurs": 2
+      },
+      {
+        "residence": "Belleville",
+        "appartement": "ZEN 62",
+        "unitNumber": "62",
+        "arrivee": "2026-11-06",
+        "depart": "2026-11-10",
+        "client": "Wei Zhang",
+        "reservation": "HTL-QA-1008",
+        "paymentStatus": "Partially paid",
+        "taxeSejour": 1234.56,
+        "voyageurs": 2
+      },
+      {
+        "residence": "Belleville",
+        "appartement": "ÉVASION 61",
+        "unitNumber": "61",
+        "arrivee": "2026-11-08",
+        "depart": "2026-11-09",
+        "client": "Test Client Sans Prénom",
+        "reservation": "HTL-QA-1009",
+        "paymentStatus": "Partially paid",
+        "taxeSejour": 0,
+        "voyageurs": 2
+      },
+      {
+        "residence": "Lantiez",
+        "appartement": "Studio A5",
+        "unitNumber": "A5",
+        "arrivee": "2026-07-22",
+        "depart": "2026-07-29",
+        "client": "Olivier Martin",
+        "reservation": "HTL-QA-2001",
+        "paymentStatus": "Partially paid",
+        "taxeSejour": 18.2,
+        "voyageurs": 2
+      },
+      {
+        "residence": "Lantiez",
+        "appartement": "A1",
+        "unitNumber": "A1",
+        "arrivee": "2026-08-15",
+        "depart": "2026-08-18",
+        "client": "Bartholomew Fitzgerald-Worthington III",
+        "reservation": "HTL-QA-2002",
+        "paymentStatus": "Partially paid",
+        "taxeSejour": 31.5,
+        "voyageurs": 2
+      },
+      {
+        "residence": "Lantiez",
+        "appartement": "A8",
+        "unitNumber": "A8",
+        "arrivee": "2026-10-20",
+        "depart": "2026-10-27",
+        "client": "Nour El Houda Ben Abdelkader",
+        "reservation": "HTL-QA-2003",
+        "paymentStatus": "Partially paid",
+        "taxeSejour": 44.1,
+        "voyageurs": 2
+      },
+      {
+        "residence": "Villiers",
+        "appartement": "Studio V2",
+        "unitNumber": "V2",
+        "arrivee": "2026-07-11",
+        "depart": "2026-07-12",
+        "client": "Kim",
+        "reservation": "HTL-QA-3001",
+        "paymentStatus": "Partially paid",
+        "taxeSejour": 2.6,
+        "voyageurs": 2
+      },
+      {
+        "residence": "Villiers",
+        "appartement": "V7",
+        "unitNumber": "V7",
+        "arrivee": "2026-09-14",
+        "depart": "2026-09-21",
+        "client": "Giuseppe Mastrogiacomo",
+        "reservation": "HTL-QA-3002",
+        "paymentStatus": "Partially paid",
+        "taxeSejour": 72.8,
+        "voyageurs": 2
+      },
+      {
+        "residence": "Villiers",
+        "appartement": "Studio V8",
+        "unitNumber": "V8",
+        "arrivee": "2026-11-01",
+        "depart": "2026-11-07",
+        "client": "Léa Rousseau",
+        "reservation": "HTL-QA-3003",
+        "paymentStatus": "Partially paid",
+        "taxeSejour": 15.6,
+        "voyageurs": 2
+      }
+    ],
+    "scanned": 187,
+    "exclus": {
+      "horsBooking": 121,
+      "dejaPaye": 38,
+      "sansLigneTaxe": 4,
+      "pasEncoreArrive": 7,
+      "horsPeriode": 1
+    },
+    "exclusDetail": [
+      {
+        "client": "Jean-Baptiste Lefebvre-Montmorency",
+        "arrivee": "2026-08-03",
+        "canal": "airbnbOfficial",
+        "statutPaiement": "Paid",
+        "motif": "horsBooking",
+        "listing": "Belleville - CONFORT 11 - Appartement lumineux proche métro Pyrénées"
+      },
+      {
+        "client": "Emma Schmidt",
+        "arrivee": "2026-09-12",
+        "canal": "bookingcom",
+        "statutPaiement": "Paid",
+        "motif": "dejaPaye",
+        "listing": "Lantiez A2"
+      },
+      {
+        "client": "Ravi Subramanian",
+        "arrivee": "2026-10-01",
+        "canal": "bookingcom",
+        "statutPaiement": "Partially paid",
+        "motif": "sansLigneTaxe",
+        "listing": "Villiers V4"
+      },
+      {
+        "client": "—",
+        "arrivee": "2026-10-18",
+        "canal": "",
+        "statutPaiement": "",
+        "motif": "horsBooking",
+        "listing": ""
+      },
+      {
+        "client": "Chloé Bernard",
+        "arrivee": "2026-11-03",
+        "canal": "expedia",
+        "statutPaiement": "Unpaid",
+        "motif": "motifInconnuNonTraduit",
+        "listing": "Belleville - CHIC 22"
+      }
+    ]
+  },
+  "/api/reservation-search": {
+    "query": "ma",
+    "scanned": 2412,
+    "items": [
+      {
+        "client": "Marie-Christine Dupont-Delacroix de la Fontaine-Saint-Germain",
+        "residence": "Belleville",
+        "appartement": "COSY 10",
+        "unitNumber": "10",
+        "arrivee": "2026-11-12",
+        "depart": "2026-11-15",
+        "reservation": "HTL-QA-5001",
+        "channel": "bookingcom"
+      },
+      {
+        "client": "Mathieu Marchand",
+        "residence": "Lantiez",
+        "appartement": "A3",
+        "unitNumber": "A3",
+        "arrivee": "2026-11-05",
+        "depart": "2026-11-09",
+        "reservation": "HTL-QA-5002",
+        "channel": "airbnbOfficial"
+      },
+      {
+        "client": "Maria Magdalena Szczepańska-Wójcik",
+        "residence": "Belleville",
+        "appartement": "CHIC 12 + CHIC 22",
+        "unitNumber": "12+22",
+        "arrivee": "2026-10-28",
+        "depart": "2026-11-02",
+        "reservation": "HTL-QA-5003",
+        "channel": "bookingcom"
+      },
+      {
+        "client": "Omar Makhlouf",
+        "residence": "Villiers",
+        "appartement": "Studio V5",
+        "unitNumber": "V5",
+        "arrivee": "2026-09-30",
+        "depart": "2026-10-04",
+        "reservation": "HTL-QA-5004",
+        "channel": "direct"
+      },
+      {
+        "client": "Emmanuel Ma",
+        "residence": "?",
+        "appartement": "—",
+        "unitNumber": "",
+        "arrivee": "2026-08-14",
+        "depart": "2026-08-16",
+        "reservation": "HTL-QA-5005",
+        "channel": ""
+      },
+      {
+        "client": "Thomas Mallet",
+        "residence": "Belleville",
+        "appartement": "DEEP 02",
+        "unitNumber": "02",
+        "arrivee": "2026-07-21",
+        "depart": "2026-07-24",
+        "reservation": "HTL-QA-5006",
+        "channel": "expedia"
+      }
+    ]
+  }
+}

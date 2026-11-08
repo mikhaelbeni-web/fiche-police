@@ -113,7 +113,7 @@ function Transition() {
   return (
     <>
       <Head><title>Rapport de transition</title></Head>
-      <div className="toolbar">
+      <div className="toolbar transition-toolbar">
         <h1>Rapport de transition</h1>
         <div className="quick tabs">
           <button onClick={() => openTab("jour")} className={tab === "jour" ? "primary" : ""}>Aujourd&apos;hui</button>
@@ -123,7 +123,7 @@ function Transition() {
         <span className="status">{status}</span>
       </div>
 
-      <div className="menage-page">
+      <div className="menage-page transition-page">
         <div className="recap">
           {tab === "jour" && todayReport && (
             <ReportForm report={todayReport} onSave={saveReport} locked={false} />
@@ -138,7 +138,7 @@ function Transition() {
           )}
           {tab === "historique" && selectedReport && (
             <>
-              <button onClick={() => setSelectedReport(null)} className="ghost" style={{ marginBottom: 12 }}>← Retour à la liste</button>
+              <button onClick={() => setSelectedReport(null)} className="ghost transition-back" style={{ marginBottom: 12 }}>← Retour à la liste</button>
               <ReportForm report={selectedReport} onSave={saveReport} locked={isLocked(selectedReport.date)} />
             </>
           )}
@@ -184,12 +184,12 @@ function ReportForm({ report, onSave, locked }) {
           <div className="resid-head"><span className="resid-name">{res}</span></div>
           <div style={{ padding: "10px 4px" }}>
             {QUESTIONS.map(q => (
-              <div key={q.key} style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)", marginBottom: 4 }}>{q.label}</div>
+              <div key={q.key} className="transition-q" style={{ marginBottom: 12 }}>
+                <div className="transition-q-label" style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)", marginBottom: 4 }}>{q.label}</div>
                 {locked ? (
-                  <div style={{ fontSize: 14, padding: "4px 0" }}>{draft.residences[res]?.[q.key] || <span className="t-muted">—</span>}</div>
+                  <div className="transition-q-text" style={{ fontSize: 14, padding: "4px 0" }}>{draft.residences[res]?.[q.key] || <span className="t-muted">—</span>}</div>
                 ) : (
-                  <div style={{ display: "flex", gap: 6, alignItems: "flex-start" }}>
+                  <div className="transition-answer" style={{ display: "flex", gap: 6, alignItems: "flex-start" }}>
                     <textarea
                       value={draft.residences[res]?.[q.key] || ""}
                       onChange={e => setField(res, q.key, e.target.value)}
@@ -208,7 +208,7 @@ function ReportForm({ report, onSave, locked }) {
       ))}
 
       {!locked && (
-        <button className="primary" onClick={() => onSave(draft)}>Enregistrer le rapport</button>
+        <button className="primary transition-save" onClick={() => onSave(draft)}>Enregistrer le rapport</button>
       )}
     </>
   );
@@ -224,19 +224,19 @@ function HistoriqueList({ reports, onSelect, onDelete }) {
           <div className="recap-sub">🔴 rapport avec un point signalé · 🟢 journée sans anomalie déclarée</div>
         </div>
       </div>
-      <div className="tbl-wrap"><table className="tbl">
+      <div className="tbl-wrap"><table className="tbl tbl-cards transition-tbl">
         <thead>
           <tr><th>Date</th><th>Rédigé par</th><th className="c">État</th><th></th></tr>
         </thead>
         <tbody>
           {reports.map(r => (
             <tr key={r.date}>
-              <td style={{ textTransform: "capitalize" }}>{fmtFr(r.date)}</td>
-              <td>{r.author || "—"}</td>
-              <td className="c">{hasAlert(r) ? "🔴" : "🟢"}</td>
-              <td style={{ whiteSpace: "nowrap" }}>
+              <td className="card-title" style={{ textTransform: "capitalize" }}>{fmtFr(r.date)}</td>
+              <td data-label="Rédigé par">{r.author || "—"}</td>
+              <td data-label="État" className="c">{hasAlert(r) ? "🔴" : "🟢"}</td>
+              <td className="transition-actions" style={{ whiteSpace: "nowrap" }}>
                 <button onClick={() => onSelect(r)} className="ghost">Consulter</button>
-                <button onClick={() => onDelete(r)} className="ghost danger" title="Supprimer" aria-label="Supprimer">✕</button>
+                <button onClick={() => onDelete(r)} className="ghost danger icon-btn" title="Supprimer" aria-label="Supprimer">✕</button>
               </td>
             </tr>
           ))}

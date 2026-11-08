@@ -1,0 +1,10 @@
+[
+  {
+    "name": "message-validation-formulaire-vide",
+    "steps": [
+      {
+        "click": "text=\"Réserver\""
+      }
+    ]
+  }
+]

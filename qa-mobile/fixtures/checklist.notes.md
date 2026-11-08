@@ -1,0 +1,14 @@
+# checklist (/checklist)
+Renders: toolbar (title, day nav ← date →, progress pill, "Mode admin"), StaffBar (who am I), "Ont pointé aujourd'hui" chips, 3 task tables (matin / après-midi / tâches de la semaine for ISO weekday) with a check button per row, optional "toute la semaine" block, CodeModal.
+Collections: `checklist_tasks_morning|afternoon` ({time:"08h30",task}), `checklist_tasks_weekly` ({weekday:1-7,task}), `staff_members` (orderBy("name") -> every doc MUST have `name`), `daily_checklist/{YYYY-MM-DD local}` ({tasks:{<taskId>:{done,by,at:"08h31"}}}). If a template collection is empty the page seeds it itself (writes) — we seed all three so no write happens on load. No Timestamps.
+2026-11-08 is a Sunday (weekday 7, "Dimanche"); at the frozen 10:00 every unticked morning task <= 09h55 renders red "overdue". 2026-11-07 (Saturday) is seeded for the read-only past-day state (click ←).
+localStorage `checklist_staff_name` = long name -> "Connecté(e)" view + editable checks; state "changer-utilisateur" shows the chip picker (9 names incl. a 34-char one).
+CodeModal: "Mode admin" asks code 2305 (NEXT_PUBLIC_CHECKLIST_ADMIN_CODE default); state `mode-admin-actif` uses a `fill` step type ({selector,value}) — drop it if the runner only supports click. Admin mode is display-only until a ✎/✕/+ is pressed (those use prompt/confirm and write: never click).
+Mobile risks (360–430px):
+- styles/globals.css:424 `.tbl td { white-space: nowrap }` at <=768px also hits `.task-text` (no override): every long task forces the table to max-content width, so the check button column (checklist.js:56-65) is pushed off-screen and needs horizontal scroll to tick — main usability bug. Same for the "Aucune tâche hebdomadaire" row.
+- checklist.js:49-53 admin ✎/✕ buttons are inline inside the nowrap task cell -> pushed even further right; 30x30px (globals.css:1198) < 44px target.
+- checklist.js:282-297 toolbar: daynav + progress (margin-left:auto, globals.css:593-596) + admin button + "Aujourd'hui" on past days all in one wrapping flex row; h1 hidden <=480px (globals.css:438); arrows 32x32 (globals.css:38-39).
+- globals.css:1108 the 40px min-height rule excludes `.toolbar *` and `.staffbar *`: "Changer" (globals.css:580-582, 12px font, ~26px tall), staff chips, and the `×` delete (globals.css:567-570, padding 0 2px, margin-left -6px) are tiny, adjacent tap targets — easy to hit "delete name" by mistake.
+- checklist.js:355-359 resid-head holds a long title + "Voir toute la semaine" button (.ghost.small 11px, globals.css:635; min-height 30px at 1196).
+- `.task-by` is display:none on mobile (globals.css:638) — "who/when" info vanishes; `.task-time` 48px/11px (639).
+- StaffBar.js:27 add-name input width:120px inline in a nowrap inline-flex; fine at 16px font but may overflow beside OK.

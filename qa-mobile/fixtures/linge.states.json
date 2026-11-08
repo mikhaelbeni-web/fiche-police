@@ -1,0 +1,28 @@
+[
+  {
+    "name": "linge-type-decale",
+    "steps": [
+      {
+        "select": ".linen-form select >> nth=0",
+        "value": "decale"
+      }
+    ],
+    "note": "reveals 'Date normalement prévue' + info paragraph"
+  },
+  {
+    "name": "linge-jour-suivant",
+    "steps": [
+      {
+        "click": "button.arrow >> nth=1"
+      }
+    ]
+  },
+  {
+    "name": "linge-jour-precedent",
+    "steps": [
+      {
+        "click": "button.arrow >> nth=0"
+      }
+    ]
+  }
+]

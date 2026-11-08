@@ -48,14 +48,15 @@ function TaskRow({ id, time, task, entry, editable, overdue, onToggle, adminMode
         {task}
         {adminMode && (
           <span className="task-admin-btns">
-            <button type="button" className="task-admin-btn" title="Modifier" onClick={() => onEdit(id, time, task)}>✎</button>
-            <button type="button" className="task-admin-btn del" title="Supprimer" onClick={() => onDelete(id)}>✕</button>
+            <button type="button" className="task-admin-btn" title="Modifier" aria-label="Modifier" onClick={() => onEdit(id, time, task)}>✎</button>
+            <button type="button" className="task-admin-btn del" title="Supprimer" aria-label="Supprimer" onClick={() => onDelete(id)}>✕</button>
           </span>
         )}
       </td>
       <td className="c task-check-cell">
         <button
           className={`task-check${done ? " checked" : ""}`}
+          aria-label={done ? "Décocher" : "Marquer fait"}
           disabled={!editable}
           onClick={() => onToggle(id, !done)}
           title={editable ? (done ? "Décocher" : "Marquer fait") : "Lecture seule (jour passé)"}
@@ -276,7 +277,7 @@ function Checklist() {
   if (!ready) return null;
 
   return (
-    <>
+    <div className="checklist-page">
       <Head><title>Checklist du jour — Résidences</title></Head>
 
       <div className="toolbar">
@@ -285,7 +286,7 @@ function Checklist() {
           <button className="arrow" onClick={() => shiftDate(-1)}>←</button>
           <span className="daylabel">{fmtFr(dateStr)}</span>
           <button className="arrow" onClick={() => shiftDate(1)} disabled={isToday}>→</button>
-          {!isToday && <button className="ghost" onClick={() => setDateStr(todayISO())}>Aujourd&apos;hui</button>}
+          {!isToday && <button className="ghost checklist-today" onClick={() => setDateStr(todayISO())}>Aujourd&apos;hui</button>}
         </div>
         <div className="progress" title={`${totalDone}/${totalTasks} tâches faites`}>
           <div className="progress-bar" style={{ width: pct + "%" }} />
@@ -391,7 +392,7 @@ function Checklist() {
         </div>
       </div>
       <CodeModal {...codeModalProps} />
-    </>
+    </div>
   );
 }
 

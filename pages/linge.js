@@ -272,7 +272,7 @@ function Linge() {
           <button className="arrow" onClick={() => shiftDay(1)}>›</button>
         </div>
         <button onClick={() => setDay(isoDay(new Date()))}>Aujourd&apos;hui</button>
-        <button onClick={() => load(day, creds.account, creds.key)} disabled={loading} title="Actualiser">↻</button>
+        <button onClick={() => load(day, creds.account, creds.key)} disabled={loading} title="Actualiser" aria-label="Actualiser" className="linge-refresh">↻</button>
         <button className="primary" onClick={() => window.print()} disabled={!sheetItems.length}>Imprimer</button>
         <span className="status">{status}</span>
       </div>
@@ -335,25 +335,24 @@ function Linge() {
             {extraStatus && <span style={{ marginLeft: 10, fontSize: 12, color: "var(--muted)" }}>{extraStatus}</span>}
 
             {extraMenages.length > 0 && (
-              <div className="tbl-wrap"><table className="tbl" style={{ marginTop: 14 }}>
+              <div className="tbl-wrap"><table className="tbl tbl-cards" style={{ marginTop: 14 }}>
                 <thead>
-                  <tr><th>Date</th><th>Résidence</th><th>Appartement</th><th>Motif</th><th>Type</th><th className="c">Coût</th><th></th></tr>
+                  <tr><th>Appartement</th><th>Date</th><th>Motif</th><th>Type</th><th className="c">Coût</th><th></th></tr>
                 </thead>
                 <tbody>
                   {extraMenages.map(e => (
                     <tr key={e.id}>
-                      <td>{fmtFr(e.date)}</td>
-                      <td>{e.residence}</td>
-                      <td>{e.appartement}</td>
-                      <td>
+                      <td className="card-title">{e.appartement} · {e.residence}</td>
+                      <td data-label="Date">{fmtFr(e.date)}</td>
+                      <td data-label="Motif" className="card-full">
                         {e.motif}
                         {e.type === "decale" && e.datePrevue && (
                           <div style={{ fontSize: 11, color: "var(--info)" }}>Prévu le {fmtFr(e.datePrevue)}</div>
                         )}
                       </td>
-                      <td>{e.type === "decale" ? <span style={{ color: "var(--info)" }}>Décalé</span> : "Supplément"}</td>
-                      <td className="c">{euros((e.menageHT || 0) + (e.amenitiesHT || 0))}</td>
-                      <td><button onClick={() => delExtraMenage(e.id)} className="ghost danger" title="Supprimer" aria-label="Supprimer">✕</button></td>
+                      <td data-label="Type">{e.type === "decale" ? <span style={{ color: "var(--info)" }}>Décalé</span> : "Supplément"}</td>
+                      <td data-label="Coût" className="c">{euros((e.menageHT || 0) + (e.amenitiesHT || 0))}</td>
+                      <td data-label="Supprimer"><button onClick={() => delExtraMenage(e.id)} className="ghost danger" title="Supprimer" aria-label="Supprimer">✕</button></td>
                     </tr>
                   ))}
                 </tbody>
@@ -365,14 +364,14 @@ function Linge() {
         {hiddenToday.length > 0 && (
           <div className="noshow-hidden-box no-print">
             <strong>{hiddenToday.length} ménage(s) masqué(s) (no-show)</strong> pour le {fmtFr(day)} — retirés de la feuille de linge.
-            <table>
+            <table className="tbl-cards">
               <thead><tr><th>Appartement</th><th>Motif</th><th></th></tr></thead>
               <tbody>
                 {hiddenToday.map(h => (
                   <tr key={h.id}>
-                    <td>{h.appartement || h.unitNumber}</td>
-                    <td>{h.motif}</td>
-                    <td><button onClick={() => unhideNoShow(h.id)} className="ghost" style={{ fontSize: 11 }}>Réafficher</button></td>
+                    <td className="card-title">{h.appartement || h.unitNumber}</td>
+                    <td data-label="Motif" className="card-full">{h.motif}</td>
+                    <td><button onClick={() => unhideNoShow(h.id)} className="ghost noshow-unhide">Réafficher</button></td>
                   </tr>
                 ))}
               </tbody>
@@ -382,6 +381,27 @@ function Linge() {
 
         {sheetItems.length === 0 && !loading && (
           <div className="empty-state">Aucun appartement Belleville à faire ce jour.</div>
+        )}
+
+        {sheetItems.length > 0 && (
+          <div className="linge-mobile-list no-print">
+            <div className="form-title">{sheetItems.length} appartement(s) à faire</div>
+            {sheetItems.map((it, i) => {
+              const n = it.attendu;
+              const affiche = (n != null && n > 0) ? (n % 2 === 0 ? n : n + 1) : null;
+              return (
+                <div key={i} className="linge-mobile-row">
+                  <div className="linge-mobile-apt">{it.unitNumber}</div>
+                  <div className="linge-mobile-info">
+                    {it.extra
+                      ? <span style={{ color: it.extraType === "decale" ? "var(--info)" : "var(--warn)" }}>{it.extraType === "decale" ? "Décalé" : "Supplément"}{it.motif ? ` · ${it.motif}` : ""}</span>
+                      : (affiche != null ? `${affiche} personnes` : "Nombre inconnu")}
+                  </div>
+                  <button className="danger" onClick={() => hideNoShow(it)}>No-show</button>
+                </div>
+              );
+            })}
+          </div>
         )}
 
         {sheetItems.length > 0 && (

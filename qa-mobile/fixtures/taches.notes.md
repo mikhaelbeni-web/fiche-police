@@ -1,0 +1,11 @@
+# taches (/taches)
+Renders: toolbar with 2 selects (résidence, appartement), checkbox "Masquer les tâches faites" (checked by default -> statut completed/done/closed hidden), ↻ and Imprimer; then a 5-column table (Appartement / Tâche + description / Assignée à / Échéance / Statut) and a note for `unresolved`.
+No Firestore. Calls GET /api/tasks with headers x-hostaway-account / x-hostaway-key read from localStorage `hostaway_account` and `hostaway_api_key` (taches.js:9-10, 38-41); if either is missing the page shows "Identifiants Hostaway non configurés" and never fetches -> set taches.localstorage.json before load. The real route also checks the session cookie (verifySession) — irrelevant once /api/tasks is mocked.
+Mock shape = pages/api/tasks.js:204 `{total, items:[{id,residence,appartement,unitNumber,titre,description,assigne,echeance:"YYYY-MM-DD",statut,priorite}], unresolved:[{listingId,listingName}]}`, pre-sorted by residence+appartement. Fixture covers: statut pending/notStarted/open (À faire), inProgress/started (En cours), completed/done/closed (hidden by default), unknown raw "waitingParts" and empty "" (—), residence "?" with a very long listing name, long titles/descriptions/assignee, empty assignee/date/unitNumber.
+State: click the checkbox label to show done tasks (pure UI filter). Changing selects needs selectOption (not in the click-only format). Never needed: ↻ just refetches; Imprimer opens print dialog — avoid.
+Mobile risks:
+- globals.css:424 nowrap on all `.tbl td` -> the description `<div class="card-meta">` (taches.js:118) stays on ONE line: a 250-char description makes the table thousands of px wide; Statut/Échéance only reachable by long horizontal scroll. Cards/stacked rows needed.
+- taches.js:115 Appartement cell concatenates residence + long apt name + (unit) — also nowrap.
+- taches.js:79-82 checkbox label inline fontSize 12, gap 4, default 13px checkbox — tiny touch target in the toolbar.
+- taches.js:83 "↻" button: single glyph, `.toolbar button` padding 7px 10px (globals.css:370-372), ~30px wide, no aria-label.
+- taches.js:66-85 `.quick` holds 2 selects + label + 2 buttons; selects have `.field {flex:1 1 100px}` but are wrapped in `label.field` inside `.quick` (wraps at <=768, globals.css:378) -> row of uneven widths; selects get width:100% (373).

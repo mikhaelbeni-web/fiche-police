@@ -1,0 +1,13 @@
+{
+  "/api/reservation-search": {
+    "query": "ma",
+    "scanned": 412,
+    "items": [
+      { "client": "Marie-Christine Delacroix-Vandenberghe de la Rochefoucauld", "residence": "Lantiez", "appartement": "Duplex 4B – terrasse panoramique", "unitNumber": "L4B", "arrivee": "2026-11-02", "depart": "2026-11-06", "reservation": "90000001", "channel": "Booking.com" },
+      { "client": "Martin Sophie", "residence": "Villiers", "appartement": "Studio 12", "unitNumber": "V12", "arrivee": "2026-11-01", "depart": "2026-11-04", "reservation": "90000002", "channel": "Airbnb" },
+      { "client": "Marc Aubert", "residence": "Belleville", "appartement": "T3 – 2e étage cour + Studio 1", "unitNumber": "B23+B1", "arrivee": "2026-10-28", "depart": "2026-11-03", "reservation": "90000003", "channel": "Direct" },
+      { "client": "Mathilde Rousseau", "residence": "Lantiez", "appartement": "Studio 2", "unitNumber": "L2", "arrivee": "2026-10-15", "depart": "2026-10-19", "reservation": "90000004", "channel": "Expedia" },
+      { "client": "Maxime Chevalier", "residence": "?", "appartement": "—", "unitNumber": "", "arrivee": "2026-09-30", "depart": "2026-10-02", "reservation": "90000005", "channel": "" }
+    ]
+  }
+}

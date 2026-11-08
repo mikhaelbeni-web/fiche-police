@@ -61,9 +61,9 @@ function Taches() {
   return (
     <>
       <Head><title>Tâches</title></Head>
-      <div className="toolbar">
+      <div className="toolbar taches-toolbar">
         <h1>Tâches</h1>
-        <div className="quick">
+        <div className="quick taches-filters">
           <label className="field">
             <select value={residence} onChange={e => { setResidence(e.target.value); setAppartement("__all__"); }}>
               <option value="__all__">Toutes résidences</option>
@@ -76,17 +76,17 @@ function Taches() {
               {appartements.map(a => <option key={a} value={a}>{a}</option>)}
             </select>
           </label>
-          <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#fff" }}>
+          <label className="taches-hide-done" style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#fff" }}>
             <input type="checkbox" checked={cacherFaites} onChange={e => setCacherFaites(e.target.checked)} />
             Masquer les tâches faites
           </label>
-          <button onClick={load}>↻</button>
-          <button onClick={() => window.print()} className="primary" disabled={!visibles.length}>Imprimer</button>
+          <button onClick={load} className="taches-refresh" title="Actualiser" aria-label="Actualiser">↻</button>
+          <button onClick={() => window.print()} className="primary taches-print" disabled={!visibles.length}>Imprimer</button>
         </div>
         <span className="status">{status}</span>
       </div>
 
-      <div className="menage-page">
+      <div className="menage-page taches-page">
         <div className="recap">
           <div className="recap-head">
             <div>
@@ -99,7 +99,7 @@ function Taches() {
           {ready && visibles.length === 0 && !status && <div className="empty-state">Aucune tâche sur ce filtre.</div>}
 
           {visibles.length > 0 && (
-            <div className="tbl-wrap"><table className="tbl taches-tbl">
+            <div className="tbl-wrap"><table className="tbl tbl-cards taches-tbl">
               <thead>
                 <tr>
                   <th>Appartement</th>
@@ -112,14 +112,14 @@ function Taches() {
               <tbody>
                 {visibles.map(t => (
                   <tr key={t.id}>
-                    <td className="apt">{t.residence} {t.appartement}{t.unitNumber ? ` (${t.unitNumber})` : ""}</td>
-                    <td>
+                    <td className="apt card-title">{t.residence} {t.appartement}{t.unitNumber ? ` (${t.unitNumber})` : ""}</td>
+                    <td data-label="Tâche" className="card-full taches-task">
                       {t.titre}
                       {t.description && <div className="card-meta">{t.description}</div>}
                     </td>
-                    <td>{t.assigne || "—"}</td>
-                    <td>{fmtFr(t.echeance) || "—"}</td>
-                    <td>{STATUT_LABEL[t.statut] || t.statut || "—"}</td>
+                    <td data-label="Assignée à">{t.assigne || "—"}</td>
+                    <td data-label="Échéance">{fmtFr(t.echeance) || "—"}</td>
+                    <td data-label="Statut">{STATUT_LABEL[t.statut] || t.statut || "—"}</td>
                   </tr>
                 ))}
               </tbody>

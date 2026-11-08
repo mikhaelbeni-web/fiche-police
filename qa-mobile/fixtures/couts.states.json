@@ -1,0 +1,19 @@
+[
+  {
+    "name": "couts-mois",
+    "steps": [
+      {
+        "click": "text=Ce mois-ci"
+      }
+    ]
+  },
+  {
+    "name": "couts-filtre-belleville",
+    "steps": [
+      {
+        "select": ".toolbar select",
+        "value": "Belleville"
+      }
+    ]
+  }
+]
