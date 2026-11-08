@@ -235,6 +235,12 @@ async function main() {
           await withTimeout((async () => {
             await page.goto(BASE + "/" + p, { waitUntil: "domcontentloaded", timeout: 30000 });
             await settle(page);
+            // WebKit n'envoie pas le cookie « Secure » en http : connexion par l'écran de code.
+            if (await page.locator(".gate input").count()) {
+              await page.locator(".gate input").fill(process.env.ACCESS_CODE || "188");
+              await page.locator(".gate button").click();
+              await settle(page);
+            }
             for (const s of st.steps || []) await runStep(page, s);
             if ((st.steps || []).length) await page.waitForTimeout(800);
           })(), 60000);
