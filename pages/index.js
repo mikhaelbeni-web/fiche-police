@@ -217,7 +217,7 @@ function Home() {
       <Head><title>Fiches de Police du jour — Le Belleville</title></Head>
       <style>{"@page { size: A4 portrait; margin: 8mm; }"}</style>
 
-      <div className="toolbar">
+      <div className="toolbar fiche-toolbar">
         <h1>Fiches de Police</h1>
 
         {!saved || showSetup ? (
@@ -247,10 +247,10 @@ function Home() {
               <div className="daylabel">{dayLabel}</div>
               <button className="arrow" onClick={() => shiftDay(1)} title="Jour suivant">›</button>
             </div>
-            <button onClick={() => setDay(isoDay(new Date()))}>Aujourd'hui</button>
-            <button onClick={() => load(day, account, apiKey)} disabled={loading} title="Actualiser">↻</button>
+            <button className="fiche-today" onClick={() => setDay(isoDay(new Date()))}>Aujourd'hui</button>
+            <button className="fiche-icon" onClick={() => load(day, account, apiKey)} disabled={loading} title="Actualiser" aria-label="Actualiser">↻</button>
             <button className="primary" onClick={() => window.print()} disabled={!list || !list.length}>Imprimer</button>
-            <button className="ghost" onClick={() => setShowSetup(true)} title="Changer les identifiants">⚙</button>
+            <button className="ghost fiche-icon" onClick={() => setShowSetup(true)} title="Changer les identifiants" aria-label="Changer les identifiants">⚙</button>
           </>
         )}
 
