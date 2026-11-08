@@ -10,7 +10,9 @@ import FactureMenage from "../components/FactureMenage";
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
 
-function isoDay(d) { return d.toISOString().slice(0, 10); }
+// Date du jour en heure locale (Paris) : toISOString() donnait la date UTC,
+// donc la veille entre minuit et 1 h / 2 h, et « Ce mois-ci » commençait le 31 du mois précédent.
+function isoDay(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; }
 function fmtFr(d) {
   const x = new Date(d + "T12:00:00");
   return isNaN(x) ? d : x.toLocaleDateString("fr-FR");
@@ -199,7 +201,7 @@ function Couts() {
         <span className="status">{status}</span>
       </div>
 
-      <div className="menage-page">
+      <div className="menage-page couts-page">
         <FactureMenage />
         <div className="recap">
           <div className="recap-head">
@@ -223,7 +225,7 @@ function Couts() {
                   {g.items.length} ménage(s) · {euros(g.menage + g.amenities)}
                 </span>
               </div>
-              <div className="tbl-wrap"><table className="tbl">
+              <div className="tbl-wrap"><table className={`tbl${from === to ? " un-jour" : ""}`}>
                 <thead>
                   <tr>
                     <th>N°</th><th>Appartement</th><th>Départ</th>
@@ -234,11 +236,11 @@ function Couts() {
                   {g.items.map((it, i) => (
                     <tr key={i}>
                       <td className="apt">{it.unitNumber}</td>
-                      <td>{it.appartement}</td>
-                      <td>{fmtFr(it.depart)}</td>
-                      <td className="c">{it.menageHT != null ? euros(it.menageHT) : "?"}</td>
-                      <td className="c">{it.amenitiesHT != null ? euros(it.amenitiesHT) : "—"}</td>
-                      <td className="c">{euros((it.menageHT ?? 0) + (it.amenitiesHT ?? 0))}</td>
+                      <td className="m-appart">{it.appartement}</td>
+                      <td className="m-depart">{fmtFr(it.depart)}</td>
+                      <td className="c m-menage">{it.menageHT != null ? euros(it.menageHT) : "?"}</td>
+                      <td className={`c m-amen${it.amenitiesHT == null ? " m-vide" : ""}`}>{it.amenitiesHT != null ? euros(it.amenitiesHT) : "—"}</td>
+                      <td className="c m-total">{euros((it.menageHT ?? 0) + (it.amenitiesHT ?? 0))}</td>
                     </tr>
                   ))}
                 </tbody>

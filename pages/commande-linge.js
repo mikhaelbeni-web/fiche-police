@@ -8,6 +8,8 @@ import { LINEN_ARTICLES, emptyQuantities, expectedReception, orderWindow, sumUsa
 import FactureLinge from "../components/FactureLinge";
 import { isFirebaseConfigured } from "../lib/firebase";
 
+// « Grande serviette (Drap bain) » -> « Grande serviette » (fiches sur téléphone).
+const court = label => label.split(" (")[0];
 function isoDay(d) { return d.toISOString().slice(0, 10); }
 function fmtFr(d) {
   if (!d) return "";
@@ -18,6 +20,20 @@ const HOTEL_GMAIL = "residencelebelleville@gmail.com";
 function euros(n) {
   if (n == null || isNaN(n)) return "—";
   return Number(n).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+}
+
+// Saisie d'une quantité au pouce : − et + de 44 px autour du champ (visibles
+// sur téléphone seulement, voir .qty-step dans globals.css).
+function QtyInput({ value, onChange, label, className = "", style }) {
+  const n = Number(value) || 0;
+  return (
+    <div className={"qty-step " + className} style={style}>
+      <button type="button" className="qty-btn" tabIndex={-1} aria-label={`Moins ${label}`} onClick={() => onChange(String(Math.max(0, n - 1)))}>−</button>
+      <input type="number" min="0" inputMode="numeric" value={value} aria-label={label}
+        onFocus={e => e.target.select()} onChange={e => onChange(e.target.value)} />
+      <button type="button" className="qty-btn" tabIndex={-1} aria-label={`Plus ${label}`} onClick={() => onChange(String(n + 1))}>+</button>
+    </div>
+  );
 }
 
 function CommandeLinge() {
@@ -137,7 +153,7 @@ function CommandeLinge() {
         <span className="status">{status}</span>
       </div>
 
-      <div className="menage-page">
+      <div className="menage-page cl-page">
         <div className="recap">
           {tab === "position" && <PositionTab fs={fs} stock={stock} orders={orders} receptions={receptions} usage={usage} defects={defects} thresholds={thresholds} setThresholds={setThresholds} setStatus={setStatus} />}
           {tab === "stock" && <StockTab fs={fs} stock={stock} setStock={setStock} orders={orders} receptions={receptions} usage={usage} defects={defects} setStatus={setStatus} />}
@@ -198,7 +214,7 @@ function StockTab({ fs, stock, setStock, orders, receptions, usage, defects, set
           : <button className="primary" onClick={save}>Enregistrer</button>}
       </div>
 
-      <div className="tbl-wrap"><table className="tbl">
+      <div className="tbl-wrap"><table className="tbl cl-cards">
         <thead>
           <tr>
             <th>Article</th>
@@ -216,16 +232,16 @@ function StockTab({ fs, stock, setStock, orders, receptions, usage, defects, set
             const low = est <= 10;
             return (
               <tr key={a.key}>
-                <td className="apt">{a.label}</td>
-                <td className="c">
+                <td className="apt cl-head">{a.label}</td>
+                <td className={"c" + (edit ? " cl-full" : "")} data-label="Stock de base">
                   {edit
-                    ? <input type="number" value={draft[a.key] ?? 0} onChange={e => setDraft({ ...draft, [a.key]: e.target.value })} style={{ width: 70, textAlign: "center" }} />
+                    ? <QtyInput value={draft[a.key] ?? 0} label={`Stock de base ${a.label}`} className="qty-tbl" onChange={v => setDraft({ ...draft, [a.key]: v })} />
                     : base}
                 </td>
-                <td className="c">{totalReceived[a.key]}</td>
-                <td className="c">{totalUsed[a.key]}</td>
-                <td className="c" style={{ color: totalDefectOut[a.key] > 0 ? "var(--warn)" : "inherit" }}>{totalDefectOut[a.key] || "—"}</td>
-                <td className="c" style={{ fontWeight: 700, color: low ? "var(--bad)" : "inherit" }}>
+                <td className="c" data-label="Reçu (total)">{totalReceived[a.key]}</td>
+                <td className="c" data-label="Utilisé (total)">{totalUsed[a.key]}</td>
+                <td className="c" data-label="Défectueux" style={{ color: totalDefectOut[a.key] > 0 ? "var(--warn)" : "inherit" }}>{totalDefectOut[a.key] || "—"}</td>
+                <td className="c cl-key" data-label="Stock estimé" style={{ fontWeight: 700, color: low ? "var(--bad)" : "inherit" }}>
                   {est}{low ? " ⚠" : ""}
                 </td>
               </tr>
@@ -409,16 +425,16 @@ function OrdersTab({ fs, orders, usage, receptions, reload, setStatus }) {
         )}
         <div className="linen-qty-grid">
           {LINEN_ARTICLES.map(a => (
-            <label key={a.key} className="qty-cell">
+            <div key={a.key} className="qty-cell">
               <span>{a.label}</span>
-              <input type="number" min="0" value={q[a.key]} onChange={e => setQ({ ...q, [a.key]: e.target.value })} />
-            </label>
+              <QtyInput value={q[a.key]} label={a.label} onChange={v => setQ({ ...q, [a.key]: v })} />
+            </div>
           ))}
         </div>
         <button className="primary" onClick={addOrder} disabled={!dateValide}>Ajouter la commande</button>
       </div>
 
-      <div className="tbl-wrap"><table className="tbl" style={{ marginTop: 18 }}>
+      <div className="tbl-wrap"><table className="tbl cl-cards cl-hist" style={{ marginTop: 18 }}>
         <thead>
           <tr>
             <th>Date</th><th>Type</th>
@@ -429,17 +445,17 @@ function OrdersTab({ fs, orders, usage, receptions, reload, setStatus }) {
         <tbody>
           {orders.map(o => (
             <tr key={o.id}>
-              <td>{fmtFr(o.date)}</td>
-              <td style={{ textTransform: "capitalize" }}>{o.type}</td>
-              {LINEN_ARTICLES.map(a => <td key={a.key} className="c">{o.quantities?.[a.key] || 0}</td>)}
-              <td>{fmtFr(o.expectedReception)}</td>
-              <td>{(() => {
+              <td className="cl-head cl-date">{fmtFr(o.date)}</td>
+              <td className="cl-head cl-type" style={{ textTransform: "capitalize" }}>{o.type}</td>
+              {LINEN_ARTICLES.map(a => <td key={a.key} className="c cl-art" data-label={court(a.label)}>{o.quantities?.[a.key] || 0}</td>)}
+              <td className="cl-full" data-label="Réception prévue">{fmtFr(o.expectedReception)}</td>
+              <td className="cl-status">{(() => {
                 const s = o.status;
                 if (s === "recue") return <span className="pill ok">✓ Reçue</span>;
                 if (s === "commandee" || !s) return <span className="pill warn">En attente</span>;
                 return <span className="pill">{s}</span>;
               })()}</td>
-              <td>
+              <td className="cl-actions">
                 <div className="row-actions">
                   <button onClick={() => exportExcel(o)} className="ghost icon-btn" title="Télécharger l'Excel" aria-label="Télécharger l'Excel">📥</button>
                   <button onClick={() => preparerMail(o)} className="ghost icon-btn" title="Préparer le mail du bon de ramassage à Elis (Gmail) et télécharger l'Excel à joindre" aria-label="Préparer le mail du bon de ramassage">✉️</button>
@@ -570,7 +586,7 @@ function ReceptionsTab({ fs, orders, receptions, defects, reload, setStatus }) {
           )}
         </div>
 
-        <div className="tbl-wrap"><table className="tbl" style={{ marginBottom: 12 }}>
+        <div className="tbl-wrap"><table className="tbl cl-cards cl-saisie" style={{ marginBottom: 12 }}>
           <thead>
             <tr>
               <th>Article</th>
@@ -588,14 +604,14 @@ function ReceptionsTab({ fs, orders, receptions, defects, reload, setStatus }) {
               const ecart = recu - attendu;
               return (
                 <tr key={a.key}>
-                  <td className="apt">{a.label}</td>
-                  <td className="c">{commande[a.key]}</td>
-                  <td className="c" style={{ color: defectEnAttente[a.key] > 0 ? "var(--warn)" : "inherit" }}>{defectEnAttente[a.key] || "—"}</td>
-                  <td className="c" style={{ fontWeight: 600 }}>{attendu}</td>
-                  <td className="c">
-                    <input type="number" min="0" value={q[a.key]} onChange={e => setQ({ ...q, [a.key]: e.target.value })} style={{ width: 64, textAlign: "center" }} />
+                  <td className="apt cl-head">{a.label}</td>
+                  <td className="c" data-label="Commandé">{commande[a.key]}</td>
+                  <td className="c" data-label="Défect. attendu" style={{ color: defectEnAttente[a.key] > 0 ? "var(--warn)" : "inherit" }}>{defectEnAttente[a.key] || "—"}</td>
+                  <td className="c" data-label="Total attendu" style={{ fontWeight: 600 }}>{attendu}</td>
+                  <td className="c cl-recu" data-label="Reçu">
+                    <QtyInput value={q[a.key]} label={`Reçu ${a.label}`} className="qty-tbl" onChange={v => setQ({ ...q, [a.key]: v })} />
                   </td>
-                  <td className="c" style={{ fontWeight: 700, color: ecart < 0 ? "var(--bad)" : (ecart > 0 ? "var(--warn)" : "var(--ok)") }}>
+                  <td className="c cl-ecart" data-label="Écart" style={{ fontWeight: 700, color: ecart < 0 ? "var(--bad)" : (ecart > 0 ? "var(--warn)" : "var(--ok)") }}>
                     {ecart === 0 ? "✓" : (ecart > 0 ? `+${ecart}` : ecart)}
                   </td>
                 </tr>
@@ -610,7 +626,7 @@ function ReceptionsTab({ fs, orders, receptions, defects, reload, setStatus }) {
         </p>
       </div>
 
-      <div className="tbl-wrap"><table className="tbl" style={{ marginTop: 18 }}>
+      <div className="tbl-wrap"><table className="tbl cl-cards cl-hist" style={{ marginTop: 18 }}>
         <thead>
           <tr>
             <th>Reçu le</th><th>Commande</th>
@@ -621,19 +637,19 @@ function ReceptionsTab({ fs, orders, receptions, defects, reload, setStatus }) {
         <tbody>
           {receptions.map(r => (
             <tr key={r.id}>
-              <td>{fmtFr(r.date)}</td>
-              <td>{r.orderDate ? `${fmtFr(r.orderDate)} ${r.orderType || ""}` : "libre"}</td>
+              <td className="cl-head cl-date">{fmtFr(r.date)}</td>
+              <td className="cl-head cl-type" title="Commande">{r.orderDate ? `${fmtFr(r.orderDate)} ${r.orderType || ""}` : "libre"}</td>
               {LINEN_ARTICLES.map(a => {
                 const val = r.quantities?.[a.key] || 0;
                 const ec = r.ecart?.[a.key];
                 const manque = ec != null && ec < 0;
                 return (
-                  <td key={a.key} className="c" style={{ color: manque ? "var(--bad)" : "inherit", fontWeight: manque ? 700 : 400 }}>
+                  <td key={a.key} className="c cl-art" data-label={court(a.label)} style={{ color: manque ? "var(--bad)" : "inherit", fontWeight: manque ? 700 : 400 }}>
                     {val}{manque ? ` (${ec})` : ""}
                   </td>
                 );
               })}
-              <td><button onClick={() => del(r.id)} className="ghost danger" title="Supprimer" aria-label="Supprimer">✕</button></td>
+              <td className="cl-actions"><button onClick={() => del(r.id)} className="ghost icon-btn danger" title="Supprimer" aria-label="Supprimer">✕</button></td>
             </tr>
           ))}
           {receptions.length === 0 && <tr><td colSpan={LINEN_ARTICLES.length + 3} className="empty-state">Aucune réception.</td></tr>}
@@ -686,16 +702,16 @@ function UsageTab({ fs, usage, reload, setStatus }) {
         </div>
         <div className="linen-qty-grid">
           {LINEN_ARTICLES.map(a => (
-            <label key={a.key} className="qty-cell">
+            <div key={a.key} className="qty-cell">
               <span>{a.label}</span>
-              <input type="number" min="0" value={q[a.key]} onChange={e => setQ({ ...q, [a.key]: e.target.value })} />
-            </label>
+              <QtyInput value={q[a.key]} label={a.label} onChange={v => setQ({ ...q, [a.key]: v })} />
+            </div>
           ))}
         </div>
         <button className="primary" onClick={addUsage}>Enregistrer</button>
       </div>
 
-      <div className="tbl-wrap"><table className="tbl" style={{ marginTop: 18 }}>
+      <div className="tbl-wrap"><table className="tbl cl-cards cl-hist" style={{ marginTop: 18 }}>
         <thead>
           <tr>
             <th>Date</th>
@@ -706,9 +722,9 @@ function UsageTab({ fs, usage, reload, setStatus }) {
         <tbody>
           {usage.map(u => (
             <tr key={u.id}>
-              <td>{fmtFr(u.date)}</td>
-              {LINEN_ARTICLES.map(a => <td key={a.key} className="c">{u.quantities?.[a.key] || 0}</td>)}
-              <td><button onClick={() => del(u.id)} className="ghost danger" title="Supprimer" aria-label="Supprimer">✕</button></td>
+              <td className="cl-head cl-date">{fmtFr(u.date)}</td>
+              {LINEN_ARTICLES.map(a => <td key={a.key} className="c cl-art" data-label={court(a.label)}>{u.quantities?.[a.key] || 0}</td>)}
+              <td className="cl-actions"><button onClick={() => del(u.id)} className="ghost icon-btn danger" title="Supprimer" aria-label="Supprimer">✕</button></td>
             </tr>
           ))}
           {usage.length === 0 && <tr><td colSpan={LINEN_ARTICLES.length + 2} className="empty-state">Aucune saisie.</td></tr>}
@@ -823,16 +839,16 @@ function DefectsTab({ fs, defects, reload, setStatus }) {
         </div>
         <div className="linen-qty-grid">
           {LINEN_ARTICLES.map(a => (
-            <label key={a.key} className="qty-cell">
+            <div key={a.key} className="qty-cell">
               <span>{a.label}</span>
-              <input type="number" min="0" value={q[a.key]} onChange={e => setQ({ ...q, [a.key]: e.target.value })} />
-            </label>
+              <QtyInput value={q[a.key]} label={a.label} onChange={v => setQ({ ...q, [a.key]: v })} />
+            </div>
           ))}
         </div>
         <button className="primary" onClick={addDefect}>Mettre de côté (accumuler)</button>
       </div>
 
-      <div className="tbl-wrap"><table className="tbl" style={{ marginTop: 18 }}>
+      <div className="tbl-wrap"><table className="tbl cl-cards cl-hist" style={{ marginTop: 18 }}>
         <thead>
           <tr>
             <th>Date</th>
@@ -843,11 +859,11 @@ function DefectsTab({ fs, defects, reload, setStatus }) {
         <tbody>
           {defects.map(d => (
             <tr key={d.id} style={{ background: rowBg(d) }}>
-              <td>{fmtFr(d.date)}</td>
-              {LINEN_ARTICLES.map(a => <td key={a.key} className="c">{d.quantities?.[a.key] || 0}</td>)}
-              <td>{d.note || "—"}</td>
-              <td>{statutLabel(d)}</td>
-              <td><div className="row-actions">
+              <td className="cl-head cl-date">{fmtFr(d.date)}</td>
+              {LINEN_ARTICLES.map(a => <td key={a.key} className="c cl-art" data-label={court(a.label)}>{d.quantities?.[a.key] || 0}</td>)}
+              <td className="cl-full cl-note" data-label="Note">{d.note || "—"}</td>
+              <td className="cl-status">{statutLabel(d)}</td>
+              <td className="cl-actions"><div className="row-actions">
                 {d.status === "accumule" &&
                   <button onClick={() => marquerRenvoye(d.id)}>Renvoyer</button>}
                 {d.status === "renvoye" && (() => {
@@ -858,7 +874,7 @@ function DefectsTab({ fs, defects, reload, setStatus }) {
                     {partiel ? `reste ${rest} à récupérer` : "soldé auto par réception"}
                   </span>;
                 })()}
-                <button onClick={() => del(d.id)} className="ghost danger" title="Supprimer" aria-label="Supprimer">✕</button>
+                <button onClick={() => del(d.id)} className="ghost icon-btn danger" title="Supprimer" aria-label="Supprimer">✕</button>
               </div></td>
             </tr>
           ))}
@@ -982,7 +998,7 @@ function PositionTab({ fs, stock, orders, receptions, usage, defects, thresholds
         </div>
       )}
 
-      <div className="tbl-wrap"><table className="tbl">
+      <div className="tbl-wrap"><table className="tbl cl-cards cl-pos">
         <thead>
           <tr>
             <th>Article</th>
@@ -1006,17 +1022,17 @@ function PositionTab({ fs, stock, orders, receptions, usage, defects, thresholds
             const probleme = mc > 0 || df > 0 || bas;
             return (
               <tr key={a.key} style={{ background: probleme ? "#fdf0ef" : "transparent" }}>
-                <td className="apt">{a.label}</td>
-                <td className="c">{totOrdered[a.key]}</td>
-                <td className="c">{totReceived[a.key]}</td>
-                <td className="c">{totUsed[a.key]}</td>
-                <td className="c" style={{ fontWeight: enAttente[a.key] > 0 ? 600 : 400, color: enAttente[a.key] > 0 ? "var(--info)" : "var(--muted)", background: "#f5f9fd" }}>{enAttente[a.key] || "—"}</td>
-                <td className="c" style={{ fontWeight: mc > 0 ? 700 : 400, color: mc > 0 ? "var(--bad)" : "var(--muted)", background: "#fdf9f3" }}>{mc || "—"}</td>
-                <td className="c" style={{ fontWeight: df > 0 ? 700 : 400, color: df > 0 ? "var(--warn)" : "var(--muted)", background: "#fdf9f3" }}>{df || "—"}</td>
-                <td className="c" style={{ fontWeight: 700, color: bas ? "var(--bad)" : "inherit" }}>{estime}{bas ? " ⚠" : ""}</td>
-                <td className="c">
+                <td className="apt cl-head">{a.label}</td>
+                <td className="c" data-label="Commandé">{totOrdered[a.key]}</td>
+                <td className="c" data-label="Reçu">{totReceived[a.key]}</td>
+                <td className="c" data-label="Utilisé">{totUsed[a.key]}</td>
+                <td className="c" data-label="En attente livraison" style={{ fontWeight: enAttente[a.key] > 0 ? 600 : 400, color: enAttente[a.key] > 0 ? "var(--info)" : "var(--muted)", background: "#f5f9fd" }}>{enAttente[a.key] || "—"}</td>
+                <td className="c" data-label="Manquant commande" style={{ fontWeight: mc > 0 ? 700 : 400, color: mc > 0 ? "var(--bad)" : "var(--muted)", background: "#fdf9f3" }}>{mc || "—"}</td>
+                <td className="c" data-label="Défectueux non rendu" style={{ fontWeight: df > 0 ? 700 : 400, color: df > 0 ? "var(--warn)" : "var(--muted)", background: "#fdf9f3" }}>{df || "—"}</td>
+                <td className="c cl-key" data-label="Stock réel" style={{ fontWeight: 700, color: bas ? "var(--bad)" : "inherit" }}>{estime}{bas ? " ⚠" : ""}</td>
+                <td className={"c" + (editThr ? " cl-full" : "")} data-label="Seuil">
                   {editThr
-                    ? <input type="number" min="0" value={draftThr[a.key] ?? 0} onChange={e => setDraftThr({ ...draftThr, [a.key]: e.target.value })} style={{ width: 60, textAlign: "center" }} />
+                    ? <QtyInput value={draftThr[a.key] ?? 0} label={`Seuil ${a.label}`} className="qty-tbl" onChange={v => setDraftThr({ ...draftThr, [a.key]: v })} />
                     : (seuil || "—")}
                 </td>
               </tr>
@@ -1118,7 +1134,7 @@ function CostTab({ fs, invoices, receptions, prices, setPrices, reload, setStatu
             <span className="fm-net-sub">{nbPieces} pièce{nbPieces > 1 ? "s" : ""} reçue{nbPieces > 1 ? "s" : ""} en {nbRecep} réception{nbRecep > 1 ? "s" : ""}</span>
           </div>
           <div>
-            <div className="tbl-wrap"><table className="tbl">
+            <div className="tbl-wrap"><table className="tbl cl-cards cl-cout">
               <thead>
                 <tr><th>Article</th><th className="c">Reçu</th><th className="c">Prix unitaire HT</th><th className="r">Montant HT</th></tr>
               </thead>
@@ -1129,16 +1145,16 @@ function CostTab({ fs, invoices, receptions, prices, setPrices, reload, setStatu
                   const montant = qte * (Number(prix) || 0);
                   return (
                     <tr key={a.key}>
-                      <td>{a.label}</td>
-                      <td className="c">{qte}</td>
-                      <td className="c">
+                      <td className="cl-head">{a.label}</td>
+                      <td className="c" data-label="Reçu">{qte}</td>
+                      <td className={"c" + (editPrices ? " cl-full" : "")} data-label="Prix unitaire HT">
                         {editPrices
                           ? <input type="number" min="0" step="0.001" inputMode="decimal" className="fl-input fl-input-prix"
                               value={draftPrices[a.key] ?? 0} aria-label={`Prix unitaire ${a.label}`}
                               onChange={e => setDraftPrices({ ...draftPrices, [a.key]: e.target.value })} />
                           : prixUnit(prix)}
                       </td>
-                      <td className="r fl-gras">{euros(montant)}</td>
+                      <td className="r fl-gras" data-label="Montant HT">{euros(montant)}</td>
                     </tr>
                   );
                 })}
