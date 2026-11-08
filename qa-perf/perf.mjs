@@ -37,7 +37,7 @@ async function measure(browserType, base, path, mode) {
     // Navigation par le menu depuis la fiche police (page déjà ouverte).
     await page.goto(base + "/");
     await page.waitForFunction(() => window.next && window.next.router && document.querySelector(".toolbar, nav"), null, { timeout: 60000 });
-    await page.waitForTimeout(1500);
+    await page.waitForTimeout(3000); // le temps d'ouvrir le menu
     fsReq = 0; fsBytes = 0; jsBytes = 0;
     const t0 = Date.now();
     await page.evaluate(p => window.next.router.push(p), path);
