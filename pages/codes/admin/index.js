@@ -9,6 +9,9 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import CodesTabs from "../../../components/CodesTabs";
+import Correspondance from "../../../components/admin/Correspondance";
+import Personnel from "../../../components/admin/Personnel";
+import Croisement from "../../../components/admin/Croisement";
 import { adminPageProps } from "../../../lib/adminAuth";
 
 export function getServerSideProps(ctx) {
@@ -80,6 +83,7 @@ export default function EspaceAdmin({ adminExpiresAt }) {
   const [hist, setHist] = useState(null);
   const [histErr, setHistErr] = useState(null);
   const [selected, setSelected] = useState(null);
+  const [tab, setTab] = useState("croisement");
 
   async function logout() {
     setBusy("logout");
@@ -130,10 +134,21 @@ export default function EspaceAdmin({ adminExpiresAt }) {
             </div>
           </div>
           <p className="admin-note">
-            Espace de test. igloohome est interrogé en <b>lecture seule</b> : liste des serrures et historique,
-            rien d&apos;autre (aucune ouverture, aucun PIN).
+            igloohome est interrogé en <b>lecture seule</b> : liste des serrures et historique,
+            rien d&apos;autre (aucune ouverture, aucun PIN). Hostaway aussi.
           </p>
 
+          <div className="admin-subtabs">
+            {[["croisement", "Croisement"], ["correspondance", "Correspondance"], ["personnel", "Codes du personnel"], ["connexion", "Test de connexion"]].map(([k, l]) => (
+              <button key={k} className={tab === k ? "on" : ""} onClick={() => setTab(k)}>{l}</button>
+            ))}
+          </div>
+
+          {tab === "croisement" && <Croisement />}
+          {tab === "correspondance" && <Correspondance />}
+          {tab === "personnel" && <Personnel />}
+
+          {tab === "connexion" && <>
           <div className="admin-block">
             <button className="primary" onClick={testConnexion} disabled={!!busy}>
               {busy === "devices" ? "Connexion…" : "Tester la connexion igloohome"}
@@ -212,6 +227,7 @@ export default function EspaceAdmin({ adminExpiresAt }) {
               )}
             </div>
           )}
+          </>}
         </div>
       </div>
     </>
