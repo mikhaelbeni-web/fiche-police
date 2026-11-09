@@ -2110,3 +2110,42 @@ body {
   .linge-page > * { min-width: 0; max-width: 100%; }
   .taches-toolbar .taches-filters { flex-wrap: wrap; }
 }
+
+/* Sous-onglets de « Codes d'accès » (rendus seulement pour un admin, voir components/CodesTabs.js) */
+.codes-tabs { display: flex; gap: 4px; padding: 8px 16px 0; border-bottom: 1px solid var(--border); }
+.codes-tab { padding: 8px 14px; border-radius: 6px 6px 0 0; font-size: 14px; color: inherit; text-decoration: none; border: 1px solid transparent; border-bottom: none; }
+.codes-tab:hover { background: rgba(0,0,0,.04); }
+.codes-tab.active { font-weight: 600; border-color: var(--border); background: #fff; margin-bottom: -1px; }
+@media (max-width: 640px) { .codes-tab { min-height: 44px; display: inline-flex; align-items: center; } }
+
+/* Espace admin (Codes d'accès > Espace admin) */
+.admin-page .recap { max-width: none; }
+.admin-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.admin-session { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.admin-note { color: var(--muted); font-size: 14px; }
+.admin-block { margin-top: 18px; }
+.admin-ok { margin: 10px 0; font-size: 13px; color: #1d6b3a; }
+.admin-err { margin: 10px 0; padding: 10px; border: 1px solid #e3b4b4; background: #fbebeb; border-radius: 6px; font-size: 13px; }
+.admin-tbl td, .admin-tbl th { font-size: 12px; text-align: left; vertical-align: top; word-break: break-word; }
+.admin-tbl tr.sel td { background: #e7f1fb; }
+.admin-page details { margin-top: 10px; }
+.admin-page pre { max-height: 420px; overflow: auto; background: #f6f8fa; padding: 10px; font-size: 12px; border-radius: 6px; }
+
+/* Espace admin : croisement igloohome (phase 3) */
+.admin-subtabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 4px; border-bottom: 1px solid #e3e7ec; padding-bottom: 8px; }
+.admin-subtabs button { background: #f3f5f8; border: 1px solid #dde2e8; border-radius: 6px; padding: 6px 12px; font-size: 13px; }
+.admin-subtabs button.on { background: #1a4a7a; color: #fff; border-color: #1a4a7a; }
+.admin-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 10px 0; font-size: 13px; }
+.admin-actions input[type="number"] { width: 60px; }
+.admin-warn { margin: 10px 0; padding: 10px; border: 1px solid #ecd9a6; background: #fff8e6; border-radius: 6px; font-size: 13px; }
+.admin-tbl tr.admin-todo td { background: #fffaf0; }
+.admin-tbl tr.admin-alerte td { background: #fdeeee; }
+.admin-conf { font-size: 11px; margin-top: 3px; }
+.admin-conf.sure { color: #1d6b3a; }
+.admin-conf.a-verifier { color: #a86400; font-weight: 600; }
+.admin-conf.aucune { color: #b02a2a; }
+.admin-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.admin-chip { border: 1px solid #dde2e8; background: #fff; border-radius: 14px; padding: 4px 10px; font-size: 12px; }
+.admin-chip.alerte { border-color: #e3b4b4; color: #b02a2a; font-weight: 700; }
+.admin-chip.on { background: #1a4a7a; color: #fff; border-color: #1a4a7a; }
+.admin-url { word-break: break-all; background: #f6f8fa; padding: 6px 8px; border-radius: 4px; font-size: 12px; }

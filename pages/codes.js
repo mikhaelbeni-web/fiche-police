@@ -4,6 +4,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import Head from "next/head";
+import CodesTabs from "../components/CodesTabs";
+import { codesPageProps } from "../lib/adminAuth";
 
 function emptyForm() {
   return { residence: "Lantiez", residenceAutre: "", emplacement: "", code: "" };
@@ -14,7 +16,7 @@ function emptyForm() {
 // des résidences connues (ce qui causait des doublons "Lantiez" / "LANTIEZ").
 const RESIDENCES_FIXED = ["Lantiez", "Villiers", "Belleville"];
 
-function Codes() {
+function Codes({ isAdmin }) {
   const [ready, setReady] = useState(false);
   const [configured, setConfigured] = useState(true);
   const [fs, setFs] = useState(null);
@@ -140,6 +142,7 @@ function Codes() {
         <span className="status">{status}</span>
       </div>
 
+      <CodesTabs isAdmin={isAdmin} current="/codes" />
       <div className="menage-page codes-page">
         <div className="recap">
           {showForm && (
@@ -195,6 +198,12 @@ function Codes() {
   );
 }
 
-export default function CodesPage() {
-  return <Codes />;
+// Rendu serveur : seul le serveur sait si la session est admin. Pour un
+// non-admin, isAdmin = false et le sous-onglet « Espace admin » n'est pas rendu.
+export function getServerSideProps(ctx) {
+  return codesPageProps(ctx);
+}
+
+export default function CodesPage({ isAdmin = false }) {
+  return <Codes isAdmin={isAdmin} />;
 }
