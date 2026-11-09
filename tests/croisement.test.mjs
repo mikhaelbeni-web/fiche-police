@@ -80,8 +80,18 @@ test("journée : séjour + marge = OK, sinon journée sans réservation (pas d'a
   assert.equal(one("IGL_COSY10", ev("2026-11-05T13:30:00Z"), { margeH: 4 }).classe, "ok", "marge réglable");
 });
 
-test("intérieur ignoré, événement qui n'est pas une ouverture mis à part, serrure ignorée absente", () => {
-  assert.equal(one("IGL_COSY10", ev("2026-11-05T20:00:00Z", "UNLOCK", { description: "Unlocked from inside" })).classe, "interieur");
+test("intérieur : ignoré quand un client est là, ALERTE la nuit sans client ; verrouillage auto mis à part", () => {
+  assert.equal(one("IGL_COSY10", ev("2026-11-04T20:00:00Z", "UNLOCK", { description: "Unlocked from inside" })).classe, "interieur", "nuit avec client");
+  assert.equal(one("IGL_COSY10", ev("2026-11-05T10:00:00Z", "", { description: "Déverrouillé manuellement." })).classe, "interieur", "journée");
+  // Textes vus dans l'app igloohome (PMR 01, 07/11/2026) :
+  const manu = one("IGL_COSY10", ev("2026-11-05T18:29:00Z", "", { description: "Déverrouillé manuellement." }));
+  assert.equal(manu.classe, "alerte", "19 h 29, aucun client : quelqu'un est dedans");
+  assert.match(manu.motif, /intérieur/);
+  assert.equal(one("IGL_COSY10", ev("2026-11-05T20:00:00Z", "", { description: "Verrouillage par bouton" })).classe, "alerte");
+  assert.equal(one("IGL_COSY10", ev("2026-11-05T20:00:00Z", "", { description: "Verrouillage automatique après la fermeture." })).classe, "autre");
+  const staff = one("IGL_COSY10", ev("2026-11-06T00:29:00Z", "", { description: "(staff) déverrouillé par le code Code PIN permanent ." }));
+  assert.equal(staff.classe, "alerte", "1 h 29, code permanent du personnel, aucun client");
+  assert.match(staff.motif, /code maître ou permanent/);
   assert.equal(one("IGL_COSY10", ev("2026-11-05T20:00:00Z", "LOCK")).classe, "autre");
   assert.equal(run({ IGL_IGN: [ev("2026-11-05T20:00:00Z")] }).length, 0);
 });
