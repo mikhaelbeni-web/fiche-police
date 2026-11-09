@@ -17,10 +17,11 @@ const igloDevices = (await import("../pages/api/admin/igloohome/devices.js")).de
 const igloActivity = (await import("../pages/api/admin/igloohome/activity.js")).default;
 const igloConfig = (await import("../pages/api/admin/igloohome/config.js")).default;
 const igloDiag = (await import("../pages/api/admin/igloohome/diagnostic.js")).default;
+const igloWebhookAdmin = (await import("../pages/api/admin/igloohome/webhook.js")).default;
 const hostawayResas = (await import("../pages/api/admin/hostaway/reservations.js")).default;
 
 // Toutes les routes /api/admin/* qui exigent l'admin (login/logout exclues : publiques par nature).
-const PROTECTED_ROUTES = { session, igloDevices, igloActivity, igloConfig, igloDiag, hostawayResas };
+const PROTECTED_ROUTES = { session, igloDevices, igloActivity, igloConfig, igloDiag, igloWebhookAdmin, hostawayResas };
 
 async function adminCookie() {
   const r = res();
