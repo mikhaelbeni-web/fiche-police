@@ -14,6 +14,7 @@ const RAW = [
   resaHostaway({ id: 3, guestName: "Demande", listingMapId: 567568, arrivalDate: "2026-11-05", departureDate: "2026-11-07", status: "inquiry" }),
   resaHostaway({ id: 4, guestName: "Deep", listingMapId: 567560, arrivalDate: "2026-11-05", departureDate: "2026-11-07" }),
   resaHostaway({ id: 5, guestName: "Lantiez", listingMapId: 371952, arrivalDate: "2026-11-05", departureDate: "2026-11-07" }),
+  resaHostaway({ id: 7, guestName: "Proprio", listingMapId: 567568, arrivalDate: "2026-11-08", departureDate: "2026-11-10", status: "ownerStay" }),
   resaHostaway({ id: 6, guestName: "Cosy sans unité", listingMapId: 567565, reservationUnit: [], arrivalDate: "2026-11-05", departureDate: "2026-11-06" }),
 ];
 const RESAS = c.bellevilleReservations(RAW);
@@ -70,6 +71,7 @@ test("soir du départ, client parti : ALERTE dès 19 h", () => {
 test("réservation annulée, demande ou d'un autre appartement : ne couvre pas la nuit", () => {
   assert.equal(one("IGL_COSY10", ev("2026-11-06T20:00:00Z")).classe, "alerte", "résa annulée du 5 au 7");
   assert.equal(one("IGL_ZEN", ev("2026-11-05T20:00:00Z")).classe, "alerte", "simple demande sur Zen");
+  assert.equal(one("IGL_ZEN", ev("2026-11-08T21:00:00Z")).classe, "alerte", "séjour propriétaire / appartement verrouillé : vérifié comme vide");
 });
 
 test("journée : séjour + marge = OK, sinon journée sans réservation (pas d'alerte)", () => {
