@@ -46,7 +46,9 @@ export default function Nav() {
   const measureRef = useRef(null);
   const current = router.pathname;
   const [sheet, setSheet] = useState(false);
-  const currentLabel = (ALL_ITEMS.find(m => m.href === current) || {}).label || "Menu";
+  // Une sous-page (ex. /codes/admin) garde son onglet parent actif.
+  const isCurrent = href => current === href || (href !== "/" && current.startsWith(href + "/"));
+  const currentLabel = (ALL_ITEMS.find(m => isCurrent(m.href)) || {}).label || "Menu";
 
   // Fermer menus et panneau à chaque changement de page.
   useEffect(() => {
@@ -123,8 +125,8 @@ export default function Nav() {
           </div>
           {ALL_ITEMS.map(m => (
             <Link key={m.href} href={m.href} onClick={() => setSheet(false)}
-              className={`mobile-nav-link${current === m.href ? " active" : ""}`}
-              aria-current={current === m.href ? "page" : undefined}>
+              className={`mobile-nav-link${isCurrent(m.href) ? " active" : ""}`}
+              aria-current={isCurrent(m.href) ? "page" : undefined}>
               {m.label}
             </Link>
           ))}
@@ -143,7 +145,7 @@ export default function Nav() {
 
       {visible.map(m => (
         <Link key={m.href} href={m.href}
-          className={`main-nav-item${current === m.href ? " active" : ""}`}>
+          className={`main-nav-item${isCurrent(m.href) ? " active" : ""}`}>
           {m.label}
         </Link>
       ))}
