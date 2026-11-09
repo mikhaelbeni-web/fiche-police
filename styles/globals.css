@@ -1302,6 +1302,15 @@ body {
   .facture-linge .fl-autre td { font-size: 13px; }
 }
 
+/* Commande linge sur ordinateur : la carte de 900 px était plus étroite que
+   l'historique des commandes (7 articles + 4 boutons, ~1 010 px) et que celui
+   des défectueux, qui débordaient sur le fond gris. Carte élargie, et si la
+   fenêtre est trop étroite le tableau défile DANS la carte au lieu d'en sortir. */
+@media screen and (min-width: 641px) {
+  .cl-page .recap { max-width: 1180px; }
+  .cl-page .tbl-wrap { overflow-x: auto; }
+}
+
 /* ============================================================
    BASE COMMUNE — écran seulement (@media screen) : l'impression
    (fiches A4, Arrivées et Ménages en paysage) n'est pas touchée.
