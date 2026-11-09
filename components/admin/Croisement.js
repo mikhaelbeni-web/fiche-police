@@ -73,7 +73,8 @@ export default function Croisement() {
           events[l.id] = h.evenements;
           if (h.pageSuivanteRestante) incidents.push(`${l.nom || l.id} : historique incomplet (limite de lecture atteinte)`);
         } catch (e) {
-          incidents.push(`${l.nom || l.id} : ${e.error || "erreur de lecture"}`);
+          const d = e.detail ? ` Réponse : ${typeof e.detail === "string" ? e.detail : JSON.stringify(e.detail)}` : "";
+          incidents.push(`${l.nom || l.id} : ${e.error || "erreur de lecture"}${d}`);
         }
       }
 

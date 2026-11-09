@@ -140,3 +140,13 @@ test("routes : 404 pour un non-admin, secret jamais renvoyé même en cas d'erre
     globalThis.fetch = realFetch;
   }
 });
+
+test("403 : un jeton neuf est redemandé une fois, puis l'erreur cite les droits du jeton", async () => {
+  igloo._resetTokenCacheForTests();
+  let n = 0;
+  const f = fakeFetch({ "/home/devices/IGL1/activity": () => { n++; return { status: 403, body: { message: "Forbidden" } }; } });
+  await assert.rejects(igloo.apiGet("/devices/IGL1/activity", {}, f), /HTTP 403.*Droits du jeton/);
+  assert.equal(n, 2, "deux essais, pas plus");
+  assert.equal(f.calls.filter(c => c.url.includes("/oauth2/token")).length, 2, "jeton redemandé");
+  assert.ok(f.calls.every(c => c.method === "GET" || c.url.includes("/oauth2/token")));
+});
