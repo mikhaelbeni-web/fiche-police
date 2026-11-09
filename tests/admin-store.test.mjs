@@ -100,3 +100,49 @@ test("route de configuration : admin seulement, validation avant écriture", asy
     globalThis.fetch = realFetch;
   }
 });
+
+test("webhook igloohome : jeton secret obligatoire, envoi enregistré chiffré, liste réservée à l'admin", async () => {
+  store._resetStoreForTests();
+  const f = fakeGoogle();
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = f;
+  try {
+    const wh = await import("../lib/igloohomeWebhook.js");
+    const route = (await import("../pages/api/igloohome/webhook/[token].js")).default;
+    const adminRoute = (await import("../pages/api/admin/igloohome/webhook.js")).default;
+    const token = wh.webhookToken();
+    assert.equal(token.length, 40);
+
+    let r = res();
+    await route({ ...req({ method: "POST", body: "{}" }), query: { token: "x".repeat(40) } }, r);
+    assert.equal(r.statusCode, 404, "mauvais jeton");
+    assert.equal(f.calls.length, 0, "rien lu ni écrit");
+
+    r = res();
+    await route({ ...req({ method: "GET" }), query: { token } }, r);
+    assert.equal(r.statusCode, 200, "vérification de l'adresse");
+
+    r = res();
+    const evt = { deviceId: "IGM408b5d5e9", activityType: "UNLOCK", description: "PIN 777777" };
+    await route({ ...req({ method: "POST", body: JSON.stringify(evt) }), headers: { "content-type": "application/json", cookie: "secret=1", authorization: "x" }, query: { token } }, r);
+    assert.equal(r.statusCode, 200);
+    const patch = f.calls.find(c => c.method === "PATCH");
+    assert.match(patch.url, /admin_prive\/igloohome_webhook$/);
+    assert.ok(!patch.body.includes("777777"), "chiffré");
+
+    r = res();
+    await adminRoute(req({ method: "GET", cookies: [accessCookie()] }), r);
+    assert.equal(r.statusCode, 404, "réceptionniste : 404");
+
+    const lr = res();
+    await login(req({ method: "POST", cookies: [accessCookie()], body: { password: ADMIN_PASSWORD } }), lr);
+    r = res();
+    await adminRoute({ ...req({ method: "GET", cookies: [accessCookie(), `fp_admin=${encodeURIComponent(setCookieValue(lr, "fp_admin"))}`] }), headers: { ...req({ cookies: [accessCookie(), `fp_admin=${encodeURIComponent(setCookieValue(lr, "fp_admin"))}`] }).headers, host: "fiche-police.vercel.app" } }, r);
+    assert.equal(r.statusCode, 200);
+    assert.equal(r.body.adresse, `https://fiche-police.vercel.app/api/igloohome/webhook/${token}`);
+    assert.deepEqual(r.body.evenements[0].corps, evt);
+    assert.deepEqual(Object.keys(r.body.evenements[0].entetes), ["content-type"], "ni cookie ni autorisation conservés");
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});

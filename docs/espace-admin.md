@@ -88,3 +88,15 @@ protégées côté serveur.
 - Routes : `/api/admin/igloohome/config` (GET/PUT), `/api/admin/hostaway/reservations`
   (GET, identifiants Hostaway du poste), `/api/admin/igloohome/activity?from=&to=`.
 - Coût igloohome : 2 $ par serrure lue dans le mois (facturé au premier appel du mois).
+
+## Webhook igloohome (test du 2026-11-09)
+
+L'historique (GET /devices/{id}/activity) répond 403 « Forbidden » malgré le droit
+`get-device-activity`. Test parallèle : igloohome peut ENVOYER les événements à une adresse
+(portail igloohome > API Access > Add a new webhook).
+
+- Adresse : `/api/igloohome/webhook/<jeton>`, affichée dans Espace admin > Webhook (test).
+  Le jeton est dérivé de `SESSION_SECRET` ; sans le bon jeton, 404.
+- La route ne fait qu'enregistrer l'envoi (corps + quelques en-têtes, jamais cookies ni
+  autorisation) dans le document chiffré `admin_prive/igloohome_webhook` (300 derniers).
+  Aucun appel vers igloohome.

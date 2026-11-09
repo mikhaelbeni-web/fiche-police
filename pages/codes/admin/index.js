@@ -12,6 +12,7 @@ import CodesTabs from "../../../components/CodesTabs";
 import Correspondance from "../../../components/admin/Correspondance";
 import Personnel from "../../../components/admin/Personnel";
 import Croisement from "../../../components/admin/Croisement";
+import Webhook from "../../../components/admin/Webhook";
 import { adminPageProps } from "../../../lib/adminAuth";
 
 export function getServerSideProps(ctx) {
@@ -148,7 +149,7 @@ export default function EspaceAdmin({ adminExpiresAt }) {
           </p>
 
           <div className="admin-subtabs">
-            {[["croisement", "Croisement"], ["correspondance", "Correspondance"], ["personnel", "Codes du personnel"], ["connexion", "Test de connexion"]].map(([k, l]) => (
+            {[["croisement", "Croisement"], ["correspondance", "Correspondance"], ["personnel", "Codes du personnel"], ["webhook", "Webhook (test)"], ["connexion", "Test de connexion"]].map(([k, l]) => (
               <button key={k} className={tab === k ? "on" : ""} onClick={() => setTab(k)}>{l}</button>
             ))}
           </div>
@@ -156,6 +157,7 @@ export default function EspaceAdmin({ adminExpiresAt }) {
           {tab === "croisement" && <Croisement />}
           {tab === "correspondance" && <Correspondance />}
           {tab === "personnel" && <Personnel />}
+          {tab === "webhook" && <Webhook />}
 
           {tab === "connexion" && <>
           <div className="admin-block">
