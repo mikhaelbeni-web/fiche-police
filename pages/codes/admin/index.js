@@ -106,7 +106,16 @@ export default function EspaceAdmin({ adminExpiresAt }) {
     finally { setBusy(""); }
   }
 
+  const [diag, setDiag] = useState(null);
+  async function diagnostic(s) {
+    setBusy("diag:" + s.id); setSelected(s); setHist(null); setHistErr(null); setDiag(null);
+    try { setDiag(await call(`/api/admin/igloohome/diagnostic?deviceId=${encodeURIComponent(s.id)}&idNumerique=${encodeURIComponent(s.idNumerique || "")}`)); }
+    catch (e) { setHistErr(e); }
+    finally { setBusy(""); }
+  }
+
   async function voirHistorique(s) {
+    setDiag(null);
     setBusy("hist:" + s.id); setSelected(s); setHist(null); setHistErr(null);
     try { setHist(await call(`/api/admin/igloohome/activity?deviceId=${encodeURIComponent(s.id)}&days=7`)); }
     catch (e) { setHistErr(e); }
@@ -177,6 +186,10 @@ export default function EspaceAdmin({ adminExpiresAt }) {
                             <button onClick={() => voirHistorique(s)} disabled={!!busy}>
                               {busy === "hist:" + s.id ? "Lecture…" : "Voir l'historique"}
                             </button>
+                            {" "}
+                            <button className="ghost" onClick={() => diagnostic(s)} disabled={!!busy}>
+                              {busy === "diag:" + s.id ? "Diagnostic…" : "Diagnostic"}
+                            </button>
                           )}
                         </td>
                       </tr>
@@ -192,6 +205,20 @@ export default function EspaceAdmin({ adminExpiresAt }) {
             <div className="admin-block">
               <div className="recap-title">Historique 7 jours : {selected.nom || selected.id}</div>
               <Erreur e={histErr} />
+              {diag && (
+                <div className="tbl-wrap"><table className="tbl admin-tbl">
+                  <thead><tr><th>Variante</th><th>Résultat</th><th>Réponse</th></tr></thead>
+                  <tbody>
+                    {diag.essais.map(t => (
+                      <tr key={t.variante}>
+                        <td>{t.variante}</td>
+                        <td>{t.ok ? <b>OK</b> : t.erreur}</td>
+                        <td><pre>{JSON.stringify(t.extrait, null, 2)?.slice(0, 3000)}</pre></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table></div>
+              )}
               {hist && (
                 <>
                   <div className="admin-ok">
