@@ -13,9 +13,11 @@ process.env.ADMIN_PASSWORD_HASH = auth.hashPassword(ADMIN_PASSWORD, { iterations
 const login = (await import("../pages/api/admin/login.js")).default;
 const logout = (await import("../pages/api/admin/logout.js")).default;
 const session = (await import("../pages/api/admin/session.js")).default;
+const igloDevices = (await import("../pages/api/admin/igloohome/devices.js")).default;
+const igloActivity = (await import("../pages/api/admin/igloohome/activity.js")).default;
 
 // Toutes les routes /api/admin/* qui exigent l'admin (login/logout exclues : publiques par nature).
-const PROTECTED_ROUTES = { session };
+const PROTECTED_ROUTES = { session, igloDevices, igloActivity };
 
 async function adminCookie() {
   const r = res();
