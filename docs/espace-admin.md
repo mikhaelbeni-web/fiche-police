@@ -44,3 +44,17 @@ protégées côté serveur.
   (aucune dépendance pour `admin-auth`, `react` requis pour `codes-tabs`).
 - `.github/workflows/tests-admin.yml` : tests unitaires, `next build`, puis contrôles de
   bout en bout (`tests/e2e-admin.mjs`) contre l'application lancée.
+
+## igloohome (phase 2, lecture seule)
+
+- Variables Vercel : `IGLOOHOME_CLIENT_ID`, `IGLOOHOME_CLIENT_SECRET` (Secret). Facultatives pour
+  ajuster les adresses sans toucher au code : `IGLOOHOME_AUTH_URL`
+  (défaut `https://auth.igloohome.co/oauth2/token`), `IGLOOHOME_API_BASE`
+  (défaut `https://api.igloohome.co/home`).
+- `lib/igloohome.js` : jeton demandé avec les seuls scopes `igloohomeapi/get-devices` et
+  `igloohomeapi/get-device-activity` ; liste blanche `GET /devices` et
+  `GET /devices/{id}/activity` ; aucun autre appel réseau.
+- Routes (admin seulement, 404 sinon) : `/api/admin/igloohome/devices`,
+  `/api/admin/igloohome/activity?deviceId=…&days=7`. Elles renvoient toujours le JSON brut.
+- Historique : lu page par page (`nextCursor`, 10 pages max), filtré sur 7 jours d'après
+  `activityTimeAt` ; aucun paramètre de date n'est envoyé (noms non confirmés par la doc).
