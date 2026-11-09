@@ -78,7 +78,10 @@ await check("aucun secret ni code serveur admin dans les fichiers envoyés au na
   walk(dir);
   for (const f of files) {
     const s = fs.readFileSync(f, "utf8");
-    for (const needle of ["ADMIN_PASSWORD_HASH", "SESSION_SECRET", "pbkdf2Sync", process.env.ADMIN_PASSWORD]) {
+    // « fp_admin:v1: » n'existe que dans lib/adminAuth.js : sa présence prouverait que le module serveur
+    // est parti dans le navigateur. (pbkdf2Sync n'est pas un bon témoin : le polyfill crypto
+    // embarqué par exceljs le contient.)
+    for (const needle of ["ADMIN_PASSWORD_HASH", "SESSION_SECRET", "fp_admin:v1:", process.env.ADMIN_PASSWORD]) {
       assert.ok(!s.includes(needle), `${needle} trouvé dans ${path.relative(process.cwd(), f)}`);
     }
   }
