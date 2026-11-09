@@ -1,0 +1,13 @@
+rules_version = '2';
+// Règles Firestore du projet beylev-linge (à coller dans Firebase Console >
+// Firestore Database > Règles). Seul le poste qui a saisi le code d'accès
+// (connexion Firebase « reception-gate », voir lib/firebaseAuth.js) lit et
+// écrit. Les tâches planifiées passent par un compte de service (IAM), qui
+// n'est pas soumis à ces règles. Voir docs/securite-firestore.md.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == "reception-gate";
+    }
+  }
+}

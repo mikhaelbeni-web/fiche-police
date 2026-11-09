@@ -4,6 +4,9 @@
 // cookie de session signé HMAC. Deux méthodes :
 //   POST { code }  -> vérifie le code, pose le cookie si correct
 //   GET            -> indique si le cookie de session est valide
+//   GET ?firebase=1 -> idem, et si le cookie est valide, ajoute firebaseToken :
+//                      jeton Firebase Auth personnalisé (uid « reception-gate »)
+//                      qui ouvre Firestore et Storage selon firestore.rules.
 
 import crypto from "crypto";
 
@@ -43,13 +46,25 @@ function parseCookies(req) {
   return out;
 }
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
   const expectedCode = process.env.ACCESS_CODE || "188";
 
   if (req.method === "GET") {
     const cookies = parseCookies(req);
     const ok = verifyToken(cookies[COOKIE_NAME]);
-    return res.status(200).json({ authenticated: ok });
+    if (!ok || !req.query || req.query.firebase !== "1") {
+      return res.status(200).json({ authenticated: ok });
+    }
+    // Import à la demande : le SDK admin ne ralentit pas la vérification simple.
+    let firebaseToken = null;
+    try {
+      const { mintAccessToken } = await import("../../lib/firebaseAdmin");
+      firebaseToken = await mintAccessToken();
+    } catch (e) {
+      console.error("mintAccessToken", e && e.message);
+    }
+    res.setHeader("Cache-Control", "no-store");
+    return res.status(200).json({ authenticated: true, firebaseToken });
   }
 
   if (req.method === "POST") {
