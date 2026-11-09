@@ -1,0 +1,25 @@
+rules_version = '2';
+// Règles Firestore du projet beylev-linge (à coller dans Firebase Console >
+// Firestore Database > Règles). Seul le poste qui a saisi le code d'accès
+// (connexion Firebase « reception-gate », voir lib/firebaseAuth.js) lit et
+// écrit. Le serveur et les tâches planifiées passent par un compte de service
+// (IAM), qui n'est pas soumis à ces règles. Voir docs/securite-firestore.md.
+//
+// Collections réservées au serveur : jamais lues ni écrites par le navigateur.
+//   admin_prive (espace admin), cash_audit et cash_audit_meta (journal espèces).
+// Collections en lecture seule pour le navigateur : SERVEUR_ECRIT.
+//   Tant que la PR « espèces » (écritures de cash_entries / cash_recoveries par
+//   le serveur) n'est pas en production, cette liste doit rester vide, sinon
+//   l'onglet Espèces ne peut plus enregistrer. Une fois en production :
+//   ["cash_entries", "cash_recoveries"].
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function poste() { return request.auth != null && request.auth.uid == "reception-gate"; }
+    function serveurSeul(c) { return c in ["admin_prive", "cash_audit", "cash_audit_meta"]; }
+    function serveurEcrit(c) { return c in []; }
+    match /{coll}/{rest=**} {
+      allow read: if poste() && !serveurSeul(coll);
+      allow write: if poste() && !serveurSeul(coll) && !serveurEcrit(coll);
+    }
+  }
+}

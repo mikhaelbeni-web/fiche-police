@@ -2,6 +2,14 @@
 // Verrou d'accès partagé. Vérification du code CÔTÉ SERVEUR (/api/auth).
 // Le code n'est jamais présent dans le bundle navigateur.
 import { useState, useEffect } from "react";
+import { ensureFirebaseAuth } from "../lib/firebaseAuth";
+
+// Connexion Firebase avant d'afficher l'app (les règles Firestore l'exigent).
+// Ne bloque jamais plus de 8 s : en cas d'échec, l'app s'ouvre quand même.
+function connecterFirebase() {
+  const delai = new Promise(res => setTimeout(res, 8000));
+  return Promise.race([ensureFirebaseAuth().catch(e => console.error("Firebase Auth", e)), delai]);
+}
 
 export default function Gate({ children }) {
   const [state, setState] = useState("checking"); // checking | locked | unlocked
@@ -11,9 +19,15 @@ export default function Gate({ children }) {
 
   useEffect(() => {
     let alive = true;
+    // Lancée en parallèle de la vérification du cookie : sur un poste déjà
+    // connecté, la session Firebase est relue localement pendant ce temps.
+    const fb = connecterFirebase();
     fetch("/api/auth", { method: "GET" })
       .then(r => r.json())
-      .then(d => { if (alive) setState(d.authenticated ? "unlocked" : "locked"); })
+      .then(async d => {
+        if (d.authenticated) await fb;
+        if (alive) setState(d.authenticated ? "unlocked" : "locked");
+      })
       .catch(() => { if (alive) setState("locked"); });
     return () => { alive = false; };
   }, []);
@@ -29,7 +43,7 @@ export default function Gate({ children }) {
         body: JSON.stringify({ code }),
       });
       const d = await r.json();
-      if (d.authenticated) setState("unlocked");
+      if (d.authenticated) { await connecterFirebase(); setState("unlocked"); }
       else { setErr(d.error || "Code incorrect"); setCode(""); }
     } catch {
       setErr("Erreur réseau");
