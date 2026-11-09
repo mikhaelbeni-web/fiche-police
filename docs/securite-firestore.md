@@ -18,6 +18,13 @@
 réservées à l'utilisateur Firebase `reception-gate`. Le compte de service
 passe par IAM et n'est pas soumis aux règles.
 
+Exceptions dans `firestore.rules` : `admin_prive`, `cash_audit` et
+`cash_audit_meta` sont fermées au navigateur (serveur uniquement). Une fois
+les écritures d'espèces passées par le serveur (journal `cash_audit`, voir
+docs/especes-journal.md), `cash_entries` et `cash_recoveries` passent en
+lecture seule pour le navigateur : remplir la liste de `serveurEcrit` avant
+de coller les règles, pas avant.
+
 Ces fichiers ne sont pas déployés automatiquement : ils se collent dans
 Firebase Console (Firestore > Règles, Storage > Règles). Retour arrière : coller
 l'ancienne règle `allow read, write: if true;`.
