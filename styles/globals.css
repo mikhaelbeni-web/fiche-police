@@ -2101,3 +2101,10 @@ body {
   .linge-page > * { min-width: 0; max-width: 100%; }
   .taches-toolbar .taches-filters { flex-wrap: wrap; }
 }
+
+/* Sous-onglets de « Codes d'accès » (rendus seulement pour un admin, voir components/CodesTabs.js) */
+.codes-tabs { display: flex; gap: 4px; padding: 8px 16px 0; border-bottom: 1px solid var(--border); }
+.codes-tab { padding: 8px 14px; border-radius: 6px 6px 0 0; font-size: 14px; color: inherit; text-decoration: none; border: 1px solid transparent; border-bottom: none; }
+.codes-tab:hover { background: rgba(0,0,0,.04); }
+.codes-tab.active { font-weight: 600; border-color: var(--border); background: #fff; margin-bottom: -1px; }
+@media (max-width: 640px) { .codes-tab { min-height: 44px; display: inline-flex; align-items: center; } }
