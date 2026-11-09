@@ -18,6 +18,8 @@ export default function App({ Component, pageProps }) {
         <link rel="icon" type="image/png" sizes="32x32" href="/icon-32.png" />
         <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        {/* Ouvre la connexion à Firestore pendant le chargement du code. */}
+        <link rel="preconnect" href="https://firestore.googleapis.com" crossOrigin="anonymous" />
       </Head>
       <Gate>
         <Nav />

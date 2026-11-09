@@ -8,6 +8,8 @@ import Head from "next/head";
 import { RESIDENCES, QUESTIONS, emptyReport, today, yesterday, isLocked, hasAlert } from "../lib/shiftReport";
 import CodeModal from "../components/CodeModal";
 import { useCodeGate } from "../hooks/useCodeGate";
+import { isFirebaseConfigured } from "../lib/firebaseApp";
+import { loadFs, makePrefetch } from "../lib/firestoreClient";
 
 // Même code que les autres suppressions sensibles de l'app. Frein volontaire
 // côté navigateur, pas une vraie sécurité. Changeable via
@@ -20,6 +22,19 @@ function fmtFr(d) {
   return isNaN(x) ? d : x.toLocaleDateString("fr-FR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
 }
 
+
+// Rapports d'aujourd'hui et d'hier lus EN PARALLÈLE, et lancés dès le
+// chargement du code de la page (voir makePrefetch).
+async function fetchTwoDays(api) {
+  const d0 = today(), d1 = yesterday();
+  const [s0, s1] = await Promise.all([
+    api.getDoc(api.doc(api.db, "shift_reports", d0)),
+    api.getDoc(api.doc(api.db, "shift_reports", d1)),
+  ]);
+  return { d0, today: s0.exists() ? s0.data() : emptyReport(d0), yesterday: s1.exists() ? s1.data() : null };
+}
+const prefetch = makePrefetch(fetchTwoDays);
+if (isFirebaseConfigured()) prefetch.start();
 
 function Transition() {
   const { requestCode, codeModalProps } = useCodeGate(DELETE_PASSWORD, "Code requis pour cette suppression");
@@ -35,27 +50,28 @@ function Transition() {
   const [selectedReport, setSelectedReport] = useState(null); // pour consultation détaillée depuis l'historique
 
   useEffect(() => {
+    if (!isFirebaseConfigured()) { setConfigured(false); setReady(true); return; }
+    let alive = true;
     (async () => {
-      const { isFirebaseConfigured } = await import("../lib/firebase");
-      if (!isFirebaseConfigured()) { setConfigured(false); setReady(true); return; }
-      const { db } = await import("../lib/firebase");
-      const { collection, doc, getDoc, getDocs, setDoc, deleteDoc, query, orderBy } = await import("firebase/firestore");
-      const api = { db, collection, doc, getDoc, getDocs, setDoc, deleteDoc, query, orderBy };
-      setFs(api);
-      await loadToday(api);
-      await loadYesterday(api);
-      setReady(true);
+      try {
+        const dataP = prefetch.take();
+        const api = await loadFs();
+        if (!alive) return;
+        setFs(api);
+        let data = await dataP;
+        // Page ouverte avant minuit, affichée après : relire les bons jours.
+        if (data.d0 !== today()) data = await fetchTwoDays(api);
+        if (!alive) return;
+        setTodayReport(data.today);
+        setYesterdayReport(data.yesterday);
+      } catch (err) {
+        if (alive) setStatus("Erreur Firestore : " + err.message);
+      }
+      if (alive) setReady(true);
     })();
+    return () => { alive = false; };
   }, []);
 
-  async function loadToday(api) {
-    const snap = await api.getDoc(api.doc(api.db, "shift_reports", today()));
-    setTodayReport(snap.exists() ? snap.data() : emptyReport(today()));
-  }
-  async function loadYesterday(api) {
-    const snap = await api.getDoc(api.doc(api.db, "shift_reports", yesterday()));
-    setYesterdayReport(snap.exists() ? snap.data() : null);
-  }
   async function loadHistorique(api) {
     setStatus("Chargement de l'historique…");
     const snap = await api.getDocs(api.query(api.collection(api.db, "shift_reports"), api.orderBy("date", "desc")));
@@ -79,8 +95,7 @@ function Transition() {
     requestCode(async () => {
       try {
         setStatus("Suppression…");
-        const { deleteDoc, doc } = await import("firebase/firestore");
-        await deleteDoc(doc(fs.db, "shift_reports", report.date));
+        await fs.deleteDoc(fs.doc(fs.db, "shift_reports", report.date));
         if (tab === "hier") setYesterdayReport(null);
         if (tab === "historique") {
           setSelectedReport(null);
