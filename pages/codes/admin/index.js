@@ -182,7 +182,7 @@ export default function EspaceAdmin({ adminExpiresAt }) {
                             : "Non indiqué"}
                         </td>
                         <td>
-                          {!s.estUnBridge && s.id && (
+                          {!s.estUnBridge && s.id && (<>
                             <button onClick={() => voirHistorique(s)} disabled={!!busy}>
                               {busy === "hist:" + s.id ? "Lecture…" : "Voir l'historique"}
                             </button>
@@ -190,7 +190,7 @@ export default function EspaceAdmin({ adminExpiresAt }) {
                             <button className="ghost" onClick={() => diagnostic(s)} disabled={!!busy}>
                               {busy === "diag:" + s.id ? "Diagnostic…" : "Diagnostic"}
                             </button>
-                          )}
+                          </>)}
                         </td>
                       </tr>
                     ))}
