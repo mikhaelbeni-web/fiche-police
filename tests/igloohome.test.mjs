@@ -140,3 +140,24 @@ test("routes : 404 pour un non-admin, secret jamais renvoyé même en cas d'erre
     globalThis.fetch = realFetch;
   }
 });
+
+test("403 : un jeton neuf est redemandé une fois, puis l'erreur cite les droits du jeton", async () => {
+  igloo._resetTokenCacheForTests();
+  let n = 0;
+  const f = fakeFetch({ "/home/devices/IGL1/activity": () => { n++; return { status: 403, body: { message: "Forbidden" } }; } });
+  await assert.rejects(igloo.apiGet("/devices/IGL1/activity", {}, f), /HTTP 403.*Droits du jeton/);
+  assert.equal(n, 2, "deux essais, pas plus");
+  assert.equal(f.calls.filter(c => c.url.includes("/oauth2/token")).length, 2, "jeton redemandé");
+  assert.ok(f.calls.every(c => c.method === "GET" || c.url.includes("/oauth2/token")));
+});
+
+test("diagnostic : seulement des GET sur l'historique, s'arrête à la première variante qui marche", async () => {
+  igloo._resetTokenCacheForTests();
+  const f = fakeFetch({
+    "/home/devices/IGL1/activity": (u) => u.searchParams.get("startDate") ? { status: 200, body: { payload: [] } } : { status: 403, body: "Forbidden" },
+  });
+  const r = await igloo.diagnoseActivity("IGL1", "1785487165632", f);
+  assert.deepEqual(r.map(t => t.ok), [false, false, true]);
+  assert.ok(f.calls.every(c => c.method === "GET" || c.url.includes("/oauth2/token")));
+  assert.ok(f.calls.every(c => c.url.includes("/oauth2/token") || /\/home\/devices\/IGL1\/activity/.test(c.url)));
+});

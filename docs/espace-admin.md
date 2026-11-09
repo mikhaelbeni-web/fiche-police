@@ -64,8 +64,12 @@ protégées côté serveur.
 - Périmètre : les 19 appartements de Belleville équipés igloohome (Deep 02 est chez Nuki,
   donc exclu). Les appareils nommés par étage ou de type bridge sont ignorés.
 - **Règle d'alerte** : une ouverture entre **19 h et 8 h le lendemain** (heure de Paris), une
-  nuit où aucune réservation confirmée ne couvre l'appartement. Une nuit D est couverte si
+  nuit où aucune réservation de client ne couvre l'appartement (un séjour propriétaire ou
+  un blocage de calendrier ne couvre rien : appartement vérifié). Une nuit D est couverte si
   arrivée ≤ D < départ. Les heures sont réglables dans « Réglages du croisement ».
+- « Serrure activée » = toute action d'une personne : ouverture par code, ouverture
+  manuelle ou depuis l'intérieur, verrouillage au bouton (pas le verrouillage automatique).
+  La nuit sans client, une ouverture depuis l'intérieur est aussi une ALERTE.
 - Autres classes : OK (nuit couverte, ou journée pendant le séjour ± marge de 2 h),
   Personnel (code du personnel en journée ; la nuit sans réservation reste une ALERTE),
   Journée sans réservation (information), Depuis l'intérieur (ignoré), Autre événement.
