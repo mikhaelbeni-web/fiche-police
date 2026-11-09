@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
 import CodeModal from "../components/CodeModal";
 import { useCodeGate } from "../hooks/useCodeGate";
-import { listStaff, ensureStaff, deleteStaff } from "../lib/staff";
 
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
@@ -19,12 +18,10 @@ function euros(n) {
   return Number(n).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
 }
 
-// Code demandé avant de supprimer un solde de départ ou une ligne de taxe de
-// séjour, ou avant de confirmer une récupération d'espèces. Ce n'est pas une
-// vraie sécurité (comparaison faite dans le navigateur) — juste un frein
-// volontaire contre une action accidentelle ou par une personne non autorisée
-// à qui l'accès à l'app a été partagé. Changeable via NEXT_PUBLIC_DELETE_PASSWORD
-// sur Vercel.
+// Code demandé avant de masquer une taxe impayée. Ce n'est pas une vraie sécurité
+// (comparaison faite dans le navigateur) : juste un frein contre une fausse
+// manœuvre. Les espèces n'en dépendent plus : leurs suppressions et récupérations
+// sont contrôlées par le serveur (/api/especes, Espace admin, codes personnels).
 const DELETE_PASSWORD = process.env.NEXT_PUBLIC_DELETE_PASSWORD || "2305";
 
 function ControleExclusions({ data }) {
@@ -350,8 +347,21 @@ function TaxesImpayees() {
 // et chaque dépense hôtel. Suivi du solde en caisse. Mikhael passe régulièrement récupérer
 // une partie des espèces, laisse un reliquat en caisse — chaque récupération est tracée
 // et exportable en Excel (CSV), avec un historique complet consultable à tout moment.
+// Écritures : toutes par /api/especes (journal d'audit côté serveur, voir
+// lib/especesJournal.js). Le navigateur ne fait plus que lire Firestore.
+async function especesApi(body) {
+  const r = await fetch("/api/especes", {
+    method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(body),
+  });
+  const d = await r.json().catch(() => ({ error: `Réponse illisible (HTTP ${r.status}).` }));
+  if (!r.ok || d.ok === false) throw new Error(d.error || `Erreur HTTP ${r.status}`);
+  return d;
+}
+
 function CashManagement() {
-  const { requestCode, codeModalProps } = useCodeGate(DELETE_PASSWORD, "Code requis");
+  const [personnel, setPersonnel] = useState([]);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [ready, setReady] = useState(false);
   const [configured, setConfigured] = useState(true);
   const [fs, setFs] = useState(null);
@@ -369,7 +379,7 @@ function CashManagement() {
       const { collection, doc, getDocs, addDoc, updateDoc, deleteDoc, query, orderBy, writeBatch } = await import("firebase/firestore");
       const api = { db, collection, doc, getDocs, addDoc, updateDoc, deleteDoc, query, orderBy, writeBatch };
       setFs(api);
-      await loadAll(api);
+      await Promise.all([loadAll(api), loadPersonnel()]);
       setReady(true);
     })();
   }, []);
@@ -383,6 +393,14 @@ function CashManagement() {
     setStatus("");
   }
 
+  async function loadPersonnel() {
+    try {
+      const r = await fetch("/api/especes", { headers: { Accept: "application/json" } });
+      const d = await r.json();
+      if (r.ok) { setPersonnel(d.personnel || []); setIsAdmin(Boolean(d.isAdmin)); }
+    } catch { /* liste vide : la saisie affichera un message */ }
+  }
+
   if (!ready) return <div className="menage-page"><div className="recap"><div className="empty-state">Chargement…</div></div></div>;
   if (!configured) {
     return (
@@ -393,8 +411,12 @@ function CashManagement() {
     );
   }
 
-  const unrecovered = entries.filter(e => !e.recoveryId);
-  const baseline = recoveries.length ? Number(recoveries[0].amountLeftInBox) || 0 : 0;
+  // Rien n'est plus jamais effacé : les lignes et récupérations supprimées restent en
+  // base (deleted = true) et sont écartées ici des calculs.
+  const activeEntries = entries.filter(e => !e.deleted);
+  const activeRecoveries = recoveries.filter(r => !r.deleted);
+  const unrecovered = activeEntries.filter(e => !e.recoveryId);
+  const baseline = activeRecoveries.length ? Number(activeRecoveries[0].amountLeftInBox) || 0 : 0;
   const sumClient = unrecovered.filter(e => e.type === "client").reduce((s, e) => s + (Number(e.amount) || 0), 0);
   const sumExpense = unrecovered.filter(e => e.type === "expense").reduce((s, e) => s + (Number(e.amount) || 0), 0);
   const totalEnCaisse = baseline + sumClient - sumExpense;
@@ -412,17 +434,17 @@ function CashManagement() {
         <div className="recap">
           {!showHistory ? (
             <CashCurrent
-              fs={fs} entries={entries} unrecovered={unrecovered} recoveries={recoveries}
+              fs={fs} entries={activeEntries} unrecovered={unrecovered} recoveries={activeRecoveries}
+              personnel={personnel} isAdmin={isAdmin} reloadPersonnel={loadPersonnel}
               baseline={baseline} sumClient={sumClient} sumExpense={sumExpense} totalEnCaisse={totalEnCaisse}
               showRecoverForm={showRecoverForm} setShowRecoverForm={setShowRecoverForm}
-              reload={() => loadAll(fs)} setStatus={setStatus} requestCode={requestCode}
+              reload={() => loadAll(fs)} setStatus={setStatus}
             />
           ) : (
-            <CashHistory recoveries={recoveries} entries={entries} fs={fs} reload={() => loadAll(fs)} setStatus={setStatus} requestCode={requestCode} />
+            <CashHistory recoveries={recoveries} entries={entries} isAdmin={isAdmin} reload={() => loadAll(fs)} setStatus={setStatus} />
           )}
         </div>
       </div>
-      <CodeModal {...codeModalProps} />
     </>
   );
 }
@@ -446,7 +468,7 @@ function downloadEntriesCSV(filename, rows) {
 }
 
 // ---- Vue courante : saisie + solde + liste depuis la dernière récupération ----
-function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient, sumExpense, totalEnCaisse, showRecoverForm, setShowRecoverForm, reload, setStatus, requestCode }) {
+function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient, sumExpense, totalEnCaisse, showRecoverForm, setShowRecoverForm, reload, setStatus, personnel, isAdmin, reloadPersonnel }) {
   const today = isoDay(new Date());
   const [mode, setMode] = useState("client"); // client | expense
   const [date, setDate] = useState(today);
@@ -456,46 +478,16 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
   const [designation, setDesignation] = useState("");
   const [fournisseur, setFournisseur] = useState("");
   const [amount, setAmount] = useState("");
-  const [saisiPar, setSaisiPar] = useState("");
-  const [staffList, setStaffList] = useState([]);
-  const [staffAdmin, setStaffAdmin] = useState(false);
-  const [newStaffName, setNewStaffName] = useState("");
+  const [saisiPar, setSaisiPar] = useState(""); // identifiant de la personne (liste de l'Espace admin)
+  const [pin, setPin] = useState("");
+  const [showActivation, setShowActivation] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [clientMode, setClientMode] = useState("taxe"); // taxe | recherche | autre
   const [taxeClients, setTaxeClients] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [showStartForm, setShowStartForm] = useState(false);
-
-  // Liste des réceptionnistes : partagée avec la Check-list (collection
-  // Firestore "staff_members"), pour n'avoir qu'un seul endroit à tenir à
-  // jour quand l'équipe change, au lieu d'une liste figée dans le code.
-  useEffect(() => {
-    (async () => {
-      try { setStaffList(await listStaff(fs)); } catch { /* collection pas encore créée */ }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  function toggleStaffAdmin() {
-    if (staffAdmin) { setStaffAdmin(false); return; }
-    requestCode(() => setStaffAdmin(true));
-  }
-
-  async function addStaffName() {
-    const name = newStaffName.trim();
-    if (!name) return;
-    await ensureStaff(fs, name);
-    setNewStaffName("");
-    setStaffList(await listStaff(fs));
-  }
-
-  async function removeStaffName(name) {
-    if (!confirm(`Retirer "${name}" de la liste des réceptionnistes ?`)) return;
-    await deleteStaff(fs, name);
-    if (saisiPar === name) setSaisiPar("");
-    setStaffList(await listStaff(fs));
-  }
 
   // Charge les clients Belleville avec taxe de séjour à régler depuis Hostaway :
   // un paiement espèces sert le plus souvent à encaisser une taxe impayée, donc
@@ -530,11 +522,7 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
     if (!amt || amt < 0) { setStatus("Montant de départ invalide."); return; }
     try {
       setStatus("Enregistrement du solde de départ…");
-      await fs.addDoc(fs.collection(fs.db, "cash_recoveries"), {
-        date: startDate, amountRecovered: 0, amountLeftInBox: amt,
-        note: "Solde de départ", totalAvant: amt, entryIds: [],
-        createdAt: new Date().toISOString(),
-      });
+      await especesApi({ action: "solde_depart", date: startDate, montant: amt });
       setShowStartForm(false);
       await reload();
       setStatus(`Solde de départ de ${amt.toFixed(2)} € enregistré au ${startDate}.`);
@@ -564,39 +552,40 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
   }
 
   async function addEntry() {
-    if (!saisiPar) { setStatus("Choisis d'abord qui saisit (le réceptionniste)."); return; }
+    if (!saisiPar) { setStatus("Choisis d'abord ton nom (réceptionniste)."); return; }
+    if (!pin) { setStatus("Tape ton code personnel."); return; }
     const amt = Number(amount);
     if (!amt || amt <= 0) { setStatus("Montant invalide."); return; }
+    const ligne = { type: mode, date, amount: amt, designation: designation || "" };
+    if (mode === "client") Object.assign(ligne, { client: client || "", appartement: appartement || "", arrivalDate: arrivalDate || "" });
+    else ligne.fournisseur = fournisseur || "";
+    setBusy(true);
     try {
       setStatus("Enregistrement…");
-      const payload = {
-        type: mode, date, amount: amt, designation: designation || "",
-        saisiPar,
-        recoveryId: null, createdAt: new Date().toISOString(),
-      };
-      if (mode === "client") {
-        payload.client = client || ""; payload.appartement = appartement || ""; payload.arrivalDate = arrivalDate || "";
-      }
-      if (mode === "expense") {
-        payload.fournisseur = fournisseur || "";
-      }
-      await fs.addDoc(fs.collection(fs.db, "cash_entries"), payload);
-      setClient(""); setAppartement(""); setArrivalDate(""); setDesignation(""); setFournisseur(""); setAmount("");
+      await especesApi({ action: "ajouter", personneId: saisiPar, pin, ligne });
+      setClient(""); setAppartement(""); setArrivalDate(""); setDesignation(""); setFournisseur(""); setAmount(""); setPin("");
       await reload();
       setStatus("Enregistré.");
     } catch (err) { setStatus("Erreur : " + err.message); }
+    setBusy(false);
   }
 
+  // Suppression : réservée à l'admin (session de l'Espace admin vérifiée par le
+  // serveur), motif obligatoire. La ligne n'est jamais effacée : elle est marquée
+  // supprimée et reste visible dans l'historique complet.
   async function delEntry(entry) {
-    const isTaxeSejour = (entry.designation || "").toLowerCase().includes("taxe de séjour")
-      || (entry.designation || "").toLowerCase().includes("taxe de sejour");
-    if (!confirm("Êtes-vous sûr de vouloir supprimer cette entrée ?")) return;
-    if (isTaxeSejour) {
-      requestCode(async () => { await fs.deleteDoc(fs.doc(fs.db, "cash_entries", entry.id)); await reload(); });
-    } else {
-      await fs.deleteDoc(fs.doc(fs.db, "cash_entries", entry.id));
-      await reload();
+    if (!isAdmin) {
+      setStatus("Suppression réservée à l'administrateur (connexion à l'Espace admin, onglet Codes d'accès).");
+      return;
     }
+    const motif = window.prompt(`Motif de la suppression de « ${entry.designation || entry.client || entry.fournisseur || "cette ligne"} » (${euros2(entry.amount)}) :`);
+    if (motif === null) return;
+    try {
+      setStatus("Suppression…");
+      await especesApi({ action: "supprimer", entryId: entry.id, motif });
+      await reload();
+      setStatus("Ligne marquée supprimée (elle reste dans l'historique complet).");
+    } catch (err) { setStatus("Erreur : " + err.message); }
   }
 
   function exportCurrentCSV() {
@@ -624,48 +613,39 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
         </div>
       </div>
 
-      <div style={{ marginBottom: 14 }}>
+      {isAdmin && <div style={{ marginBottom: 14 }}>
         <button onClick={() => setShowStartForm(!showStartForm)} className="ghost">
           {showStartForm ? "Annuler" : (recoveries.length ? "Redéfinir le solde de départ" : "Définir un solde de départ")}
         </button>
-      </div>
+      </div>}
 
       {showStartForm && (
         <StartingBalanceForm hasRecoveries={recoveries.length > 0} onConfirm={setStartingBalance} onCancel={() => setShowStartForm(false)} />
       )}
 
       <div className="linen-form">
-        <div className={`linen-form-row recep-row${saisiPar ? "" : " a-remplir"}`}>
+        <div className={`linen-form-row recep-row${saisiPar && pin ? "" : " a-remplir"}`}>
           <label className="t-strong">Réceptionniste (obligatoire)
-            <select value={saisiPar} onChange={e => setSaisiPar(e.target.value)}>
+            <select value={saisiPar} onChange={e => { setSaisiPar(e.target.value); setPin(""); }}>
               <option value="">— Qui saisit ? —</option>
-              {staffList.map(name => <option key={name} value={name}>{name}</option>)}
+              {personnel.filter(p => p.codeChoisi).map(p => <option key={p.id} value={p.id}>{p.nom}</option>)}
             </select>
           </label>
-          {!saisiPar && <span className="pill warn">À renseigner avant toute saisie</span>}
-          <button type="button" onClick={toggleStaffAdmin} className="ghost push-right">
-            {staffAdmin ? "✓ Édition liste active" : "Gérer la liste"}
+          <label className="t-strong">Code personnel
+            <input type="password" inputMode="numeric" autoComplete="off" value={pin} maxLength={8}
+              onChange={e => setPin(e.target.value.replace(/\D/g, ""))} style={{ width: 110 }} />
+          </label>
+          {!(saisiPar && pin) && <span className="pill warn">Nom et code demandés à chaque saisie</span>}
+          <button type="button" onClick={() => setShowActivation(!showActivation)} className="ghost push-right">
+            {showActivation ? "Fermer" : "Première utilisation"}
           </button>
         </div>
-        {staffAdmin && (
-          <div className="panel">
-            <div className="panel-title">Réceptionnistes (liste partagée avec la Check-list)</div>
-            <div className="panel-row">
-              {staffList.map(name => (
-                <span key={name} className="chip">
-                  {name}
-                  <button type="button" onClick={() => removeStaffName(name)} className="chip-del" title={`Retirer ${name}`} aria-label={`Retirer ${name}`}>✕</button>
-                </span>
-              ))}
-              {staffList.length === 0 && <span className="note">Aucun nom pour l&apos;instant.</span>}
-            </div>
-            <div className="panel-row">
-              <input type="text" value={newStaffName} onChange={e => setNewStaffName(e.target.value)}
-                onKeyDown={e => { if (e.key === "Enter") addStaffName(); }}
-                placeholder="Ajouter un prénom…" />
-              <button type="button" onClick={addStaffName} className="primary">Ajouter</button>
-            </div>
-          </div>
+        {personnel.length === 0 && (
+          <div className="msg warn">Aucun réceptionniste enregistré : l&apos;admin doit les créer dans Codes d&apos;accès &gt; Espace admin &gt; Espèces.</div>
+        )}
+        {showActivation && (
+          <ActivationForm personnel={personnel} setStatus={setStatus}
+            onDone={async () => { setShowActivation(false); await reloadPersonnel(); }} />
         )}
         <div className="linen-form-row">
           <label>Type
@@ -761,7 +741,7 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
             <label>Montant € <input type="number" min="0" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} style={{ width: 100 }} /></label>
           </div>
         )}
-        <button className="primary" onClick={addEntry} disabled={!saisiPar}>Ajouter</button>
+        <button className="primary" onClick={addEntry} disabled={!saisiPar || !pin || busy}>{busy ? "Enregistrement…" : "Ajouter"}</button>
       </div>
 
       <div className="tx-btn-row" style={{ display: "flex", gap: 8, margin: "14px 0" }}>
@@ -774,7 +754,8 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
       {showRecoverForm && (
         <RecoverForm fs={fs} unrecovered={unrecovered} totalEnCaisse={totalEnCaisse}
           baseline={baseline} sumClient={sumClient} sumExpense={sumExpense}
-          onDone={() => { setShowRecoverForm(false); reload(); }} setStatus={setStatus} requestCode={requestCode} />
+          personnel={personnel} isAdmin={isAdmin}
+          onDone={() => { setShowRecoverForm(false); reload(); }} setStatus={setStatus} />
       )}
 
       <div className="tbl-wrap"><table className="tbl tbl-cards" style={{ marginTop: 10 }}>
@@ -797,7 +778,7 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
               <td className="c" data-label="Montant" style={{ color: e.type === "expense" ? "var(--bad)" : "var(--ok)", fontWeight: 600 }}>
                 {e.type === "expense" ? "−" : "+"}{euros2(e.amount)}
               </td>
-              <td className="tx-actions"><button onClick={() => delEntry(e)} className="ghost danger tx-del" title="Supprimer" aria-label="Supprimer">✕</button></td>
+              <td className="tx-actions">{isAdmin && <button onClick={() => delEntry(e)} className="ghost danger tx-del" title="Supprimer (admin, motif obligatoire)" aria-label="Supprimer">✕</button>}</td>
             </tr>
           ))}
           {unrecovered.length === 0 && <tr><td colSpan={9} className="empty-state">Rien depuis la dernière récupération.</td></tr>}
@@ -810,7 +791,52 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
   );
 }
 
-// ---- Formulaire de récupération : clôture les entrées en cours ----
+// ---- Première utilisation : la personne choisit elle-même son code personnel ----
+// L'admin lui a remis un code d'activation à 6 chiffres (valable 7 jours). L'admin ne
+// connaît donc jamais le code personnel : une saisie faite avec ce code engage la personne.
+function ActivationForm({ personnel, setStatus, onDone }) {
+  const [id, setId] = useState("");
+  const [activation, setActivation] = useState("");
+  const [pin1, setPin1] = useState("");
+  const [pin2, setPin2] = useState("");
+  const enAttente = personnel.filter(p => p.activationEnAttente);
+  async function valider() {
+    if (pin1 !== pin2) { setStatus("Les deux codes personnels ne sont pas identiques."); return; }
+    try {
+      setStatus("Activation…");
+      await especesApi({ action: "activer", personneId: id, activation, pin: pin1 });
+      setStatus("Code personnel enregistré. Il sera demandé à chaque saisie : ne le communique à personne.");
+      await onDone();
+    } catch (err) { setStatus("Erreur : " + err.message); }
+  }
+  const digits = v => v.replace(/\D/g, "");
+  return (
+    <div className="panel">
+      <div className="panel-title">Première utilisation : choisir mon code personnel</div>
+      {enAttente.length === 0 ? <span className="note">Personne n&apos;a d&apos;activation en attente. Demande un code d&apos;activation à l&apos;admin.</span> : (
+        <div className="panel-row">
+          <label>Mon nom
+            <select value={id} onChange={e => setId(e.target.value)}>
+              <option value="">—</option>
+              {enAttente.map(p => <option key={p.id} value={p.id}>{p.nom}</option>)}
+            </select>
+          </label>
+          <label>Code d&apos;activation (6 chiffres)
+            <input inputMode="numeric" autoComplete="off" maxLength={6} value={activation} onChange={e => setActivation(digits(e.target.value))} style={{ width: 100 }} />
+          </label>
+          <label>Nouveau code (4 à 8 chiffres)
+            <input type="password" inputMode="numeric" autoComplete="new-password" maxLength={8} value={pin1} onChange={e => setPin1(digits(e.target.value))} style={{ width: 100 }} />
+          </label>
+          <label>Confirmer
+            <input type="password" inputMode="numeric" autoComplete="new-password" maxLength={8} value={pin2} onChange={e => setPin2(digits(e.target.value))} style={{ width: 100 }} />
+          </label>
+          <button className="primary" onClick={valider} disabled={!id || activation.length !== 6 || pin1.length < 4}>Enregistrer mon code</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ---- Solde de départ (une seule fois, avant la première vraie récupération) ----
 function StartingBalanceForm({ hasRecoveries, onConfirm, onCancel }) {
   const [startDate, setStartDate] = useState(isoDay(new Date()));
@@ -893,9 +919,14 @@ async function downloadRecoveryXLSX({ unrecovered, baseline, sumClient, sumExpen
   setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
 
-function RecoverForm({ fs, unrecovered, totalEnCaisse, baseline, sumClient, sumExpense, onDone, setStatus, requestCode }) {
+// ---- Formulaire de récupération : clôture les entrées en cours ----
+// Faite par l'admin (session Espace admin) ou par un réceptionniste avec son code
+// personnel : l'auteur est enregistré dans le journal.
+function RecoverForm({ unrecovered, totalEnCaisse, baseline, sumClient, sumExpense, onDone, setStatus, personnel, isAdmin }) {
   const [amountRecovered, setAmountRecovered] = useState("");
   const [note, setNote] = useState("");
+  const [qui, setQui] = useState(isAdmin ? "admin" : "");
+  const [pin, setPin] = useState("");
 
   useEffect(() => {
     setAmountRecovered(totalEnCaisse.toFixed(2));
@@ -914,32 +945,23 @@ function RecoverForm({ fs, unrecovered, totalEnCaisse, baseline, sumClient, sumE
   async function confirmRecovery() {
     if (!totalPositif) { setStatus("La caisse est vide ou négative, rien à récupérer."); return; }
     if (!montantValide) { setStatus("Le montant récupéré ne peut pas dépasser le total en caisse."); return; }
-    requestCode(async () => {
-      // Sauvegarde Excel d'abord : si elle échoue, rien n'est modifié.
-      try {
-        setStatus("Téléchargement de l'Excel de sauvegarde…");
-        await downloadRecoveryXLSX({ unrecovered, baseline, sumClient, sumExpense, totalEnCaisse, rec, left, note });
-      } catch (err) {
-        setStatus("Récupération annulée : l'Excel de sauvegarde n'a pas pu être généré (" + err.message + "). Rien n'a été modifié.");
-        return;
-      }
-      try {
-        setStatus("Enregistrement de la récupération…");
-        const date = isoDay(new Date());
-        const entryIds = unrecovered.map(e => e.id);
-        const recDoc = await fs.addDoc(fs.collection(fs.db, "cash_recoveries"), {
-          date, amountRecovered: rec, amountLeftInBox: left, note: note || "",
-          totalAvant: totalEnCaisse, entryIds, createdAt: new Date().toISOString(),
-        });
-        const batch = fs.writeBatch(fs.db);
-        for (const id of entryIds) {
-          batch.update(fs.doc(fs.db, "cash_entries", id), { recoveryId: recDoc.id });
-        }
-        await batch.commit();
-        setStatus(`Récupération enregistrée : ${euros2(rec)} récupérés, ${euros2(left)} laissés en caisse.`);
-        onDone();
-      } catch (err) { setStatus("Erreur : " + err.message); }
-    });
+    if (!qui || (qui !== "admin" && !pin)) { setStatus("Indique qui récupère (nom et code personnel)."); return; }
+    // Sauvegarde Excel d'abord : si elle échoue, rien n'est modifié.
+    try {
+      setStatus("Téléchargement de l'Excel de sauvegarde…");
+      await downloadRecoveryXLSX({ unrecovered, baseline, sumClient, sumExpense, totalEnCaisse, rec, left, note });
+    } catch (err) {
+      setStatus("Récupération annulée : l'Excel de sauvegarde n'a pas pu être généré (" + err.message + "). Rien n'a été modifié.");
+      return;
+    }
+    try {
+      setStatus("Enregistrement de la récupération…");
+      const body = { action: "recuperer", montant: rec, note: note || "", entryIds: unrecovered.map(e => e.id) };
+      if (qui !== "admin") Object.assign(body, { personneId: qui, pin });
+      const d = await especesApi(body);
+      setStatus(`Récupération enregistrée : ${euros2(d.recuperation.amountRecovered)} récupérés, ${euros2(d.recuperation.amountLeftInBox)} laissés en caisse.`);
+      onDone();
+    } catch (err) { setStatus("Erreur : " + err.message); }
   }
 
   return (
@@ -954,16 +976,34 @@ function RecoverForm({ fs, unrecovered, totalEnCaisse, baseline, sumClient, sumE
         </label>
         <label style={{ flex: 1 }}>Note <input type="text" value={note} onChange={e => setNote(e.target.value)} style={{ width: "100%" }} /></label>
       </div>
+      <div className="linen-form-row">
+        <label>Récupéré par
+          <select value={qui} onChange={e => { setQui(e.target.value); setPin(""); }}>
+            <option value="">—</option>
+            {isAdmin && <option value="admin">Admin (session Espace admin)</option>}
+            {personnel.filter(p => p.codeChoisi).map(p => <option key={p.id} value={p.id}>{p.nom}</option>)}
+          </select>
+        </label>
+        {qui && qui !== "admin" && (
+          <label>Code personnel
+            <input type="password" inputMode="numeric" autoComplete="off" maxLength={8} value={pin} onChange={e => setPin(e.target.value.replace(/\D/g, ""))} style={{ width: 110 }} />
+          </label>
+        )}
+      </div>
       {!montantValide && <div className="msg bad">Le montant récupéré ne peut pas dépasser le total en caisse ({euros2(totalEnCaisse)}).</div>}
       <button className="primary" onClick={confirmRecovery} disabled={!peutValider}>Confirmer la récupération</button>
     </div>
   );
 }
 
-// ---- Historique des récupérations ----
-function CashHistory({ recoveries, entries, fs, reload, setStatus, requestCode }) {
+// ---- Historique des récupérations + historique complet (lignes supprimées incluses) ----
+function CashHistory({ recoveries, entries, isAdmin, reload, setStatus }) {
+  const actives = recoveries.filter(r => !r.deleted);
+  const annulees = recoveries.filter(r => r.deleted);
+  const supprimees = entries.filter(e => e.deleted);
+
   function exportRecoveryCSV(rec) {
-    const linked = entries.filter(e => e.recoveryId === rec.id);
+    const linked = entries.filter(e => e.recoveryId === rec.id && !e.deleted);
     const rows = [["Type", "Date", "Saisi par", "Client", "Appartement", "Date arrivée", "Fournisseur", "Désignation", "Montant"]];
     for (const e of linked) {
       rows.push([
@@ -978,30 +1018,42 @@ function CashHistory({ recoveries, entries, fs, reload, setStatus, requestCode }
     downloadEntriesCSV(`recuperation_especes_${rec.date}.csv`, rows);
   }
 
-  // Supprime une récupération (ou un solde de départ, qui est le même type de
-  // document). Libère d'abord les entrées liées si besoin, pour ne jamais les
-  // laisser orphelines avec un recoveryId pointant vers un document supprimé.
+  // Toutes les lignes jamais saisies, y compris celles marquées supprimées, avec leur
+  // statut, leur auteur et le motif de suppression.
+  function exportHistoriqueComplet() {
+    const rows = [["Identifiant", "Statut", "Type", "Date", "Saisi par", "Client", "Appartement", "Date arrivée",
+      "Fournisseur", "Désignation", "Montant", "Créée le", "Journalisée", "Récupération", "Supprimée le", "Supprimée par", "Motif de suppression"]];
+    const tri = [...entries].sort((a, b) => String(a.createdAt || "").localeCompare(String(b.createdAt || "")));
+    for (const e of tri) {
+      rows.push([
+        e.id, e.deleted ? "SUPPRIMÉE" : (e.recoveryId ? "Récupérée" : "En cours"),
+        e.type === "client" ? "Paiement client" : "Dépense", fmtFrShort(e.date), e.saisiPar || "",
+        e.client || "", e.appartement || "", e.arrivalDate ? fmtFrShort(e.arrivalDate) : "", e.fournisseur || "",
+        e.designation || "", e.amount, e.createdAt || "", e.journalise ? "oui" : "non (avant le journal)",
+        e.recoveryId || "", e.deletedAt || "", e.deletedBy || "", e.deleteReason || "",
+      ]);
+    }
+    rows.push([]);
+    rows.push(["Récupérations"]);
+    rows.push(["Identifiant", "Statut", "Date", "Total avant", "Récupéré", "Laissé en caisse", "Note", "Faite par", "Créée le", "Annulée le", "Motif d'annulation"]);
+    for (const r of recoveries) {
+      rows.push([r.id, r.deleted ? "ANNULÉE" : "Valide", fmtFrShort(r.date), r.totalAvant, r.amountRecovered, r.amountLeftInBox,
+        r.note || "", r.faitPar || "", r.createdAt || "", r.deletedAt || "", r.deleteReason || ""]);
+    }
+    downloadEntriesCSV(`especes_historique_complet_${isoDay(new Date())}.csv`, rows);
+  }
+
+  // Annule une récupération (admin, motif obligatoire) : elle reste en base, marquée
+  // annulée, et ses lignes redeviennent « en cours ».
   async function delRecovery(rec) {
-    const isSoldeDepart = (rec.note || "").toLowerCase().includes("solde de départ")
-      || (rec.note || "").toLowerCase().includes("solde de depart");
-    if (!confirm(`Êtes-vous sûr de vouloir supprimer "${rec.note || "cette récupération"}" du ${fmtFrShort(rec.date)} ?`)) return;
-    const doDelete = async () => {
-      try {
-        setStatus("Suppression…");
-        const linked = entries.filter(e => e.recoveryId === rec.id);
-        if (linked.length > 0) {
-          const batch = fs.writeBatch(fs.db);
-          for (const e of linked) {
-            batch.update(fs.doc(fs.db, "cash_entries", e.id), { recoveryId: null });
-          }
-          await batch.commit();
-        }
-        await fs.deleteDoc(fs.doc(fs.db, "cash_recoveries", rec.id));
-        await reload();
-        setStatus("Récupération supprimée.");
-      } catch (err) { setStatus("Erreur : " + err.message); }
-    };
-    if (isSoldeDepart) requestCode(doDelete); else await doDelete();
+    const motif = window.prompt(`Motif de l'annulation de « ${rec.note || "récupération"} » du ${fmtFrShort(rec.date)} :`);
+    if (motif === null) return;
+    try {
+      setStatus("Annulation…");
+      await especesApi({ action: "annuler_recuperation", recoveryId: rec.id, motif });
+      await reload();
+      setStatus("Récupération annulée (elle reste visible dans l'historique complet).");
+    } catch (err) { setStatus("Erreur : " + err.message); }
   }
 
   return (
@@ -1011,6 +1063,7 @@ function CashHistory({ recoveries, entries, fs, reload, setStatus, requestCode }
           <div className="recap-title">Historique des récupérations</div>
           <div className="recap-sub">Chaque récupération est exportable individuellement</div>
         </div>
+        <button onClick={exportHistoriqueComplet}>📥 Historique complet (lignes supprimées incluses)</button>
       </div>
       <div className="tbl-wrap"><table className="tbl tbl-cards">
         <thead>
@@ -1020,22 +1073,45 @@ function CashHistory({ recoveries, entries, fs, reload, setStatus, requestCode }
           </tr>
         </thead>
         <tbody>
-          {recoveries.map(r => (
+          {actives.map(r => (
             <tr key={r.id}>
               <td className="card-title">{fmtFrShort(r.date)}</td>
               <td className="c" data-label="Total avant">{euros2(r.totalAvant)}</td>
               <td className="c" data-label="Récupéré" style={{ fontWeight: 700, color: "var(--ok)" }}>{euros2(r.amountRecovered)}</td>
               <td className="c" data-label="Laissé en caisse">{euros2(r.amountLeftInBox)}</td>
-              <td data-label="Note" className="card-full">{r.note || "—"}</td>
+              <td data-label="Note" className="card-full">{r.note || "—"}{r.faitPar ? ` · par ${r.faitPar}` : ""}</td>
               <td className="tx-actions" style={{ whiteSpace: "nowrap" }}>
                 <button onClick={() => exportRecoveryCSV(r)} className="ghost" style={{ color: "var(--ok)" }}>📥 Excel</button>
-                <button onClick={() => delRecovery(r)} className="ghost danger tx-del" title="Supprimer" aria-label="Supprimer">✕</button>
+                {isAdmin && <button onClick={() => delRecovery(r)} className="ghost danger tx-del" title="Annuler (admin, motif obligatoire)" aria-label="Annuler">✕</button>}
               </td>
             </tr>
           ))}
-          {recoveries.length === 0 && <tr><td colSpan={6} className="empty-state">Aucune récupération enregistrée.</td></tr>}
+          {actives.length === 0 && <tr><td colSpan={6} className="empty-state">Aucune récupération enregistrée.</td></tr>}
         </tbody>
       </table></div>
+
+      {(supprimees.length > 0 || annulees.length > 0) && (
+        <>
+          <div className="recap-title" style={{ marginTop: 20 }}>Lignes supprimées et récupérations annulées</div>
+          <div className="tbl-wrap"><table className="tbl tbl-cards">
+            <thead><tr><th>Supprimée le</th><th>Quoi</th><th>Saisi par</th><th className="c">Montant</th><th>Motif</th></tr></thead>
+            <tbody>
+              {[...supprimees.map(e => ({ k: e.id, at: e.deletedAt, quoi: `${e.type === "client" ? "Paiement client" : "Dépense"} du ${fmtFrShort(e.date)} : ${e.client || e.fournisseur || ""} ${e.designation || ""}`, qui: e.saisiPar, m: e.amount, motif: e.deleteReason })),
+                ...annulees.map(r => ({ k: r.id, at: r.deletedAt, quoi: `Récupération du ${fmtFrShort(r.date)}`, qui: r.faitPar, m: r.amountRecovered, motif: r.deleteReason }))]
+                .sort((a, b) => String(b.at || "").localeCompare(String(a.at || "")))
+                .map(x => (
+                  <tr key={x.k}>
+                    <td data-label="Supprimée le">{x.at ? new Date(x.at).toLocaleString("fr-FR") : "—"}</td>
+                    <td className="card-title">{x.quoi}</td>
+                    <td data-label="Saisi par">{x.qui || "—"}</td>
+                    <td className="c" data-label="Montant">{euros2(x.m)}</td>
+                    <td data-label="Motif" className="card-full">{x.motif || "—"}</td>
+                  </tr>
+                ))}
+            </tbody>
+          </table></div>
+        </>
+      )}
     </>
   );
 }
