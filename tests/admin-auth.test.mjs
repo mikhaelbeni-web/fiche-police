@@ -15,9 +15,11 @@ const logout = (await import("../pages/api/admin/logout.js")).default;
 const session = (await import("../pages/api/admin/session.js")).default;
 const igloDevices = (await import("../pages/api/admin/igloohome/devices.js")).default;
 const igloActivity = (await import("../pages/api/admin/igloohome/activity.js")).default;
+const igloConfig = (await import("../pages/api/admin/igloohome/config.js")).default;
+const hostawayResas = (await import("../pages/api/admin/hostaway/reservations.js")).default;
 
 // Toutes les routes /api/admin/* qui exigent l'admin (login/logout exclues : publiques par nature).
-const PROTECTED_ROUTES = { session, igloDevices, igloActivity };
+const PROTECTED_ROUTES = { session, igloDevices, igloActivity, igloConfig, hostawayResas };
 
 async function adminCookie() {
   const r = res();
@@ -61,7 +63,7 @@ test("admin : /codes/admin est servie", async () => {
 test("non-admin : chaque route API admin répond 404", async () => {
   for (const [name, handler] of Object.entries(PROTECTED_ROUTES)) {
     for (const cookies of [[], [accessCookie()]]) {
-      for (const method of ["GET", "POST", "DELETE"]) {
+      for (const method of ["GET", "POST", "PUT", "DELETE"]) {
         const r = res();
         await handler(req({ method, cookies }), r);
         assert.equal(r.statusCode, 404, `${name} ${method} cookies=${cookies.length}`);
