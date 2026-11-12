@@ -18,11 +18,13 @@ const LIGNES = [
   "517 Taie Am Clas blc 50x80 NF 94 94",
   "76549 Tapis bain harmony 49x70 blc 30 30",
   "49110 Torchon carreaux bleus resid 47x70 21 20",
+  "Commentaires Signature client Sign.PANTIN US",
+  "Lun 09/11/2026 - 20:28:00",
 ];
 
 test("lecture d'un bordereau", () => {
-  const r = B.analyserBordereauElis(LIGNES, "bordereau_expe_20260911_1_NULL_28840255_99063.pdf");
-  assert.equal(r.numero, "28840255");
+  const r = B.analyserBordereauElis(LIGNES);
+  assert.equal(r.saisieLe, "2026-11-09T20:28");
   assert.equal(r.dateLivraison, "2026-11-10");
   assert.deepEqual(r.lines.drap_clas, { aLivrer: 44, livree: 44 });
   assert.deepEqual(r.lines.taie_clas, { aLivrer: 94, livree: 94 });
@@ -31,31 +33,33 @@ test("lecture d'un bordereau", () => {
   assert.equal(r.avertissements.length, 1); // torchon : 21 à livrer, 20 livrés
 });
 
-const bord = (numero, dateLivraison, q) => {
+const bord = (saisieLe, dateLivraison, q) => {
   const lines = B.lignesVidesBordereau();
   for (const [id, n] of Object.entries(q)) lines[id] = { aLivrer: n, livree: n };
-  return { numero, dateLivraison, lines };
+  return { saisieLe, dateLivraison, lines };
 };
 const BORDS = [
-  bord("111", "2026-10-06", { drap_clas: 50, taie_clas: 100 }),
-  bord("222", "2026-10-20", { drap_clas: 40 }),
-  bord("333", "2026-11-03", { drap_clas: 999 }), // hors période
+  bord("2026-10-05T19:10", "2026-10-06", { drap_clas: 50, taie_clas: 100 }),
+  bord("2026-10-19T20:05", "2026-10-20", { drap_clas: 40 }),
+  bord("2026-11-02T18:00", "2026-11-03", { drap_clas: 999 }), // hors période
 ];
 const INV = { numFacture: "2600104-998989", periodFrom: "2026-10-01", periodTo: "2026-10-31",
   lines: { drap_clas: { qte: 100, prixUnitaire: 1.804 }, taie_clas: { qte: 100, prixUnitaire: 0.558 }, torchon_carreaux: { qte: 0, prixUnitaire: 0.651 } } };
 
 test("facture comparée aux bordereaux du mois", () => {
   const c = B.comparerFactureBordereaux(INV, BORDS);
-  assert.deepEqual(c.bordereaux.map(b => b.numero), ["111", "222"]);
+  assert.deepEqual(c.bordereaux.map(b => b.dateLivraison), ["2026-10-06", "2026-10-20"]);
   const drap = c.lignes.find(l => l.id === "drap_clas");
   assert.equal(drap.livre, 90);
   assert.equal(drap.ecart, 10);
   assert.ok(Math.abs(drap.ecartEuros - 18.04) < 1e-9);
-  assert.deepEqual(drap.detail.map(d => d.numero), ["111", "222"]);
+  assert.deepEqual(drap.detail.map(d => d.saisieLe), ["2026-10-05T19:10", "2026-10-19T20:05"]);
   assert.equal(c.lignes.find(l => l.id === "taie_clas").ecart, 0);
   assert.equal(c.conforme, false);
   const mail = B.mailEcartBordereaux(INV, c);
-  assert.match(mail.body, /n° 111 – livraison du 06\/10\/2026/);
+  assert.match(mail.body, /- Bordereau livraison du 06\/10\/2026 \(saisi le 05\/10\/2026 à 19h10\)/);
+  assert.match(mail.body, /      - livraison du 20\/10\/2026 \(saisi le 19\/10\/2026 à 20h05\) : 40/);
+  assert.doesNotMatch(mail.body, /bordereau n°|- n° /i);
   assert.match(mail.body, /facturé : 100 – livré selon vos bordereaux : 90/);
   assert.match(mail.body, /10 pièces facturée\(s\) en trop \(18,04 € HT\)/);
   assert.doesNotMatch(mail.body, /Taie/);
@@ -69,7 +73,7 @@ test("facture conforme : pas de mail", () => {
 });
 
 test("contrôle avec la réception saisie le même jour", () => {
-  const b = bord("444", "2026-11-10", { drap_clas: 44, drap_cocoon: 81 });
+  const b = bord("2026-11-09T20:28", "2026-11-10", { drap_clas: 44, drap_cocoon: 81 });
   const rec = [{ date: "2026-11-10", quantities: { drap: 44, grande_serviette: 80 } }];
   const r = B.controleReception(b, rec);
   assert.equal(r.statut, "different");
