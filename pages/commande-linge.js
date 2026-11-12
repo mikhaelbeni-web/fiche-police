@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
 import { LINEN_ARTICLES, emptyQuantities, expectedReception, orderWindow, sumUsage, computeDefectSettlements, PANTIN_CODES, PANTIN_CLIENT, ELIS_INVOICE_ARTICLES } from "../lib/linen";
 import FactureLinge from "../components/FactureLinge";
+import RecapReceptionsMois from "../components/RecapReceptionsMois";
 import { isFirebaseConfigured } from "../lib/firebaseApp";
 import { loadFs, makePrefetch } from "../lib/firestoreClient";
 
@@ -636,6 +637,8 @@ function ReceptionsTab({ fs, orders, receptions, defects, reload, setStatus }) {
           <span style={{ color: "var(--ok)", fontWeight: 700 }}> ✓</span> = commande + défectueux bien reçus. Marque ensuite dans Défectueux ceux réellement revenus.
         </p>
       </div>
+
+      <RecapReceptionsMois fs={fs} orders={orders} receptions={receptions} setStatus={setStatus} />
 
       <div className="tbl-wrap"><table className="tbl cl-cards cl-hist" style={{ marginTop: 18 }}>
         <thead>
