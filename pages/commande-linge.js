@@ -173,7 +173,7 @@ function CommandeLinge() {
           {tab === "receptions" && <ReceptionsTab fs={fs} orders={orders} receptions={receptions} defects={defects} reload={() => loadAll(fs)} setStatus={setStatus} />}
           {tab === "usage" && <UsageTab fs={fs} usage={usage} reload={() => loadAll(fs)} setStatus={setStatus} />}
           {tab === "defects" && <DefectsTab fs={fs} defects={defects} reload={() => loadAll(fs)} setStatus={setStatus} />}
-          {tab === "cout" && <CostTab fs={fs} invoices={invoices} receptions={receptions} prices={prices} setPrices={setPrices} reload={() => loadAll(fs)} setStatus={setStatus} />}
+          {tab === "cout" && <CostTab fs={fs} orders={orders} invoices={invoices} receptions={receptions} prices={prices} setPrices={setPrices} reload={() => loadAll(fs)} setStatus={setStatus} />}
         </div>
       </div>
     </>
@@ -638,8 +638,6 @@ function ReceptionsTab({ fs, orders, receptions, defects, reload, setStatus }) {
         </p>
       </div>
 
-      <RecapReceptionsMois fs={fs} orders={orders} receptions={receptions} setStatus={setStatus} />
-
       <div className="tbl-wrap"><table className="tbl cl-cards cl-hist" style={{ marginTop: 18 }}>
         <thead>
           <tr>
@@ -1068,7 +1066,7 @@ function PositionTab({ fs, stock, orders, receptions, usage, defects, thresholds
 // Parcours en 3 étapes : 1. estimation à partir des réceptions, 2. import de
 // la facture Elis, 3. résultat (facturé en trop) et mail de réclamation.
 // Les étapes 2 et 3 vivent dans components/FactureLinge.js.
-function CostTab({ fs, invoices, receptions, prices, setPrices, reload, setStatus }) {
+function CostTab({ fs, orders, invoices, receptions, prices, setPrices, reload, setStatus }) {
   // ---- Estimation automatique : Du/Au -> total anticipé à partir des
   // réceptions déjà enregistrées, sans ressaisie. C'est la réponse directe à
   // "combien vais-je être facturé par Elis sur cette période ?".
@@ -1193,6 +1191,7 @@ function CostTab({ fs, invoices, receptions, prices, setPrices, reload, setStatu
       </div>
 
       <FactureLinge fs={fs} invoices={invoices} receptions={receptions} prices={prices} reload={reload} setStatus={setStatus} />
+      <RecapReceptionsMois fs={fs} orders={orders} receptions={receptions} setStatus={setStatus} />
     </div>
   );
 }
