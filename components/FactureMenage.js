@@ -7,7 +7,7 @@
 // ouvert dans la messagerie, et ne contient que les surfacturations.
 
 import { useState, useEffect } from "react";
-import { parseAnnexeRows, applyMapping, unitsResidence, buildExpected, controlerFacture, buildReclamation, bilanControle, attendusHorsMois, plageHorsMois, TYPES, moisLabel, nettoyerEcarts } from "../lib/factureMenage";
+import { parseAnnexeRows, applyMapping, unitsResidence, buildExpected, controlerFacture, buildReclamation, bilanControle, attendusHorsMois, plageHorsMois, TYPES, moisLabel, nettoyerEcarts, normRemise, libelleRemise } from "../lib/factureMenage";
 
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
@@ -50,6 +50,34 @@ function NetResume({ net, big }) {
     <div className={`fm-net vert${big ? " big" : ""}`}>
       <span className="fm-net-v">Rien à réclamer</span>
       {net < 0 && <span className="fm-net-sub">Le prestataire a oublié de facturer {eur(-net)} HT net.</span>}
+    </div>
+  );
+}
+
+// Saisie de la remise accordée par le prestataire : valeur + unité (% ou € HT).
+// Enregistrée en quittant le champ (ou Entrée) et à chaque changement d'unité.
+function RemiseSaisie({ remise, onChange }) {
+  const [valeur, setValeur] = useState(remise ? String(remise.valeur).replace(".", ",") : "");
+  const [type, setType] = useState(remise?.type || "pct");
+  useEffect(() => {
+    setValeur(remise ? String(remise.valeur).replace(".", ",") : "");
+    setType(remise?.type || "pct");
+  }, [remise?.valeur, remise?.type]);
+  const valider = (v = valeur, t = type) => onChange(normRemise({ type: t, valeur: v }));
+  return (
+    <div className="fm-remise no-print">
+      <label htmlFor="fm-remise-v">Remise accordée sur la facture</label>
+      <div className="fm-remise-champs">
+        <input id="fm-remise-v" type="text" inputMode="decimal" placeholder="0" value={valeur}
+          onChange={e => setValeur(e.target.value.replace(/[^0-9.,]/g, ""))}
+          onBlur={() => valider()} onKeyDown={e => { if (e.key === "Enter") e.currentTarget.blur(); }} />
+        <select value={type} onChange={e => { setType(e.target.value); valider(valeur, e.target.value); }} aria-label="Unité de la remise">
+          <option value="pct">%</option>
+          <option value="eur">€ HT</option>
+        </select>
+        {remise && <button type="button" className="fm-btn fm-btn-light" onClick={() => { setValeur(""); onChange(null); }}>Retirer</button>}
+      </div>
+      <div className="fm-note">En %, la remise réduit d&apos;autant le trop-facturé à réclamer. En €, elle est déduite du montant à réclamer.</div>
     </div>
   );
 }
@@ -175,6 +203,9 @@ export default function FactureMenage() {
       const autresMois = history.filter(h => h.residence === resi && h.mois !== mois).flatMap(h => (h.lines || []).map(l => ({ ...l, mois: h.mois })));
       const out = controlerFacture({ lines: mapped.lines, expected, mois, autresMois });
       const full = { residence: resi, mois, lines: mapped.lines, ecarts: out.ecarts, totaux: out.totaux, surfactureHT: out.netHT, brutHT: out.surfactureHT, compensationHT: out.sousFactureHT, annexeNom: fichier.name };
+      // Une remise déjà saisie pour ce mois est conservée quand on réimporte l'annexe.
+      const ancienne = history.find(h => h.id === docId(resi, mois))?.remise;
+      if (normRemise(ancienne)) full.remise = ancienne;
       setResult(full);
       setIgnored([]);
       setStatus("");
@@ -204,6 +235,20 @@ export default function FactureMenage() {
     const next = ignored.includes(k) ? ignored.filter(x => x !== k) : [...ignored, k];
     setIgnored(next);
     sauvegarder(result, next);
+  }
+
+  async function majRemise(remise) {
+    const next = { ...result, remise };
+    setResult(next);
+    const id = docId(result.residence, result.mois);
+    setHistory(history.map(x => x.id === id ? { ...x, remise } : x));
+    try {
+      const { isFirebaseConfigured, db } = await import("../lib/firebase");
+      if (!isFirebaseConfigured()) return;
+      const { doc, setDoc } = await import("firebase/firestore");
+      const t = bilanControle(next, ignored);
+      await setDoc(doc(db, "factures_menage", id), { remise, surfactureHT: t.netHT }, { merge: true });
+    } catch (e) { setStatus("Remise non enregistrée : " + e.message); }
   }
 
   async function majSuivi(h, suivi) {
@@ -295,7 +340,7 @@ export default function FactureMenage() {
                     {h ? (
                       <>
                         <NetResume net={net} />
-                        <div className="fm-card-sub">Annexe : {eur(h.totaux?.annexeHT)} HT</div>
+                        <div className="fm-card-sub">Annexe : {eur(h.totaux?.annexeHT)} HT{normRemise(h.remise) ? ` · remise ${libelleRemise(h.remise)}` : ""}</div>
                       </>
                     ) : (
                       <div className="fm-card-sub fm-card-vide">Annexe pas encore importée pour ce mois.</div>
@@ -356,10 +401,12 @@ export default function FactureMenage() {
                     <table className="tbl fm-calc">
                       <tbody>
                         <tr><td>Facturé dans l&apos;annexe ({result.totaux.nbMenages} ménages{result.totaux.nbCommunes ? ` + ${result.totaux.nbCommunes} partie(s) commune(s)` : ""})</td><td className="r">{eur(effective.annexeHT)}</td></tr>
+                        {effective.remise && <tr><td>Remise accordée sur la facture ({libelleRemise(effective.remise)}), soit {eur(effective.annexeHT - effective.remiseHT)} HT à payer</td><td className="r">− {eur(effective.remiseHT)}</td></tr>}
                         {effective.prevuHT != null && <tr><td>Prévu d&apos;après le logiciel ({result.totaux.nbAttendus} ménages au tarif convenu{result.totaux.communesHT ? " + parties communes" : ""})</td><td className="r">{eur(effective.prevuHT)}</td></tr>}
                         {effective.ecartHT != null && <tr className="sub"><td>Écart (facturé − prévu)</td><td className="r">{eur(effective.ecartHT)}</td></tr>}
                         <tr><td>Facturé en trop (sans ménage, doublons, tarifs)</td><td className="r">+ {eur(effective.brutHT)}</td></tr>
                         <tr><td>Ménages effectués non facturés (déduits)</td><td className="r">− {eur(effective.compensationHT)}</td></tr>
+                        {effective.remiseSurNetHT ? <tr><td>Part du trop-facturé déjà couverte par la remise</td><td className="r">− {eur(effective.remiseSurNetHT)}</td></tr> : null}
                         {effective.autresHT ? <tr><td>Autres écarts, sans réclamation (tarifs inférieurs, logements sans tarif)</td><td className="r">{eur(effective.autresHT)}</td></tr> : null}
                         <tr className={`net ${effective.netHT > 0 ? "rouge" : "vert"}`}>
                           <td>Net à réclamer</td>
@@ -367,6 +414,7 @@ export default function FactureMenage() {
                         </tr>
                       </tbody>
                     </table>
+                    <RemiseSaisie remise={effective.remise} onChange={majRemise} />
                     {effective.prevuHT == null && <div className="recap-sub no-print">Contrôle enregistré avant le calcul du « prévu » : réimporte l&apos;annexe pour le détail complet.</div>}
                   </div>
                 </div>
