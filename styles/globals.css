@@ -980,6 +980,12 @@ body {
 .facture-menage .fm-calc tr.net td { font-weight: 800; font-size: 15px; border-top: 2px solid var(--line); }
 .facture-menage .fm-calc tr.net.rouge td { color: #b91c1c; }
 .facture-menage .fm-calc tr.net.vert td { color: #15803d; }
+.facture-menage .fm-remise { margin-top: 12px; padding: 10px 12px; border: 1px dashed var(--line); border-radius: 8px; }
+.facture-menage .fm-remise label { display: block; font-weight: 600; margin-bottom: 6px; }
+.facture-menage .fm-remise-champs { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.facture-menage .fm-remise-champs input { width: 90px; font-size: 15px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; text-align: right; }
+.facture-menage .fm-remise-champs select { width: auto; }
+.facture-menage .fm-remise .fm-note { margin-top: 6px; }
 .facture-menage .tbl .r { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .facture-menage .tbl td.fm-detail { color: #444; }
 .facture-menage .tbl tr.fm-off td { opacity: .45; }
