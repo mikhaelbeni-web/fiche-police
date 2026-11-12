@@ -1493,6 +1493,18 @@ body {
 .fl-pdf-page { display: block; margin: 0 auto 12px; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.18); max-width: 100%; height: auto; }
 .fl-pdf-etat { padding: 10px 12px; color: #555; font-size: 14px; }
 .fl-pdf.fl-pdf-grand { max-width: none; width: 100%; height: 100%; border-radius: 0; }
+/* --- Contrôle facture ménage : visualisation rapide de l'annexe importée --- */
+.fm-apercu { max-width: 1200px; }
+.facture-menage .fm-res-head .fm-actions { margin-top: 0; }
+.fm-apercu-filtre { padding: 6px 10px; border: 1px solid #cfd5dc; border-radius: 6px; font-size: 14px; width: 190px; }
+.fm-apercu-info { padding: 6px 12px; font-size: 13px; color: #555; border-bottom: 1px solid #e3e6ea; }
+.fm-apercu-cadre { flex: 1; overflow: auto; }
+.fm-apercu-tbl { width: 100%; font-size: 13px; }
+.fm-apercu-tbl thead th { position: sticky; top: 0; background: #f4f6f8; z-index: 1; }
+.fm-apercu-tbl td { padding: 5px 8px; white-space: nowrap; }
+.fm-apercu-tbl td.fm-detail { white-space: normal; min-width: 160px; }
+.fm-apercu-tbl tr.fm-ap-rouge td { background: #fdecec; }
+.fm-apercu-tbl tr.fm-ap-orange td { background: #fff6e0; }
 @media screen and (max-width: 768px) {
   .fl-pdf-overlay { padding: 0; }
   .fl-pdf { height: 100%; max-width: none; border-radius: 0; }
