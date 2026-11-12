@@ -7,6 +7,7 @@ import Head from "next/head";
 import { LINEN_ARTICLES, emptyQuantities, expectedReception, orderWindow, sumUsage, computeDefectSettlements, PANTIN_CODES, PANTIN_CLIENT, ELIS_INVOICE_ARTICLES } from "../lib/linen";
 import FactureLinge from "../components/FactureLinge";
 import RecapReceptionsMois from "../components/RecapReceptionsMois";
+import BordereauxLinge from "../components/BordereauxLinge";
 import { isFirebaseConfigured } from "../lib/firebaseApp";
 import { loadFs, makePrefetch } from "../lib/firestoreClient";
 
@@ -161,6 +162,7 @@ function CommandeLinge() {
           <button onClick={() => setTab("usage")} className={tab === "usage" ? "primary" : ""}>Linge utilisé</button>
           <button onClick={() => setTab("defects")} className={tab === "defects" ? "primary" : ""}>Défectueux</button>
           <button onClick={() => setTab("cout")} className={tab === "cout" ? "primary" : ""}>Coût linge</button>
+          <button onClick={() => setTab("bordereaux")} className={tab === "bordereaux" ? "primary" : ""}>Bordereaux</button>
         </div>
         <span className="status">{status}</span>
       </div>
@@ -174,6 +176,7 @@ function CommandeLinge() {
           {tab === "usage" && <UsageTab fs={fs} usage={usage} reload={() => loadAll(fs)} setStatus={setStatus} />}
           {tab === "defects" && <DefectsTab fs={fs} defects={defects} reload={() => loadAll(fs)} setStatus={setStatus} />}
           {tab === "cout" && <CostTab fs={fs} orders={orders} invoices={invoices} receptions={receptions} prices={prices} setPrices={setPrices} reload={() => loadAll(fs)} setStatus={setStatus} />}
+          {tab === "bordereaux" && <BordereauxLinge fs={fs} invoices={invoices} receptions={receptions} setStatus={setStatus} />}
         </div>
       </div>
     </>
