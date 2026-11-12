@@ -77,6 +77,9 @@ export default function BordereauxLinge({ fs, invoices, receptions, setStatus })
   function modifier(cle, champ, valeur) {
     setAVerifier(v => v.map(b => (b.cle === cle ? { ...b, [champ]: valeur } : b)));
   }
+  function retirer(cle) {
+    setAVerifier(v => v.filter(b => b.cle !== cle));
+  }
   function modifierQte(cle, id, valeur) {
     setAVerifier(v => v.map(b => (b.cle === cle ? { ...b, lines: { ...b.lines, [id]: { ...(b.lines[id] || {}), livree: valeur } } } : b)));
   }
@@ -166,13 +169,13 @@ export default function BordereauxLinge({ fs, invoices, receptions, setStatus })
 
         {aVerifier.length > 0 && (
           <>
-            <p className="note">Vérifie avant d&apos;enregistrer : date de livraison, date et heure de saisie (bas du bordereau) et quantités de la colonne « Quantité livrée ».</p>
+            <p className="note">Vérifie avant d&apos;enregistrer (✕ retire un bordereau en double) : date de livraison, date et heure de saisie (bas du bordereau) et quantités de la colonne « Quantité livrée ».</p>
             <div className="tbl-wrap"><table className="tbl" style={{ marginTop: 8 }}>
               <thead>
                 <tr>
                   <th>Livraison du</th><th>Saisi le</th>
                   {ELIS_INVOICE_ARTICLES.filter(a => !/horizon/.test(a.id) || aVerifier.some(b => Number(b.lines?.[a.id]?.livree) > 0)).map(a => <th key={a.id} className="c">{a.label}</th>)}
-                  <th>État</th>
+                  <th>État</th><th></th>
                 </tr>
               </thead>
               <tbody>
@@ -192,6 +195,7 @@ export default function BordereauxLinge({ fs, invoices, receptions, setStatus })
                         {b.avertissements?.map((w, i) => <div key={i} style={{ color: "var(--warn)" }}>{w}</div>)}
                         <div style={{ color: "var(--muted, #888)" }}>{b.fichierNom}</div>
                       </td>
+                      <td><button onClick={() => retirer(b.cle)} className="ghost icon-btn danger" title="Retirer ce bordereau de la sélection (il ne sera pas enregistré)" aria-label="Retirer ce bordereau">✕</button></td>
                     </tr>
                   );
                 })}
