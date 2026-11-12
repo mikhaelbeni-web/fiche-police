@@ -32,15 +32,31 @@ test("relevé d'octobre : complément déduit, manque restant", () => {
   assert.equal(r.totalRecu.drap, 64);
   assert.equal(r.totalRecuLibre.drap, 63);
   assert.equal(r.totalAttendu.drap, 126);
-  assert.equal(r.difference.drap, -62);
-  assert.equal(r.difference.housse, -64);
+  // r1 ouvre 63 draps + 2 housses ; r2 en comble 63 ; r3 (repli commande) ouvre 62 draps + 62 housses.
+  assert.equal(r.manqueOuvert.drap, 125);
+  assert.equal(r.comble.drap, 63);
+  assert.equal(r.manquant.drap, 62);
+  assert.equal(r.manquant.housse, 64);
   assert.deepEqual(r.sansReception.map(o => o.id), ["o2"]);
 });
 
 test("mois sans réception", () => {
   const r = monthReceptionReport(RECEPTIONS, ORDERS, "2026-09");
   assert.equal(r.rows.length, 0);
-  assert.equal(r.difference.drap, 0);
+  assert.equal(r.manquant.drap, 0);
+});
+
+test("une livraison sans commande AVANT le manque ne l'efface pas", () => {
+  const rec = [
+    { id: "a", date: "2026-10-06", quantities: q({ drap: 100 }) },
+    { id: "b", date: "2026-10-15", orderId: "o1", quantities: q({ drap: 56, housse: 62 }), commande: q({ drap: 63, housse: 62 }) },
+    { id: "c", date: "2026-10-20", orderId: "o1", quantities: q({ drap: 65, housse: 62 }), commande: q({ drap: 63, housse: 62 }) },
+  ];
+  const r = monthReceptionReport(rec, ORDERS, "2026-10");
+  assert.equal(r.manqueOuvert.drap, 7);
+  assert.equal(r.comble.drap, 2);   // excédent de 2 le 20/10
+  assert.equal(r.manquant.drap, 5);
+  assert.equal(r.manquant.housse, 0);
 });
 
 test("libellé du mois", () => {

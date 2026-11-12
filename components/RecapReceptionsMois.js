@@ -7,7 +7,7 @@
 // (le dépôt est public, aucune adresse dans le code).
 
 import { useState, useEffect } from "react";
-import { LINEN_ARTICLES, PANTIN_CODES, PANTIN_CLIENT, monthReceptionReport, moisLabel } from "../lib/linen";
+import { LINEN_ARTICLES, PANTIN_CLIENT, monthReceptionReport, moisLabel } from "../lib/linen";
 
 const HOTEL_GMAIL = "residencelebelleville@gmail.com";
 const court = label => label.split(" (")[0];
@@ -21,17 +21,18 @@ function moisPrecedent() {
   const p = new Date(d.getFullYear(), d.getMonth() - 1, 15);
   return `${p.getFullYear()}-${String(p.getMonth() + 1).padStart(2, "0")}`;
 }
-const nomElis = key => PANTIN_CODES[key]?.libelle || key;
+// Noms courts dans le mail (« Drap », « Taie d'oreiller ») ; codes et libellés Elis dans l'Excel.
+const nom = key => court(LINEN_ARTICLES.find(a => a.key === key)?.label || key).toLowerCase();
 
 export function corpsMail(report) {
   const lignesLivraisons = report.rows.map(row => {
-    const q = LINEN_ARTICLES.filter(a => row.recu[a.key] > 0).map(a => `${row.recu[a.key]} ${nomElis(a.key)}`).join(", ");
-    const origine = row.libre ? "complément sans commande" : `commande du ${fr(row.orderDate)}`;
-    const manque = row.ecart ? LINEN_ARTICLES.filter(a => row.ecart[a.key] < 0).map(a => `${-row.ecart[a.key]} ${nomElis(a.key)}`) : [];
+    const q = LINEN_ARTICLES.filter(a => row.recu[a.key] > 0).map(a => `${row.recu[a.key]} ${nom(a.key)}`).join(", ");
+    const origine = row.libre ? "livraison sans commande" : `commande du ${fr(row.orderDate)}`;
+    const manque = row.ecart ? LINEN_ARTICLES.filter(a => row.ecart[a.key] < 0).map(a => `${-row.ecart[a.key]} ${nom(a.key)}`) : [];
     return `- ${fr(row.date)} (${origine}) : ${q || "rien"}` + (manque.length ? `\n   manquant : ${manque.join(", ")}` : "");
   });
-  const manquants = LINEN_ARTICLES.filter(a => report.difference[a.key] < 0)
-    .map(a => `- ${nomElis(a.key)} : ${-report.difference[a.key]}`);
+  const manquants = LINEN_ARTICLES.filter(a => report.manquant[a.key] > 0)
+    .map(a => `- ${nom(a.key)} : ${report.manquant[a.key]}`);
   return [
     "Bonjour,",
     "",
@@ -41,8 +42,8 @@ export function corpsMail(report) {
     ...lignesLivraisons,
     "",
     ...(manquants.length
-      ? ["Linge attendu et non reçu sur le mois (compléments déjà déduits) :", ...manquants]
-      : ["Sur le mois, tout le linge attendu a été reçu (compléments compris)."]),
+      ? ["Linge commandé et toujours pas reçu à la fin du mois (les livraisons complémentaires sont déjà déduites) :", ...manquants]
+      : ["Sur le mois, tout le linge manquant a été complété par la suite."]),
     "",
     "Bien cordialement,",
     "Résidence Le Belleville",
@@ -103,7 +104,7 @@ export default function RecapReceptionsMois({ fs, orders, receptions, setStatus 
     if (fichier) setStatus(`Excel téléchargé (${fichier}) : glisse-le dans le mail Gmail ouvert, relis puis envoie.`);
   }
 
-  const manquants = LINEN_ARTICLES.filter(a => report.difference[a.key] < 0);
+  const manquants = LINEN_ARTICLES.filter(a => report.manquant[a.key] > 0);
 
   return (
     <div className="linen-form" style={{ marginTop: 18 }}>
@@ -126,21 +127,25 @@ export default function RecapReceptionsMois({ fs, orders, receptions, setStatus 
                 <th>Article</th>
                 <th className="c">Attendu</th>
                 <th className="c">Reçu</th>
-                <th className="c">dont complément</th>
-                <th className="c">Différence</th>
+                <th className="c">dont sans commande</th>
+                <th className="c">Manque</th>
+                <th className="c">Complété</th>
+                <th className="c">Manquant</th>
               </tr>
             </thead>
             <tbody>
               {LINEN_ARTICLES.map(a => {
-                const diff = report.difference[a.key];
+                const m = report.manquant[a.key];
                 return (
                   <tr key={a.key}>
                     <td className="apt cl-head">{court(a.label)}</td>
                     <td className="c" data-label="Attendu">{report.totalAttendu[a.key]}</td>
                     <td className="c" data-label="Reçu">{report.totalRecu[a.key]}</td>
-                    <td className="c" data-label="dont complément">{report.totalRecuLibre[a.key] || "—"}</td>
-                    <td className="c" data-label="Différence" style={{ fontWeight: 700, color: diff < 0 ? "var(--bad)" : (diff > 0 ? "var(--warn)" : "var(--ok)") }}>
-                      {diff === 0 ? "✓" : (diff > 0 ? `+${diff}` : diff)}
+                    <td className="c" data-label="dont sans commande">{report.totalRecuLibre[a.key] || "—"}</td>
+                    <td className="c" data-label="Manque">{report.manqueOuvert[a.key] || "—"}</td>
+                    <td className="c" data-label="Complété">{report.comble[a.key] || "—"}</td>
+                    <td className="c" data-label="Manquant" style={{ fontWeight: 700, color: m > 0 ? "var(--bad)" : "var(--ok)" }}>
+                      {m > 0 ? m : "✓"}
                     </td>
                   </tr>
                 );
@@ -149,7 +154,7 @@ export default function RecapReceptionsMois({ fs, orders, receptions, setStatus 
           </table></div>
           <p className="note">
             {report.rows.length} livraison(s) en {moisLabel(month)}.
-            {manquants.length ? " Différence négative = linge attendu jamais reçu (les compléments livrés sans commande sont déjà déduits)." : " Tout le linge attendu a été reçu."}
+            {" "}Manque = écarts négatifs des livraisons ; Complété = rattrapé ensuite (livraison sans commande ou excédent) ; Manquant = toujours pas reçu en fin de mois.
             {report.sansReception.length > 0 && ` ${report.sansReception.length} commande(s) prévue(s) ce mois-ci sans réception enregistrée (listée(s) dans l'Excel).`}
             {" "}Destinataires : {destinataires.length ? destinataires.join(", ") : "aucun (demandés au premier envoi)"}.
           </p>

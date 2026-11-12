@@ -37,21 +37,22 @@ export function construireClasseur(report) {
 
   // ---- Feuille 1 : synthèse par article
   const s = wb.addWorksheet("Synthèse", { pageSetup: { orientation: "landscape", fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
-  s.columns = [{ width: 44 }, { width: 18 }, { width: 18 }, { width: 18 }, { width: 18 }];
   s.addRow([titre]).font = { bold: true, size: 14 };
   s.addRow([sousTitre]);
   s.addRow([`${report.rows.length} livraison(s) enregistrée(s) dans le mois.`]);
   s.addRow([]);
-  entete(s, s.addRow(["Article", "Attendu (commandes + défectueux renvoyés)", "Reçu sur commande", "Reçu en complément (sans commande)", "Différence (reçu − attendu)"]));
+  s.columns = [{ width: 44 }, { width: 16 }, { width: 16 }, { width: 16 }, { width: 16 }, { width: 16 }, { width: 16 }];
+  entete(s, s.addRow(["Article", "Attendu (commandes + défectueux renvoyés)", "Reçu (total)", "dont livré sans commande", "Manque constaté aux livraisons", "Complété ensuite", "Toujours manquant en fin de mois"]));
   for (const a of LINEN_ARTICLES) {
-    const recuCmd = report.totalRecu[a.key] - report.totalRecuLibre[a.key];
-    const r = s.addRow([libelle(a.key), report.totalAttendu[a.key], recuCmd, report.totalRecuLibre[a.key], report.difference[a.key]]);
+    const k = a.key;
+    const r = s.addRow([libelle(k), report.totalAttendu[k], report.totalRecu[k], report.totalRecuLibre[k], report.manqueOuvert[k], report.comble[k], report.manquant[k]]);
     cadre(r);
-    if (report.difference[a.key] < 0) r.getCell(5).fill = ROUGE;
-    r.getCell(5).font = { bold: true };
+    r.getCell(7).font = { bold: true };
+    if (report.manquant[k] > 0) r.getCell(7).fill = ROUGE;
   }
   s.addRow([]);
-  s.addRow(["Différence négative = linge attendu et jamais reçu à l'hôtel sur le mois."]).font = { italic: true };
+  s.addRow(["Manque constaté = écarts négatifs des livraisons (détail dans la feuille « Détail par livraison »)."]).font = { italic: true };
+  s.addRow(["Complété ensuite = rattrapé plus tard dans le mois par une livraison sans commande ou un excédent."]).font = { italic: true };
   if (report.sansReception.length) {
     s.addRow([]);
     s.addRow(["Commandes dont la livraison était prévue ce mois-ci, sans réception enregistrée :"]).font = { bold: true };
@@ -66,7 +67,7 @@ export function construireClasseur(report) {
   d.columns = [{ width: 18 }, { width: 30 }, { width: 44 }, { width: 12 }, { width: 12 }, { width: 12 }];
   entete(d, d.addRow(["Reçu le", "Commande", "Article", "Attendu", "Reçu", "Écart"]));
   for (const row of report.rows) {
-    const cmd = row.libre ? "Complément sans commande" : `${row.orderType || ""} ${fr(row.orderDate)}`.trim();
+    const cmd = row.libre ? "Livraison sans commande" : `${row.orderType || ""} ${fr(row.orderDate)}`.trim();
     for (const a of LINEN_ARTICLES) {
       if (!row.recu[a.key] && !(row.attendu && row.attendu[a.key])) continue;
       const r = d.addRow([frJour(row.date), cmd, libelle(a.key), row.attendu ? row.attendu[a.key] : "—", row.recu[a.key], row.ecart ? row.ecart[a.key] : "—"]);
@@ -80,7 +81,7 @@ export function construireClasseur(report) {
   g.columns = [{ width: 18 }, { width: 26 }, ...LINEN_ARTICLES.map(() => ({ width: 14 }))];
   entete(g, g.addRow(["Reçu le", "Commande", ...LINEN_ARTICLES.map(a => `${PANTIN_CODES[a.key]?.code}\n${PANTIN_CODES[a.key]?.libelle}`)]));
   for (const row of report.rows) {
-    cadre(g.addRow([frJour(row.date), row.libre ? "Complément" : `${row.orderType || ""} ${fr(row.orderDate)}`.trim(), ...LINEN_ARTICLES.map(a => row.recu[a.key])]));
+    cadre(g.addRow([frJour(row.date), row.libre ? "Sans commande" : `${row.orderType || ""} ${fr(row.orderDate)}`.trim(), ...LINEN_ARTICLES.map(a => row.recu[a.key])]));
   }
   const tot = g.addRow(["Total reçu", "", ...LINEN_ARTICLES.map(a => report.totalRecu[a.key])]);
   cadre(tot); tot.font = { bold: true };
