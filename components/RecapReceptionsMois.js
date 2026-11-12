@@ -1,5 +1,5 @@
 // components/RecapReceptionsMois.js
-// Commande linge > Réceptions : relevé de toutes les réceptions d'un mois choisi,
+// Commande linge > Coût linge : relevé de toutes les réceptions d'un mois choisi,
 // à envoyer à Elis pour justifier le linge manquant (« les trous »).
 // Même principe que le bon de ramassage : Gmail de l'hôtel pré-rempli +
 // téléchargement de l'Excel à glisser dans le mail (un lien web ne peut pas
