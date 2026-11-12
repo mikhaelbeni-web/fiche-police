@@ -7,7 +7,7 @@
 // ouvert dans la messagerie, et ne contient que les surfacturations.
 
 import { useState, useEffect } from "react";
-import { parseAnnexeRows, applyMapping, unitsResidence, buildExpected, controlerFacture, buildReclamation, bilanControle, attendusHorsMois, plageHorsMois, TYPES, moisLabel, normRemise, libelleRemise } from "../lib/factureMenage";
+import { parseAnnexeRows, applyMapping, unitsResidence, buildExpected, controlerFacture, buildReclamation, bilanControle, attendusHorsMois, plageHorsMois, TYPES, moisLabel, nettoyerEcarts, normRemise, libelleRemise } from "../lib/factureMenage";
 
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
@@ -16,6 +16,10 @@ const RESIDENCES = ["Belleville", "Villiers", "Lantiez"];
 const eur = n => n == null ? "—" : n.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
 const fmtFr = d => d ? d.split("-").reverse().join("/") : "";
 const ecartKey = e => `${e.type}|${e.unit}|${e.date}|${e.ligne}`;
+// Clé React d'une ligne : ecartKey peut se répéter (plusieurs ménages « manquants » même
+// logement, même date, sans n° de ligne) ; des clés en double laissaient à l'écran des lignes
+// d'un autre mois après changement de contrôle. L'index les rend uniques.
+const rowKey = (e, i) => `${ecartKey(e)}|${i}`;
 const docId = (residence, mois) => `${residence}_${mois}`;
 const SUIVI = { controle: "Contrôlé", reclame: "Réclamation envoyée", avoir: "Avoir reçu" };
 const suiviDe = h => (SUIVI[h.suivi] ? h.suivi : "controle");
@@ -123,6 +127,7 @@ export default function FactureMenage() {
   const [copied, setCopied] = useState(false);
   const [pending, setPending] = useState([]); // libellés de l'annexe non rapprochés
   const [choices, setChoices] = useState({});
+  const [apercu, setApercu] = useState(null); // contrôle dont on affiche l'annexe
 
   async function loadHistory() {
     try {
@@ -342,6 +347,7 @@ export default function FactureMenage() {
                     )}
                     <div className="fm-card-actions">
                       {h && <button type="button" className="fm-btn" onClick={() => ouvrir(h)}>Voir le détail</button>}
+                      {h?.lines?.length > 0 && <button type="button" className="fm-btn fm-btn-light" onClick={() => setApercu(h)}>Voir l&apos;annexe</button>}
                       <label className={`fm-btn${h ? " fm-btn-light" : " primary"}${busy ? " disabled" : ""}`}>
                         {h ? "Réimporter" : "Importer l'annexe"}
                         <input type="file" accept=".xlsx" className="fm-file" disabled={busy} onChange={e => { const f = e.target.files?.[0]; e.target.value = ""; if (f) controler({}, { residence: r, file: f }); }} />
@@ -383,7 +389,10 @@ export default function FactureMenage() {
                     <div className="fm-res-title">{result.residence} · {moisLabel(result.mois)}</div>
                     <div className="recap-sub">Contrôle de la facture ménage{result.annexeNom ? ` · annexe ${result.annexeNom}` : ""}</div>
                   </div>
-                  <button type="button" className="fm-btn no-print" onClick={() => window.print()}>Imprimer (paysage)</button>
+                  <div className="fm-actions no-print">
+                    {result.lines?.length > 0 && <button type="button" className="fm-btn" onClick={() => setApercu(result)}>Voir l&apos;annexe</button>}
+                    <button type="button" className="fm-btn" onClick={() => window.print()}>Imprimer (paysage)</button>
+                  </div>
                 </div>
 
                 <div className="fm-res-grid">
@@ -415,8 +424,8 @@ export default function FactureMenage() {
                     <div className="resid-head"><span className="resid-name">Facturé en trop</span><span className="resid-count">{reclam.filter(e => e.reclamable).length} ligne(s) réclamée(s) · {eur(effective.brutHT)} HT</span></div>
                     <div className="tbl-wrap"><table className="tbl">
                       <thead><tr><th className="no-print c">Réclamer</th><th>Type</th><th>N°</th><th>Date</th><th className="r">Montant HT</th><th>Détail</th></tr></thead>
-                      <tbody>{reclam.map(e => (
-                        <tr key={ecartKey(e)} className={e.reclamable ? undefined : "fm-off"}>
+                      <tbody>{reclam.map((e, i) => (
+                        <tr key={rowKey(e, i)} className={e.reclamable ? undefined : "fm-off"}>
                           <td className="no-print c"><label className="fm-check"><input type="checkbox" checked={e.reclamable} onChange={() => toggle(e)} aria-label="Réclamer cette ligne" /></label></td>
                           <td>{TYPES[e.type].label}</td><td className="apt">{e.unit || "—"}</td><td>{fmtFr(e.date)}</td>
                           <td className="r" data-label="HT">{eur(e.montantHT)}</td><td className="fm-detail">{e.detail}</td>
@@ -431,8 +440,8 @@ export default function FactureMenage() {
                     <div className="resid-head"><span className="resid-name">Ménages effectués non facturés (déduits)</span><span className="resid-count">{eur(effective.compensationHT)} HT</span></div>
                     <div className="tbl-wrap"><table className="tbl">
                       <thead><tr><th className="no-print c">Déduire</th><th>N°</th><th>Date</th><th className="r">Valeur HT</th><th>Détail</th></tr></thead>
-                      <tbody>{compens.map(e => (
-                        <tr key={ecartKey(e)} className={e.compensation ? undefined : "fm-off"}>
+                      <tbody>{compens.map((e, i) => (
+                        <tr key={rowKey(e, i)} className={e.compensation ? undefined : "fm-off"}>
                           <td className="no-print c"><label className="fm-check"><input type="checkbox" checked={e.compensation} onChange={() => toggle(e)} aria-label="Déduire ce ménage" /></label></td>
                           <td className="apt">{e.unit || "—"}</td><td>{fmtFr(e.date)}</td><td className="r" data-label="HT">{eur(e.montantHT)}</td><td className="fm-detail">{e.detail}</td>
                         </tr>))}</tbody>
@@ -458,8 +467,8 @@ export default function FactureMenage() {
                     <div className="fm-note">Sans effet sur le montant. « Date différente » : même logement facturé à une autre date que le départ.</div>
                     <div className="tbl-wrap"><table className="tbl">
                       <thead><tr><th>Type</th><th>N°</th><th>Date</th><th>Détail</th></tr></thead>
-                      <tbody>{info.map(e => (
-                        <tr key={ecartKey(e)}><td>{TYPES[e.type].label}</td><td className="apt">{e.unit || "—"}</td><td>{fmtFr(e.date)}</td><td className="fm-detail">{e.detail}</td></tr>))}</tbody>
+                      <tbody>{info.map((e, i) => (
+                        <tr key={rowKey(e, i)}><td>{TYPES[e.type].label}</td><td className="apt">{e.unit || "—"}</td><td>{fmtFr(e.date)}</td><td className="fm-detail">{e.detail}</td></tr>))}</tbody>
                     </table></div>
                   </div>
                 )}
@@ -522,6 +531,56 @@ export default function FactureMenage() {
           )}
         </div>
       )}
+      {apercu && <AnnexeApercu controle={apercu} onClose={() => setApercu(null)} />}
+    </div>
+  );
+}
+
+// Visualisation rapide de l'annexe importée : lignes telles que lues dans le fichier Excel
+// (lignes vides et ligne de totaux écartées), avec l'écart trouvé sur chaque ligne.
+function AnnexeApercu({ controle, onClose }) {
+  const [filtre, setFiltre] = useState("");
+  useEffect(() => {
+    const k = e => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", k);
+    return () => window.removeEventListener("keydown", k);
+  }, [onClose]);
+  const ecartsParLigne = {};
+  for (const e of nettoyerEcarts(controle.ecarts)) if (e.ligne != null) (ecartsParLigne[e.ligne] ||= []).push(e);
+  const f = filtre.trim().toLowerCase();
+  const lignes = (controle.lines || []).filter(l => !f
+    || [l.unit, l.label, l.desc, fmtFr(l.date), l.resa].some(v => String(v || "").toLowerCase().includes(f)));
+  const total = lignes.reduce((s, l) => s + (l.ht || 0) + (l.amenities || 0), 0);
+  const titre = `Annexe ${controle.residence} · ${moisLabel(controle.mois)}`;
+  return (
+    <div className="fl-pdf-overlay no-print" onClick={onClose} role="dialog" aria-modal="true" aria-label={titre}>
+      <div className="fl-pdf fm-apercu" onClick={e => e.stopPropagation()}>
+        <div className="fl-pdf-head">
+          <span className="fl-pdf-titre">{titre}{controle.annexeNom ? ` · ${controle.annexeNom}` : ""}</span>
+          <input type="search" className="fm-apercu-filtre" placeholder="Filtrer (n°, date…)" value={filtre} onChange={e => setFiltre(e.target.value)} aria-label="Filtrer les lignes" />
+          <button type="button" className="fm-btn" onClick={onClose}>Fermer</button>
+        </div>
+        <div className="fm-apercu-info">{lignes.length} ligne(s) · {eur(Math.round(total * 100) / 100)} HT{f ? " (filtrées)" : ""}. En couleur : lignes avec un écart.</div>
+        <div className="fm-apercu-cadre"><table className="tbl fm-apercu-tbl">
+          <thead><tr><th className="r">Ligne</th><th>N°</th><th>Libellé</th><th>Date</th><th>Description</th><th className="r">HT</th><th className="r">Amenities</th><th className="r">TTC</th><th>Écart</th></tr></thead>
+          <tbody>{lignes.map(l => {
+            const ec = ecartsParLigne[l.ligne] || [];
+            const cls = ec.some(e => e.reclamable) ? "fm-ap-rouge" : ec.length ? "fm-ap-orange" : undefined;
+            return (
+              <tr key={l.ligne} className={cls}>
+                <td className="r">{l.ligne}</td>
+                <td className="apt">{l.commune ? "Communs" : (l.unit || "—")}</td>
+                <td>{l.label}</td>
+                <td>{fmtFr(l.date)}</td>
+                <td className="fm-detail">{l.desc}</td>
+                <td className="r">{eur(l.ht)}</td>
+                <td className="r">{l.amenities ? eur(l.amenities) : ""}</td>
+                <td className="r">{eur(l.ttc)}</td>
+                <td className="fm-detail">{ec.map(e => TYPES[e.type]?.label).join(", ")}</td>
+              </tr>);
+          })}</tbody>
+        </table></div>
+      </div>
     </div>
   );
 }
