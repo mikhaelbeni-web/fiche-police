@@ -57,12 +57,11 @@ test("facture comparée aux bordereaux du mois", () => {
   assert.equal(c.lignes.find(l => l.id === "taie_clas").ecart, 0);
   assert.equal(c.conforme, false);
   const mail = B.mailEcartBordereaux(INV, c);
-  assert.match(mail.body, /- Bordereau livraison du 06\/10\/2026 \(saisi le 05\/10\/2026 à 19h10\)/);
-  assert.match(mail.body, /      - livraison du 20\/10\/2026 \(saisi le 19\/10\/2026 à 20h05\) : 40/);
+  assert.match(mail.body, /- livraison du 06\/10\/2026 \(saisi le 05\/10\/2026 à 19h10\) : Drap 50, Taie 100/);
+  assert.match(mail.body, /- livraison du 20\/10\/2026 \(saisi le 19\/10\/2026 à 20h05\) : Drap 40/);
   assert.doesNotMatch(mail.body, /bordereau n°|- n° /i);
-  assert.match(mail.body, /facturé : 100 – livré selon vos bordereaux : 90/);
-  assert.match(mail.body, /10 pièces facturée\(s\) en trop \(18,04 € HT\)/);
-  assert.doesNotMatch(mail.body, /Taie/);
+  assert.match(mail.body, /- Drap Clas blc l. noir 280 NF : facturé 100, bordereaux 90 → 10 pièces facturée\(s\) en trop \(18,04 € HT\)/);
+  assert.doesNotMatch(mail.body, /Taie Am Clas/);
 });
 
 test("facture conforme : pas de mail", () => {

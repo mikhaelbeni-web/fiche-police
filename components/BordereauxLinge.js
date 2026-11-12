@@ -36,6 +36,7 @@ export default function BordereauxLinge({ fs, invoices, receptions, setStatus })
   const [aVerifier, setAVerifier] = useState([]); // bordereaux lus, pas encore enregistrés
   const [lecture, setLecture] = useState("");
   const [destinataires, setDestinataires] = useState([]);
+  const [texteMail, setTexteMail] = useState("");
   const fichierRef = useRef(null);
 
   async function charger() {
@@ -145,9 +146,20 @@ export default function BordereauxLinge({ fs, invoices, receptions, setStatus })
       setDestinataires(to);
       fs.setDoc(fs.doc(fs.db, "linen_settings", "belleville"), { bonDestinataires: to }, { merge: true }).catch(() => {});
     }
-    window.open("https://mail.google.com/mail/?" + new URLSearchParams({
-      authuser: HOTEL_GMAIL, view: "cm", fs: "1", to: to.join(","), su: mail.subject, body: mail.body,
-    }).toString(), "_blank");
+    const lien = body => "https://mail.google.com/mail/?" + new URLSearchParams({
+      authuser: HOTEL_GMAIL, view: "cm", fs: "1", to: to.join(","), su: mail.subject, body,
+    }).toString();
+    // Gmail refuse les adresses trop longues (erreur 404) : au-delà, le texte
+    // est copié et il suffit de le coller dans le mail ouvert.
+    if (lien(mail.body).length <= 7000) { window.open(lien(mail.body), "_blank"); return; }
+    window.open(lien("(coller ici le texte copié : Ctrl+V)"), "_blank");
+    try {
+      await navigator.clipboard.writeText(mail.body);
+      setStatus("Mail trop long pour Gmail : le texte est copié, colle-le dans le mail ouvert (Ctrl+V).");
+    } catch {
+      setStatus("Mail trop long pour Gmail et copie impossible : recopie le texte affiché sous le bouton.");
+      setTexteMail(mail.body);
+    }
   }
 
   return (
@@ -290,6 +302,7 @@ export default function BordereauxLinge({ fs, invoices, receptions, setStatus })
                   <button className="primary" onClick={preparerMail}>✉️ Préparer le mail à Elis</button>
                   <span className="note" style={{ margin: 0 }}>Destinataires : {destinataires.length ? destinataires.join(", ") : "demandés au premier envoi"}</span>
                 </div>
+                {texteMail && <textarea readOnly value={texteMail} rows={14} style={{ width: "100%", marginTop: 8 }} onFocus={e => e.target.select()} />}
               </>
             )}
           </>
