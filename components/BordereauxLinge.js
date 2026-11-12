@@ -2,7 +2,8 @@
 // Commande linge > Bordereaux : les bordereaux d'expédition Elis (un par
 // livraison) importés en PDF, plusieurs à la fois, puis comparés à la facture
 // du mois. La facture doit être exactement la somme des bordereaux ; sinon,
-// mail à Elis avec les n° de bordereau et les quantités en écart.
+// mail à Elis avec chaque bordereau (date de livraison + date et heure de
+// saisie) et les quantités en écart.
 // Indépendant du coût du linge. Firestore : `linen_bordereaux`
 // (factures : `linen_invoices`, importées dans Coût linge).
 
@@ -10,6 +11,10 @@ import { useState, useEffect, useRef } from "react";
 import { ELIS_INVOICE_ARTICLES, moisLabel } from "../lib/linen";
 import { lireLignesPdf } from "../lib/factureLinge";
 import { analyserBordereauElis, comparerFactureBordereaux, controleReception, mailEcartBordereaux } from "../lib/bordereauLinge";
+
+// Un bordereau = date de livraison + date et heure de saisie (Elis n'a pas de numéro fiable).
+const cleBordereau = b => `${b.dateLivraison || ""}|${(b.saisieLe || "").slice(0, 16)}`;
+const frHeure = iso => (iso ? `${iso.slice(0, 10).split("-").reverse().join("/")} à ${iso.slice(11, 16).replace(":", "h")}` : "—");
 
 const HOTEL_GMAIL = "residencelebelleville@gmail.com";
 const fr = iso => (iso ? iso.slice(0, 10).split("-").reverse().join("/") : "");
@@ -46,7 +51,7 @@ export default function BordereauxLinge({ fs, invoices, receptions, setStatus })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fs]);
 
-  const existe = numero => numero && bordereaux.some(b => String(b.numero) === String(numero));
+  const existe = b => bordereaux.some(x => cleBordereau(x) === cleBordereau(b));
 
   async function importer(e) {
     const fichiers = Array.from(e.target.files || []);
@@ -57,10 +62,10 @@ export default function BordereauxLinge({ fs, invoices, receptions, setStatus })
       const f = fichiers[i];
       setLecture(`Lecture des bordereaux… ${i + 1}/${fichiers.length}`);
       try {
-        const r = analyserBordereauElis(await lireLignesPdf(f), f.name);
+        const r = analyserBordereauElis(await lireLignesPdf(f));
         lus.push({ cle: `${f.name}-${i}`, fichierNom: f.name, ...r });
       } catch (err) {
-        lus.push({ cle: `${f.name}-${i}`, fichierNom: f.name, numero: "", dateLivraison: "", lines: {}, avertissements: [`Impossible de lire ce PDF (${err.message}).`], illisible: true });
+        lus.push({ cle: `${f.name}-${i}`, fichierNom: f.name, saisieLe: "", dateLivraison: "", lines: {}, avertissements: [`Impossible de lire ce PDF (${err.message}).`], illisible: true });
       }
     }
     setLecture("");
@@ -76,15 +81,14 @@ export default function BordereauxLinge({ fs, invoices, receptions, setStatus })
     setAVerifier(v => v.map(b => (b.cle === cle ? { ...b, lines: { ...b.lines, [id]: { ...(b.lines[id] || {}), livree: valeur } } } : b)));
   }
 
-  // Doublons : déjà enregistré, ou deux fois le même n° dans le lot importé.
-  const numerosLot = aVerifier.map(b => String(b.numero || "").trim());
+  // Doublons : même livraison + même saisie déjà enregistrée, ou deux fois dans le lot.
+  const clesLot = aVerifier.map(cleBordereau);
   const probleme = b => {
-    const n = String(b.numero || "").trim();
     if (b.illisible) return "PDF illisible";
-    if (!n) return "N° manquant";
-    if (!b.dateLivraison) return "Date manquante";
-    if (existe(n)) return "Déjà importé";
-    if (numerosLot.filter(x => x === n).length > 1) return "En double dans la sélection";
+    if (!b.dateLivraison) return "Date de livraison manquante";
+    if (!b.saisieLe) return "Date de saisie manquante";
+    if (existe(b)) return "Déjà importé";
+    if (clesLot.filter(x => x === cleBordereau(b)).length > 1) return "En double dans la sélection";
     return null;
   };
   const valides = aVerifier.filter(b => !probleme(b));
@@ -99,7 +103,7 @@ export default function BordereauxLinge({ fs, invoices, receptions, setStatus })
           lines[a.id] = { aLivrer: Number(l.aLivrer) || 0, livree: Number(l.livree) || 0 };
         }
         await fs.addDoc(fs.collection(fs.db, "linen_bordereaux"), {
-          numero: String(b.numero).trim(), dateLivraison: b.dateLivraison, lines,
+          dateLivraison: b.dateLivraison, saisieLe: b.saisieLe.slice(0, 16), lines,
           fichierNom: b.fichierNom || null, createdAt: new Date().toISOString(),
         });
       }
@@ -111,7 +115,7 @@ export default function BordereauxLinge({ fs, invoices, receptions, setStatus })
   }
 
   async function supprimer(b) {
-    if (!confirm(`Supprimer le bordereau n° ${b.numero} du ${fr(b.dateLivraison)} ?`)) return;
+    if (!confirm(`Supprimer le bordereau de la livraison du ${fr(b.dateLivraison)} (saisi le ${frHeure(b.saisieLe)}) ?`)) return;
     await fs.deleteDoc(fs.doc(fs.db, "linen_bordereaux", b.id));
     await charger();
   }
@@ -162,11 +166,11 @@ export default function BordereauxLinge({ fs, invoices, receptions, setStatus })
 
         {aVerifier.length > 0 && (
           <>
-            <p className="note">Vérifie avant d&apos;enregistrer : le n° vient du nom du fichier, les quantités sont celles de la colonne « Quantité livrée ».</p>
+            <p className="note">Vérifie avant d&apos;enregistrer : date de livraison, date et heure de saisie (bas du bordereau) et quantités de la colonne « Quantité livrée ».</p>
             <div className="tbl-wrap"><table className="tbl" style={{ marginTop: 8 }}>
               <thead>
                 <tr>
-                  <th>N° bordereau</th><th>Livraison du</th>
+                  <th>Livraison du</th><th>Saisi le</th>
                   {ELIS_INVOICE_ARTICLES.filter(a => !/horizon/.test(a.id) || aVerifier.some(b => Number(b.lines?.[a.id]?.livree) > 0)).map(a => <th key={a.id} className="c">{a.label}</th>)}
                   <th>État</th>
                 </tr>
@@ -176,8 +180,8 @@ export default function BordereauxLinge({ fs, invoices, receptions, setStatus })
                   const pb = probleme(b);
                   return (
                     <tr key={b.cle}>
-                      <td><input value={b.numero} onChange={e => modifier(b.cle, "numero", e.target.value)} style={{ width: 110 }} /></td>
                       <td><input type="date" value={b.dateLivraison} onChange={e => modifier(b.cle, "dateLivraison", e.target.value)} /></td>
+                      <td><input type="datetime-local" value={b.saisieLe} onChange={e => modifier(b.cle, "saisieLe", e.target.value)} /></td>
                       {ELIS_INVOICE_ARTICLES.filter(a => !/horizon/.test(a.id) || aVerifier.some(x => Number(x.lines?.[a.id]?.livree) > 0)).map(a => (
                         <td key={a.id} className="c">
                           <input type="number" min="0" inputMode="numeric" value={b.lines?.[a.id]?.livree ?? 0} onChange={e => modifierQte(b.cle, a.id, e.target.value)} style={{ width: 64 }} />
@@ -212,7 +216,7 @@ export default function BordereauxLinge({ fs, invoices, receptions, setStatus })
           <div className="tbl-wrap"><table className="tbl" style={{ marginTop: 10 }}>
             <thead>
               <tr>
-                <th>N°</th><th>Livraison</th>
+                <th>Livraison</th><th>Saisi le</th>
                 {cols.map(a => <th key={a.id} className="c">{a.label}</th>)}
                 <th>Réception saisie</th><th></th>
               </tr>
@@ -222,8 +226,8 @@ export default function BordereauxLinge({ fs, invoices, receptions, setStatus })
                 const ctl = controleReception(b, receptions);
                 return (
                   <tr key={b.id}>
-                    <td style={{ fontWeight: 600 }}>{b.numero}</td>
-                    <td>{fr(b.dateLivraison)}</td>
+                    <td style={{ fontWeight: 600 }}>{fr(b.dateLivraison)}</td>
+                    <td>{frHeure(b.saisieLe)}</td>
                     {cols.map(a => <td key={a.id} className="c">{Number(b.lines?.[a.id]?.livree) || 0}</td>)}
                     <td style={{ fontSize: 12 }}>
                       {ctl.statut === "identique" && <span className="pill ok">✓ identique</span>}
