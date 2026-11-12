@@ -16,6 +16,10 @@ const RESIDENCES = ["Belleville", "Villiers", "Lantiez"];
 const eur = n => n == null ? "—" : n.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
 const fmtFr = d => d ? d.split("-").reverse().join("/") : "";
 const ecartKey = e => `${e.type}|${e.unit}|${e.date}|${e.ligne}`;
+// Clé React d'une ligne : ecartKey peut se répéter (plusieurs ménages « manquants » même
+// logement, même date, sans n° de ligne) ; des clés en double laissaient à l'écran des lignes
+// d'un autre mois après changement de contrôle. L'index les rend uniques.
+const rowKey = (e, i) => `${ecartKey(e)}|${i}`;
 const docId = (residence, mois) => `${residence}_${mois}`;
 const SUIVI = { controle: "Contrôlé", reclame: "Réclamation envoyée", avoir: "Avoir reçu" };
 const suiviDe = h => (SUIVI[h.suivi] ? h.suivi : "controle");
@@ -367,8 +371,8 @@ export default function FactureMenage() {
                     <div className="resid-head"><span className="resid-name">Facturé en trop</span><span className="resid-count">{reclam.filter(e => e.reclamable).length} ligne(s) réclamée(s) · {eur(effective.brutHT)} HT</span></div>
                     <div className="tbl-wrap"><table className="tbl">
                       <thead><tr><th className="no-print c">Réclamer</th><th>Type</th><th>N°</th><th>Date</th><th className="r">Montant HT</th><th>Détail</th></tr></thead>
-                      <tbody>{reclam.map(e => (
-                        <tr key={ecartKey(e)} className={e.reclamable ? undefined : "fm-off"}>
+                      <tbody>{reclam.map((e, i) => (
+                        <tr key={rowKey(e, i)} className={e.reclamable ? undefined : "fm-off"}>
                           <td className="no-print c"><label className="fm-check"><input type="checkbox" checked={e.reclamable} onChange={() => toggle(e)} aria-label="Réclamer cette ligne" /></label></td>
                           <td>{TYPES[e.type].label}</td><td className="apt">{e.unit || "—"}</td><td>{fmtFr(e.date)}</td>
                           <td className="r" data-label="HT">{eur(e.montantHT)}</td><td className="fm-detail">{e.detail}</td>
@@ -383,8 +387,8 @@ export default function FactureMenage() {
                     <div className="resid-head"><span className="resid-name">Ménages effectués non facturés (déduits)</span><span className="resid-count">{eur(effective.compensationHT)} HT</span></div>
                     <div className="tbl-wrap"><table className="tbl">
                       <thead><tr><th className="no-print c">Déduire</th><th>N°</th><th>Date</th><th className="r">Valeur HT</th><th>Détail</th></tr></thead>
-                      <tbody>{compens.map(e => (
-                        <tr key={ecartKey(e)} className={e.compensation ? undefined : "fm-off"}>
+                      <tbody>{compens.map((e, i) => (
+                        <tr key={rowKey(e, i)} className={e.compensation ? undefined : "fm-off"}>
                           <td className="no-print c"><label className="fm-check"><input type="checkbox" checked={e.compensation} onChange={() => toggle(e)} aria-label="Déduire ce ménage" /></label></td>
                           <td className="apt">{e.unit || "—"}</td><td>{fmtFr(e.date)}</td><td className="r" data-label="HT">{eur(e.montantHT)}</td><td className="fm-detail">{e.detail}</td>
                         </tr>))}</tbody>
@@ -410,8 +414,8 @@ export default function FactureMenage() {
                     <div className="fm-note">Sans effet sur le montant. « Date différente » : même logement facturé à une autre date que le départ.</div>
                     <div className="tbl-wrap"><table className="tbl">
                       <thead><tr><th>Type</th><th>N°</th><th>Date</th><th>Détail</th></tr></thead>
-                      <tbody>{info.map(e => (
-                        <tr key={ecartKey(e)}><td>{TYPES[e.type].label}</td><td className="apt">{e.unit || "—"}</td><td>{fmtFr(e.date)}</td><td className="fm-detail">{e.detail}</td></tr>))}</tbody>
+                      <tbody>{info.map((e, i) => (
+                        <tr key={rowKey(e, i)}><td>{TYPES[e.type].label}</td><td className="apt">{e.unit || "—"}</td><td>{fmtFr(e.date)}</td><td className="fm-detail">{e.detail}</td></tr>))}</tbody>
                     </table></div>
                   </div>
                 )}
