@@ -2,6 +2,8 @@
 // « Voir l'historique » d'une serrure sur N jours (7 par défaut, 31 max), événements bruts.
 // Avec ?from=AAAA-MM-JJ&to=AAAA-MM-JJ (62 jours max) : période du croisement (rejeu),
 // dates prises en heure de Paris, marge d'un jour de chaque côté pour les nuits.
+// Si la lecture n'est pas finie au bout de 40 s, la réponse donne `suite` : le navigateur
+// rappelle la route avec &cursor=<suite> pour lire les pages suivantes.
 // Admin uniquement (404 sinon). Lecture seule : voir lib/igloohome.js.
 import { requireAdminApi } from "../../../../lib/adminAuth";
 import { readActivity, apiBase, parseRange } from "../../../../lib/igloohome";
@@ -21,7 +23,10 @@ export default async function handler(req, res) {
   const t0 = Date.now();
   try {
     const out = range
-      ? await readActivity(deviceId, { fromMs: range.fromMs, toMs: range.toMs, maxPages: 40, keepRaw: false })
+      ? await readActivity(deviceId, {
+        fromMs: range.fromMs, toMs: range.toMs, maxPages: 200, budgetMs: 40000, keepRaw: false,
+        startCursor: req.query.cursor ? String(req.query.cursor) : null,
+      })
       : await readActivity(deviceId, { days });
     return res.status(200).json({ ok: true, deviceId, jours: days, dureeMs: Date.now() - t0, api: apiBase(), lueLe: new Date().toISOString(), ...out });
   } catch (e) {

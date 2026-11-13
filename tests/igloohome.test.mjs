@@ -174,3 +174,23 @@ test("diagnostic : seulement des GET sur l'historique, s'arrête à la première
   assert.ok(f.calls.every(c => c.method === "GET" || c.url.includes("/oauth2/token")));
   assert.ok(f.calls.every(c => c.url.includes("/oauth2/token") || /\/home\/devices\/IGL1\/activity/.test(c.url)));
 });
+
+test("historique : lecture reprise avec le curseur `suite`, plus ancien événement indiqué", async () => {
+  igloo._resetTokenCacheForTests();
+  const now = Date.now();
+  const f = fakeFetch({
+    "/home/devices/IGL1/activity": (u) => {
+      const c = u.searchParams.get("cursor");
+      if (!c) return { status: 200, body: { nextCursor: "p2", payload: [{ activityTimeAt: new Date(now - 86400e3).toISOString() }] } };
+      if (c === "p2") return { status: 200, body: { nextCursor: "p3", payload: [{ activityTimeAt: new Date(now - 2 * 86400e3).toISOString() }] } };
+      return { status: 200, body: { nextCursor: null, payload: [{ activityTimeAt: new Date(now - 3 * 86400e3).toISOString() }] } };
+    },
+  });
+  const a = await igloo.readActivity("IGL1", { days: 30, maxPages: 1, fetchImpl: f });
+  assert.equal(a.suite, "p2");
+  const b = await igloo.readActivity("IGL1", { days: 30, maxPages: 5, startCursor: a.suite, fetchImpl: f });
+  assert.equal(b.suite, null);
+  assert.equal(b.debutAtteint, false, "l'historique s'arrête avant le début de la période");
+  assert.equal(b.plusAncien, new Date(now - 3 * 86400e3).toISOString());
+  await assert.rejects(igloo.readActivity("IGL1", { startCursor: "a b", fetchImpl: f }), /Curseur invalide/);
+});

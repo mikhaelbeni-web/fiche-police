@@ -77,6 +77,17 @@ protégées côté serveur.
   Journée sans réservation (information), Depuis l'intérieur (ignoré), Autre événement.
   Si l'événement porte un code de réservation utilisé hors de son séjour ou sur une autre
   porte : ALERTE.
+- **Visites hors réservation** (mikhael, 13/11) : l'onglet Croisement n'affiche plus que les
+  périodes sans réservation de client, du départ (11 h) à l'arrivée suivante (15 h), heures
+  réglables. Les événements y sont regroupés en visites : entrée (ouverture depuis l'extérieur),
+  sortie (ouverture depuis l'intérieur), durée. Visite touchant la plage 19 h → 8 h : ALERTE ;
+  en journée : information. Chaque type d'action igloohome (`activityType`) reçoit une
+  interprétation proposée, que l'admin valide ou corrige (`config.interpretations`) ; une
+  visite fondée sur un type non validé est « à confirmer ». Le code PIN présent en clair dans
+  l'historique n'est jamais affiché.
+- Lecture longue : au-delà de 40 s, la route d'historique renvoie `suite` (curseur) et le
+  navigateur la rappelle avec `&cursor=`. « Profondeur de l'historique lu » donne, par serrure,
+  le plus ancien événement lu.
 - Onglets de l'Espace admin : Croisement (période, rejeu d'un mois, filtres, export CSV),
   Correspondance (serrure → appartement, proposition d'après les noms, chaque ligne doit
   être validée), Codes du personnel, Test de connexion.
