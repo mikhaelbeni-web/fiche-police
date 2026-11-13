@@ -167,7 +167,7 @@ export function ReclamationDetail({ r, onSave, onCreateSinistre, onOpenSinistre 
       <h2 className="sx-d-title">{r.client || "Client inconnu"}</h2>
       <div className="sx-d-meta">
         {[r.logement, r.reservation && `résa ${r.reservation}`].filter(Boolean).join(" · ") || "Logement non trouvé"}
-        <br />Reçue le {fmtFr(r.dateRecu)}{!r.traite && age != null ? ` · il y a ${age} j` : ""}
+        <br />Reçue le {fmtFr(r.dateRecu)}{!r.traite && age != null ? (age === 0 ? " · aujourd'hui" : age === 1 ? " · hier" : ` · il y a ${age} j`) : ""}
       </div>
       {r.gmailUrl && <a href={r.gmailUrl} target="_blank" rel="noreferrer" className="sx-btn sx-mail">Ouvrir le mail ↗</a>}
       {r.resume && <p className="sx-d-text">{r.resume}</p>}

@@ -2280,8 +2280,15 @@ body {
     .sx-foot { position: sticky; bottom: calc(-1 * max(16px, env(safe-area-inset-bottom))); background: #fff; padding-bottom: max(12px, env(safe-area-inset-bottom)); }
   }
 
+  @media (max-width: 1023.98px) {
+    body.sx-lock { overflow: hidden; }
+    body.sx-lock .notes-fab { display: none; }
+  }
+
   @media (max-width: 640px) {
     .sx-page { padding: 10px 12px 32px; }
+    .sx-seg button, .sx-chip, .sx-delete { min-height: 44px; }
+    .sx-close { width: 44px; height: 44px; }
     .sx-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
     .sx-kpi b { font-size: 18px; }
     .sx-seg { flex: 1 1 100%; }

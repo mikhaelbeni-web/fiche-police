@@ -58,6 +58,7 @@ function Sinistres() {
   const [sel, setSel] = useState(null); // { kind: "sin"|"gmail"|"new", id?, prefill? }
   const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
+  const sheetRef = useRef(null);
 
   const notify = useCallback((msg, kind = "ok") => {
     setToast({ msg, kind });
@@ -77,6 +78,13 @@ function Sinistres() {
       setReady(true);
     })();
   }, []);
+
+  // Fiche ouverte : on repart du haut, et sur téléphone la liste derrière ne défile plus.
+  useEffect(() => {
+    if (sheetRef.current) sheetRef.current.scrollTop = 0;
+    document.body.classList.toggle("sx-lock", !!sel);
+    return () => document.body.classList.remove("sx-lock");
+  }, [sel?.kind, sel?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Échap ferme la fiche (utile sur téléphone où elle couvre l'écran).
   useEffect(() => {
@@ -295,7 +303,7 @@ function Sinistres() {
 
         <aside className={`sx-panel ${sel ? "open" : ""}`} aria-label="Fiche du dossier">
           {sel && <div className="sx-backdrop" onClick={() => setSel(null)} />}
-          <div className="sx-sheet">
+          <div className="sx-sheet" ref={sheetRef}>
             {sel ? (
               <>
                 <div className="sx-sheet-head">
@@ -356,7 +364,7 @@ function ItemRow({ it, selected, onOpen }) {
       <span className="sx-i-meta">{[it.lieu, fmtFr(it.date)].filter(Boolean).join(" · ")}</span>
       {it.motif && <span className="sx-i-txt">{it.motif}</span>}
       <span className="sx-i-end">
-        {age != null && <span className={`sx-age ${ageCls(age)}`}>il y a {age} j</span>}
+        {age != null && <span className={`sx-age ${ageCls(age)}`}>{age === 0 ? "aujourd'hui" : age === 1 ? "hier" : `il y a ${age} j`}</span>}
         {it.montant != null && it.montant !== "" && (
           <span className={`sx-amt ${it.kind === "sin" ? "neg" : ""}`}>{euros(it.montant)}{it.montantLbl && <small> {it.montantLbl}</small>}</span>
         )}
