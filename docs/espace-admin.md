@@ -53,7 +53,9 @@ protégées côté serveur.
   (défaut `https://api.igloohome.co/home`).
 - `lib/igloohome.js` : jeton demandé avec les seuls scopes `igloohomeapi/get-devices` et
   `igloohomeapi/get-device-activity` ; liste blanche `GET /devices` et
-  `GET /devices/{id}/activity` ; aucun autre appel réseau.
+  `GET /devices/{id}/activity` ; aucun autre appel réseau. L'historique utilise un jeton
+  à part, demandé avec le SEUL scope `igloohomeapi/get-device-activity` : avec les deux
+  scopes, igloohome répond 403 « Forbidden » (support igloohome, ticket #232544, 12/11/2026).
 - Routes (admin seulement, 404 sinon) : `/api/admin/igloohome/devices`,
   `/api/admin/igloohome/activity?deviceId=…&days=7`. Elles renvoient toujours le JSON brut.
 - Historique : lu page par page (`nextCursor`, 10 pages max), filtré sur 7 jours d'après

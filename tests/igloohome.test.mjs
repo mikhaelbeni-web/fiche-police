@@ -80,6 +80,19 @@ test("lecture : uniquement des GET vers api.igloohome.co", async () => {
   assert.equal(devs[1].estUnBridge, true);
 });
 
+test("historique : jeton demandé avec le SEUL scope get-device-activity (consigne igloohome 12/11)", async () => {
+  igloo._resetTokenCacheForTests();
+  const f = fakeFetch({
+    "/home/devices": () => ({ status: 200, body: { payload: [] } }),
+    "/home/devices/IGL1/activity": () => ({ status: 200, body: { payload: [] } }),
+  });
+  await igloo.apiGet("/devices", {}, f);
+  await igloo.apiGet("/devices/IGL1/activity", {}, f);
+  const tokens = f.calls.filter(c => c.url.includes("/oauth2/token")).map(c => new URLSearchParams(c.body).get("scope"));
+  assert.deepEqual(tokens, ["igloohomeapi/get-devices igloohomeapi/get-device-activity", "igloohomeapi/get-device-activity"]);
+  await assert.rejects(() => igloo.getToken(f, ["igloohomeapi/unlock"]), /lecture seule/);
+});
+
 test("historique : pagination par nextCursor, arrêt dès qu'on dépasse 7 jours", async () => {
   igloo._resetTokenCacheForTests();
   const now = Date.now();
