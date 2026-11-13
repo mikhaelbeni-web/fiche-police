@@ -58,6 +58,20 @@ function Cell({ lbl, value, full, oneLine }) {
   );
 }
 
+// Hostaway : guestName contient déjà le nom complet (« Prénom Nom »).
+// Ne pas y recoller guestFirstName, sinon le prénom apparaît deux fois.
+function nomComplet(r) {
+  const full = (r.guestName || "").trim();
+  const first = (r.guestFirstName || "").trim();
+  const last = (r.guestLastName || "").trim();
+  if (full) {
+    // guestName ne contient que le nom de famille : on ajoute le prénom devant.
+    if (first && !full.toLowerCase().includes(first.toLowerCase())) return `${first} ${full}`;
+    return full;
+  }
+  return [first, last].filter(Boolean).join(" ");
+}
+
 function Sheet({ r }) {
   const c = customMap(r);
   const adresse = c["adresse"] || c["adresse personnelle"] || c["domicile"] || c["home address"] || r.guestAddress || "";
@@ -65,7 +79,7 @@ function Sheet({ r }) {
   const pays = c["pays"] || c["nationalité"] || c["nationality"] || r.guestCountry || "";
   const naiss = c["date de naissance"] || c["naissance"] || c["date of birth"] || "";
   const lieuNaiss = c["lieu de naissance"] || c["place of birth"] || "";
-  const nom = [r.guestFirstName, r.guestName || r.guestLastName].filter(Boolean).join(" ") || r.guestName || "";
+  const nom = nomComplet(r);
   const today = new Date().toLocaleDateString("fr-FR");
 
   return (
