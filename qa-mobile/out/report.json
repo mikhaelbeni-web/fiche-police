@@ -2,41 +2,12 @@
   {
     "page": "sinistres",
     "state": "(chargement)",
-    "device": "android-360",
-    "stepError": null,
-    "errors": [],
-    "scrollWidth": 360,
-    "vw": 360,
-    "overflow": [],
-    "offscreen": [],
-    "small": [
-      {
-        "sel": "div.sx-main > div.sx-bar > div.sx-seg > button.on « À traiter 12 »",
-        "w": 110,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Clos »",
-        "w": 110,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Tout »",
-        "w": 110,
-        "h": 40
-      }
-    ],
-    "covered": [],
-    "inputFont": [],
-    "clipped": [],
-    "interactiveCount": 20
-  },
-  {
-    "page": "sinistres",
-    "state": "(chargement)",
     "device": "pc-1280",
     "stepError": null,
-    "errors": [],
+    "errors": [
+      "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+      "Failed to load resource: the server responded with a status of 400 (Bad Request)"
+    ],
     "scrollWidth": 1280,
     "vw": 1280,
     "overflow": [],
@@ -137,6 +108,38 @@
     ],
     "clipped": [],
     "interactiveCount": 30
+  },
+  {
+    "page": "sinistres",
+    "state": "(chargement)",
+    "device": "android-360",
+    "stepError": null,
+    "errors": [],
+    "scrollWidth": 360,
+    "vw": 360,
+    "overflow": [],
+    "offscreen": [],
+    "small": [
+      {
+        "sel": "div.sx-main > div.sx-bar > div.sx-seg > button.on « À traiter 12 »",
+        "w": 110,
+        "h": 40
+      },
+      {
+        "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Clos »",
+        "w": 110,
+        "h": 40
+      },
+      {
+        "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Tout »",
+        "w": 110,
+        "h": 40
+      }
+    ],
+    "covered": [],
+    "inputFont": [],
+    "clipped": [],
+    "interactiveCount": 20
   },
   {
     "page": "sinistres",
@@ -280,6 +283,70 @@
   {
     "page": "sinistres",
     "state": "(chargement)",
+    "device": "iphone-390",
+    "stepError": null,
+    "errors": [],
+    "scrollWidth": 390,
+    "vw": 390,
+    "overflow": [],
+    "offscreen": [],
+    "small": [
+      {
+        "sel": "div.sx-main > div.sx-bar > div.sx-seg > button.on « À traiter 12 »",
+        "w": 120,
+        "h": 40
+      },
+      {
+        "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Clos »",
+        "w": 120,
+        "h": 40
+      },
+      {
+        "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Tout »",
+        "w": 120,
+        "h": 40
+      }
+    ],
+    "covered": [],
+    "inputFont": [],
+    "clipped": [],
+    "interactiveCount": 20
+  },
+  {
+    "page": "sinistres",
+    "state": "(chargement)",
+    "device": "iphone-430",
+    "stepError": null,
+    "errors": [],
+    "scrollWidth": 430,
+    "vw": 430,
+    "overflow": [],
+    "offscreen": [],
+    "small": [
+      {
+        "sel": "div.sx-main > div.sx-bar > div.sx-seg > button.on « À traiter 12 »",
+        "w": 133,
+        "h": 40
+      },
+      {
+        "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Clos »",
+        "w": 133,
+        "h": 40
+      },
+      {
+        "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Tout »",
+        "w": 133,
+        "h": 40
+      }
+    ],
+    "covered": [],
+    "inputFont": [],
+    "clipped": [],
+    "interactiveCount": 20
+  },
+  {
+    "page": "sinistres",
+    "state": "(chargement)",
     "device": "iphone-paysage",
     "stepError": null,
     "errors": [],
@@ -357,70 +424,6 @@
     ],
     "clipped": [],
     "interactiveCount": 26
-  },
-  {
-    "page": "sinistres",
-    "state": "(chargement)",
-    "device": "iphone-390",
-    "stepError": null,
-    "errors": [],
-    "scrollWidth": 390,
-    "vw": 390,
-    "overflow": [],
-    "offscreen": [],
-    "small": [
-      {
-        "sel": "div.sx-main > div.sx-bar > div.sx-seg > button.on « À traiter 12 »",
-        "w": 120,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Clos »",
-        "w": 120,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Tout »",
-        "w": 120,
-        "h": 40
-      }
-    ],
-    "covered": [],
-    "inputFont": [],
-    "clipped": [],
-    "interactiveCount": 20
-  },
-  {
-    "page": "sinistres",
-    "state": "(chargement)",
-    "device": "iphone-430",
-    "stepError": null,
-    "errors": [],
-    "scrollWidth": 430,
-    "vw": 430,
-    "overflow": [],
-    "offscreen": [],
-    "small": [
-      {
-        "sel": "div.sx-main > div.sx-bar > div.sx-seg > button.on « À traiter 12 »",
-        "w": 133,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Clos »",
-        "w": 133,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Tout »",
-        "w": 133,
-        "h": 40
-      }
-    ],
-    "covered": [],
-    "inputFont": [],
-    "clipped": [],
-    "interactiveCount": 20
   },
   {
     "page": "sinistres",
@@ -789,11 +792,6 @@
         "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Tout »",
         "w": 110,
         "h": 40
-      },
-      {
-        "sel": "aside.sx-panel.open > div.sx-sheet > div.sx-sheet-head > button.sx-close « ✕ »",
-        "w": 40,
-        "h": 40
       }
     ],
     "covered": [
@@ -871,12 +869,12 @@
       },
       {
         "sel": "button.sx-item.is-open « ● Ouvert sur Booking\nBooking\nR »",
-        "by": "label.sx-follow"
+        "by": "span"
       }
     ],
     "inputFont": [],
     "clipped": [],
-    "interactiveCount": 29
+    "interactiveCount": 28
   },
   {
     "page": "sinistres",
@@ -896,52 +894,52 @@
     ],
     "small": [
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Fiches de police »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Fiches de police »",
         "w": 133,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Arrivées »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Arrivées »",
         "w": 84,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Ménages »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Ménages »",
         "w": 88,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Check-list »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Check-list »",
         "w": 94,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Commande linge »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Commande linge »",
         "w": 137,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Linge Belleville »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Linge Belleville »",
         "w": 127,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Rapport transition »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Rapport transition »",
         "w": 145,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Coûts ménage »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Coûts ménage »",
         "w": 122,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Taxes de séjour / Espèces »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Taxes de séjour / Espèces »",
         "w": 193,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item.active « Sinistres »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item.active « Sinistres »",
         "w": 87,
         "h": 42
       },
@@ -951,7 +949,7 @@
         "h": 42
       },
       {
-        "sel": "body > div#__next > div.toolbar.sin-toolbar > button.primary « + Nouveau sinistre »",
+        "sel": "body.sx-lock > div#__next > div.toolbar.sin-toolbar > button.primary « + Nouveau sinistre »",
         "w": 148,
         "h": 31
       },
@@ -1087,36 +1085,6 @@
         "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Tout »",
         "w": 110,
         "h": 40
-      },
-      {
-        "sel": "aside.sx-panel.open > div.sx-sheet > div.sx-sheet-head > button.sx-close « ✕ »",
-        "w": 40,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Booking »",
-        "w": 86,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Airbnb »",
-        "w": 75,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Expedia »",
-        "w": 84,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « En direct »",
-        "w": 90,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-form > div.sx-fld > div.sx-chips > button.sx-chip.on « Autre »",
-        "w": 67,
-        "h": 40
       }
     ],
     "covered": [
@@ -1199,7 +1167,7 @@
     ],
     "inputFont": [],
     "clipped": [],
-    "interactiveCount": 35
+    "interactiveCount": 34
   },
   {
     "page": "sinistres",
@@ -1219,52 +1187,52 @@
     ],
     "small": [
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Fiches de police »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Fiches de police »",
         "w": 133,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Arrivées »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Arrivées »",
         "w": 84,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Ménages »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Ménages »",
         "w": 88,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Check-list »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Check-list »",
         "w": 94,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Commande linge »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Commande linge »",
         "w": 137,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Linge Belleville »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Linge Belleville »",
         "w": 127,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Rapport transition »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Rapport transition »",
         "w": 145,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Coûts ménage »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Coûts ménage »",
         "w": 122,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Taxes de séjour / Espèces »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Taxes de séjour / Espèces »",
         "w": 193,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item.active « Sinistres »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item.active « Sinistres »",
         "w": 87,
         "h": 42
       },
@@ -1274,7 +1242,7 @@
         "h": 42
       },
       {
-        "sel": "body > div#__next > div.toolbar.sin-toolbar > button.primary « + Nouveau sinistre »",
+        "sel": "body.sx-lock > div#__next > div.toolbar.sin-toolbar > button.primary « + Nouveau sinistre »",
         "w": 148,
         "h": 31
       },
@@ -1375,11 +1343,6 @@
         "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Tout »",
         "w": 110,
         "h": 40
-      },
-      {
-        "sel": "aside.sx-panel.open > div.sx-sheet > div.sx-sheet-head > button.sx-close « ✕ »",
-        "w": 40,
-        "h": 40
       }
     ],
     "covered": [
@@ -1405,7 +1368,7 @@
       },
       {
         "sel": "input « Client, logement, n° de résa,  »",
-        "by": "div.sx-form"
+        "by": "div.sx-err"
       },
       {
         "sel": "select « Tous canaux\nBooking\nAirbnb\nExp »",
@@ -1453,7 +1416,7 @@
       },
       {
         "sel": "button.sx-item.is-open « ○ À ouvrir sur Autre\nAutre\nWol »",
-        "by": "div.sx-err"
+        "by": "div.sx-fld"
       },
       {
         "sel": "button.sx-item.is-open « ● Ouvert sur Booking\nBooking\nR »",
@@ -1462,7 +1425,7 @@
     ],
     "inputFont": [],
     "clipped": [],
-    "interactiveCount": 29
+    "interactiveCount": 28
   },
   {
     "page": "sinistres",
@@ -1482,52 +1445,52 @@
     ],
     "small": [
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Fiches de police »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Fiches de police »",
         "w": 133,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Arrivées »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Arrivées »",
         "w": 84,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Ménages »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Ménages »",
         "w": 88,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Check-list »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Check-list »",
         "w": 94,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Commande linge »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Commande linge »",
         "w": 137,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Linge Belleville »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Linge Belleville »",
         "w": 127,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Rapport transition »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Rapport transition »",
         "w": 145,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Coûts ménage »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Coûts ménage »",
         "w": 122,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Taxes de séjour / Espèces »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Taxes de séjour / Espèces »",
         "w": 193,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item.active « Sinistres »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item.active « Sinistres »",
         "w": 87,
         "h": 42
       },
@@ -1537,7 +1500,7 @@
         "h": 42
       },
       {
-        "sel": "body > div#__next > div.toolbar.sin-toolbar > button.primary « + Nouveau sinistre »",
+        "sel": "body.sx-lock > div#__next > div.toolbar.sin-toolbar > button.primary « + Nouveau sinistre »",
         "w": 148,
         "h": 31
       },
@@ -1673,31 +1636,6 @@
         "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Tout »",
         "w": 110,
         "h": 40
-      },
-      {
-        "sel": "aside.sx-panel.open > div.sx-sheet > div.sx-sheet-head > button.sx-close « ✕ »",
-        "w": 40,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail > div.sx-fld > div.sx-chips > button.sx-chip.on « Pas ouvert »",
-        "w": 102,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail > div.sx-fld > div.sx-chips > button.sx-chip « Ouvert »",
-        "w": 75,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail > div.sx-fld > div.sx-chips > button.sx-chip « Fermé »",
-        "w": 72,
-        "h": 40
-      },
-      {
-        "sel": "aside.sx-panel.open > div.sx-sheet > div.sx-detail > button.sx-delete « Supprimer ce sinistre… »",
-        "w": 152,
-        "h": 40
       }
     ],
     "covered": [
@@ -1727,7 +1665,7 @@
       },
       {
         "sel": "select « Tous canaux\nBooking\nAirbnb\nExp »",
-        "by": "div.sx-detail"
+        "by": "label.sx-check"
       },
       {
         "sel": "button.sx-item.sel « ○ À ouvrir sur Autre\nAutre\nWol »",
@@ -1736,7 +1674,7 @@
     ],
     "inputFont": [],
     "clipped": [],
-    "interactiveCount": 21
+    "interactiveCount": 20
   },
   {
     "page": "sinistres",
@@ -1756,52 +1694,52 @@
     ],
     "small": [
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Fiches de police »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Fiches de police »",
         "w": 133,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Arrivées »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Arrivées »",
         "w": 84,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Ménages »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Ménages »",
         "w": 88,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Check-list »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Check-list »",
         "w": 94,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Commande linge »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Commande linge »",
         "w": 137,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Linge Belleville »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Linge Belleville »",
         "w": 127,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Rapport transition »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Rapport transition »",
         "w": 145,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Coûts ménage »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Coûts ménage »",
         "w": 122,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Taxes de séjour / Espèces »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Taxes de séjour / Espèces »",
         "w": 193,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item.active « Sinistres »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item.active « Sinistres »",
         "w": 87,
         "h": 42
       },
@@ -1811,7 +1749,7 @@
         "h": 42
       },
       {
-        "sel": "body > div#__next > div.toolbar.sin-toolbar > button.primary « + Nouveau sinistre »",
+        "sel": "body.sx-lock > div#__next > div.toolbar.sin-toolbar > button.primary « + Nouveau sinistre »",
         "w": 148,
         "h": 31
       },
@@ -1911,11 +1849,6 @@
         "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Tout »",
         "w": 120,
         "h": 40
-      },
-      {
-        "sel": "aside.sx-panel.open > div.sx-sheet > div.sx-sheet-head > button.sx-close « ✕ »",
-        "w": 40,
-        "h": 40
       }
     ],
     "covered": [
@@ -1993,12 +1926,12 @@
       },
       {
         "sel": "button.sx-item.is-open « ● Ouvert sur Booking\nBooking\nR »",
-        "by": "input"
+        "by": "div.sx-fld"
       }
     ],
     "inputFont": [],
     "clipped": [],
-    "interactiveCount": 29
+    "interactiveCount": 28
   },
   {
     "page": "sinistres",
@@ -2024,11 +1957,6 @@
       {
         "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Tout »",
         "w": 133,
-        "h": 40
-      },
-      {
-        "sel": "aside.sx-panel.open > div.sx-sheet > div.sx-sheet-head > button.sx-close « ✕ »",
-        "w": 40,
         "h": 40
       }
     ],
@@ -2107,12 +2035,12 @@
       },
       {
         "sel": "button.sx-item.is-open « ● Ouvert sur Booking\nBooking\nR »",
-        "by": "small"
+        "by": "span"
       }
     ],
     "inputFont": [],
     "clipped": [],
-    "interactiveCount": 29
+    "interactiveCount": 28
   },
   {
     "page": "sinistres",
@@ -2138,31 +2066,6 @@
       {
         "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Tout »",
         "w": 110,
-        "h": 40
-      },
-      {
-        "sel": "aside.sx-panel.open > div.sx-sheet > div.sx-sheet-head > button.sx-close « ✕ »",
-        "w": 40,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail > div.sx-fld > div.sx-chips > button.sx-chip « Pas ouvert »",
-        "w": 102,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail > div.sx-fld > div.sx-chips > button.sx-chip « Ouvert »",
-        "w": 75,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail > div.sx-fld > div.sx-chips > button.sx-chip.on « Fermé »",
-        "w": 72,
-        "h": 40
-      },
-      {
-        "sel": "aside.sx-panel.open > div.sx-sheet > div.sx-detail > button.sx-delete « Supprimer ce sinistre… »",
-        "w": 152,
         "h": 40
       }
     ],
@@ -2202,7 +2105,7 @@
     ],
     "inputFont": [],
     "clipped": [],
-    "interactiveCount": 21
+    "interactiveCount": 20
   },
   {
     "page": "sinistres",
@@ -2222,52 +2125,52 @@
     ],
     "small": [
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Fiches de police »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Fiches de police »",
         "w": 133,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Arrivées »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Arrivées »",
         "w": 84,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Ménages »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Ménages »",
         "w": 88,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Check-list »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Check-list »",
         "w": 94,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Commande linge »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Commande linge »",
         "w": 137,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Linge Belleville »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Linge Belleville »",
         "w": 127,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Rapport transition »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Rapport transition »",
         "w": 145,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Coûts ménage »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Coûts ménage »",
         "w": 122,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Taxes de séjour / Espèces »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Taxes de séjour / Espèces »",
         "w": 193,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item.active « Sinistres »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item.active « Sinistres »",
         "w": 87,
         "h": 42
       },
@@ -2277,7 +2180,7 @@
         "h": 42
       },
       {
-        "sel": "body > div#__next > div.toolbar.sin-toolbar > button.primary « + Nouveau sinistre »",
+        "sel": "body.sx-lock > div#__next > div.toolbar.sin-toolbar > button.primary « + Nouveau sinistre »",
         "w": 148,
         "h": 31
       },
@@ -2377,46 +2280,6 @@
         "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Tout »",
         "w": 110,
         "h": 40
-      },
-      {
-        "sel": "aside.sx-panel.open > div.sx-sheet > div.sx-sheet-head > button.sx-close « ✕ »",
-        "w": 40,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip.on « Chercher une réservation »",
-        "w": 200,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Saisie libre »",
-        "w": 104,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip.on « Booking »",
-        "w": 86,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Airbnb »",
-        "w": 75,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Expedia »",
-        "w": 84,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Autre plateforme »",
-        "w": 142,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « En direct »",
-        "w": 90,
-        "h": 40
       }
     ],
     "covered": [
@@ -2426,7 +2289,7 @@
       },
       {
         "sel": "button.primary « + Nouveau sinistre »",
-        "by": "div.sx-lbl"
+        "by": "div.sx-sheet"
       },
       {
         "sel": "button.on « À traiter\n12 »",
@@ -2442,7 +2305,7 @@
       },
       {
         "sel": "input « Client, logement, n° de résa,  »",
-        "by": "div.sx-fld"
+        "by": "label.sx-lbl"
       },
       {
         "sel": "select « Tous canaux\nBooking\nAirbnb\nExp »",
@@ -2490,7 +2353,7 @@
       },
       {
         "sel": "button.sx-item.is-open « ○ À ouvrir sur Autre\nAutre\nWol »",
-        "by": "div.sx-fld"
+        "by": "label.sx-lbl"
       },
       {
         "sel": "button.sx-item.is-open « ● Ouvert sur Booking\nBooking\nR »",
@@ -2499,7 +2362,7 @@
     ],
     "inputFont": [],
     "clipped": [],
-    "interactiveCount": 35
+    "interactiveCount": 34
   },
   {
     "page": "sinistres",
@@ -2519,52 +2382,52 @@
     ],
     "small": [
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Fiches de police »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Fiches de police »",
         "w": 133,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Arrivées »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Arrivées »",
         "w": 84,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Ménages »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Ménages »",
         "w": 88,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Check-list »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Check-list »",
         "w": 94,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Commande linge »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Commande linge »",
         "w": 137,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Linge Belleville »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Linge Belleville »",
         "w": 127,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Rapport transition »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Rapport transition »",
         "w": 145,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Coûts ménage »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Coûts ménage »",
         "w": 122,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Taxes de séjour / Espèces »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Taxes de séjour / Espèces »",
         "w": 193,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item.active « Sinistres »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item.active « Sinistres »",
         "w": 87,
         "h": 42
       },
@@ -2574,7 +2437,7 @@
         "h": 42
       },
       {
-        "sel": "body > div#__next > div.toolbar.sin-toolbar > button.primary « + Nouveau sinistre »",
+        "sel": "body.sx-lock > div#__next > div.toolbar.sin-toolbar > button.primary « + Nouveau sinistre »",
         "w": 148,
         "h": 31
       },
@@ -2693,36 +2556,6 @@
         "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Tout »",
         "w": 120,
         "h": 40
-      },
-      {
-        "sel": "aside.sx-panel.open > div.sx-sheet > div.sx-sheet-head > button.sx-close « ✕ »",
-        "w": 40,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Booking »",
-        "w": 95,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Airbnb »",
-        "w": 83,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Expedia »",
-        "w": 93,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « En direct »",
-        "w": 102,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-form > div.sx-fld > div.sx-chips > button.sx-chip.on « Autre »",
-        "w": 75,
-        "h": 40
       }
     ],
     "covered": [
@@ -2800,12 +2633,12 @@
       },
       {
         "sel": "button.sx-item.is-open « ● Ouvert sur Booking\nBooking\nR »",
-        "by": "div.sx-chips"
+        "by": "div.sx-fld"
       }
     ],
     "inputFont": [],
     "clipped": [],
-    "interactiveCount": 35
+    "interactiveCount": 34
   },
   {
     "page": "sinistres",
@@ -2831,36 +2664,6 @@
       {
         "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Tout »",
         "w": 133,
-        "h": 40
-      },
-      {
-        "sel": "aside.sx-panel.open > div.sx-sheet > div.sx-sheet-head > button.sx-close « ✕ »",
-        "w": 40,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Booking »",
-        "w": 95,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Airbnb »",
-        "w": 83,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Expedia »",
-        "w": 93,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « En direct »",
-        "w": 102,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-form > div.sx-fld > div.sx-chips > button.sx-chip.on « Autre »",
-        "w": 75,
         "h": 40
       }
     ],
@@ -2939,12 +2742,12 @@
       },
       {
         "sel": "button.sx-item.is-open « ● Ouvert sur Booking\nBooking\nR »",
-        "by": "div.sx-form"
+        "by": "div.sx-chips"
       }
     ],
     "inputFont": [],
     "clipped": [],
-    "interactiveCount": 35
+    "interactiveCount": 34
   },
   {
     "page": "sinistres",
@@ -2971,46 +2774,6 @@
         "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Tout »",
         "w": 110,
         "h": 40
-      },
-      {
-        "sel": "aside.sx-panel.open > div.sx-sheet > div.sx-sheet-head > button.sx-close « ✕ »",
-        "w": 40,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip.on « Chercher une réservation »",
-        "w": 200,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Saisie libre »",
-        "w": 104,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip.on « Booking »",
-        "w": 86,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Airbnb »",
-        "w": 75,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Expedia »",
-        "w": 84,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Autre plateforme »",
-        "w": 142,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « En direct »",
-        "w": 90,
-        "h": 40
       }
     ],
     "covered": [
@@ -3020,7 +2783,7 @@
       },
       {
         "sel": "button.primary « + Nouveau sinistre »",
-        "by": "div.sx-lbl"
+        "by": "div.sx-sheet"
       },
       {
         "sel": "button.on « À traiter\n12 »",
@@ -3040,47 +2803,47 @@
       },
       {
         "sel": "select « Tous canaux\nBooking\nAirbnb\nExp »",
-        "by": "small"
+        "by": "button.sx-result"
       },
       {
         "sel": "button.sx-item.is-open « ● Gmail · à traiter\nAvis négat »",
-        "by": "small"
+        "by": "button.sx-result"
       },
       {
         "sel": "button.sx-item.is-open « ● Gmail · à traiter\nReclamatio »",
-        "by": "small"
+        "by": "button.sx-result"
       },
       {
         "sel": "button.sx-item.is-open « ● Gmail · à traiter\nAvis négat »",
-        "by": "small"
+        "by": "button.sx-result"
       },
       {
         "sel": "button.sx-item.is-open « ● Gmail · à traiter\nLitige\nEn  »",
-        "by": "small"
+        "by": "button.sx-result"
       },
       {
         "sel": "button.sx-item.is-open « ● Gmail · à traiter\nMécontent\n »",
-        "by": "small"
+        "by": "button.sx-result"
       },
       {
         "sel": "button.sx-item.is-open « ● Gmail · à traiter\nRemboursem »",
-        "by": "small"
+        "by": "button.sx-result"
       },
       {
         "sel": "button.sx-item.is-open « ● Ouvert sur Autre\nAutre\nHugo  »",
-        "by": "small"
+        "by": "button.sx-result"
       },
       {
         "sel": "button.sx-item.is-open « ● Ouvert sur Booking\nBooking\nR »",
-        "by": "small"
+        "by": "button.sx-result"
       },
       {
         "sel": "button.sx-item.is-open « ● Ouvert sur Booking\nBooking\nE »",
-        "by": "small"
+        "by": "button.sx-result"
       },
       {
         "sel": "button.sx-item.is-open « ● Non réglé\nEn direct\nAïcha Be »",
-        "by": "small"
+        "by": "button.sx-result"
       },
       {
         "sel": "button.sx-item.is-open « ○ À ouvrir sur Autre\nAutre\nWol »",
@@ -3088,12 +2851,12 @@
       },
       {
         "sel": "button.sx-item.is-open « ● Ouvert sur Booking\nBooking\nR »",
-        "by": "div.sx-hint"
+        "by": "div.sx-fld"
       }
     ],
     "inputFont": [],
     "clipped": [],
-    "interactiveCount": 41
+    "interactiveCount": 40
   },
   {
     "page": "sinistres",
@@ -3113,52 +2876,52 @@
     ],
     "small": [
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Fiches de police »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Fiches de police »",
         "w": 133,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Arrivées »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Arrivées »",
         "w": 84,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Ménages »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Ménages »",
         "w": 88,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Check-list »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Check-list »",
         "w": 94,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Commande linge »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Commande linge »",
         "w": 137,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Linge Belleville »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Linge Belleville »",
         "w": 127,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Rapport transition »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Rapport transition »",
         "w": 145,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Coûts ménage »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Coûts ménage »",
         "w": 122,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Taxes de séjour / Espèces »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Taxes de séjour / Espèces »",
         "w": 193,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item.active « Sinistres »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item.active « Sinistres »",
         "w": 87,
         "h": 42
       },
@@ -3168,7 +2931,7 @@
         "h": 42
       },
       {
-        "sel": "body > div#__next > div.toolbar.sin-toolbar > button.primary « + Nouveau sinistre »",
+        "sel": "body.sx-lock > div#__next > div.toolbar.sin-toolbar > button.primary « + Nouveau sinistre »",
         "w": 148,
         "h": 31
       },
@@ -3287,11 +3050,6 @@
         "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Tout »",
         "w": 120,
         "h": 40
-      },
-      {
-        "sel": "aside.sx-panel.open > div.sx-sheet > div.sx-sheet-head > button.sx-close « ✕ »",
-        "w": 40,
-        "h": 40
       }
     ],
     "covered": [
@@ -3374,7 +3132,7 @@
     ],
     "inputFont": [],
     "clipped": [],
-    "interactiveCount": 29
+    "interactiveCount": 28
   },
   {
     "page": "sinistres",
@@ -3401,11 +3159,6 @@
         "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Tout »",
         "w": 133,
         "h": 40
-      },
-      {
-        "sel": "aside.sx-panel.open > div.sx-sheet > div.sx-sheet-head > button.sx-close « ✕ »",
-        "w": 40,
-        "h": 40
       }
     ],
     "covered": [
@@ -3431,7 +3184,7 @@
       },
       {
         "sel": "input « Client, logement, n° de résa,  »",
-        "by": "div.sx-form"
+        "by": "div.sx-err"
       },
       {
         "sel": "select « tous »",
@@ -3479,7 +3232,7 @@
       },
       {
         "sel": "button.sx-item.is-open « ○ À ouvrir sur Autre\nAutre\nWol »",
-        "by": "div.sx-fld"
+        "by": "label.sx-lbl"
       },
       {
         "sel": "button.sx-item.is-open « ● Ouvert sur Booking\nBooking\nR »",
@@ -3488,7 +3241,7 @@
     ],
     "inputFont": [],
     "clipped": [],
-    "interactiveCount": 29
+    "interactiveCount": 28
   },
   {
     "page": "sinistres",
@@ -3515,46 +3268,6 @@
         "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Tout »",
         "w": 110,
         "h": 40
-      },
-      {
-        "sel": "aside.sx-panel.open > div.sx-sheet > div.sx-sheet-head > button.sx-close « ✕ »",
-        "w": 40,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip.on « Chercher une réservation »",
-        "w": 200,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Saisie libre »",
-        "w": 104,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip.on « Booking »",
-        "w": 86,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Airbnb »",
-        "w": 75,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Expedia »",
-        "w": 84,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Autre plateforme »",
-        "w": 142,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « En direct »",
-        "w": 90,
-        "h": 40
       }
     ],
     "covered": [
@@ -3564,7 +3277,7 @@
       },
       {
         "sel": "button.primary « + Nouveau sinistre »",
-        "by": "div.sx-lbl"
+        "by": "div.sx-sheet"
       },
       {
         "sel": "button.on « À traiter\n12 »",
@@ -3584,47 +3297,47 @@
       },
       {
         "sel": "select « Tous canaux\nBooking\nAirbnb\nExp »",
-        "by": "div.sx-fld"
+        "by": "label.sx-lbl"
       },
       {
         "sel": "button.sx-item.is-open « ● Gmail · à traiter\nAvis négat »",
-        "by": "div.sx-fld"
+        "by": "label.sx-lbl"
       },
       {
         "sel": "button.sx-item.is-open « ● Gmail · à traiter\nReclamatio »",
-        "by": "div.sx-fld"
+        "by": "label.sx-lbl"
       },
       {
         "sel": "button.sx-item.is-open « ● Gmail · à traiter\nAvis négat »",
-        "by": "div.sx-fld"
+        "by": "label.sx-lbl"
       },
       {
         "sel": "button.sx-item.is-open « ● Gmail · à traiter\nLitige\nEn  »",
-        "by": "div.sx-fld"
+        "by": "label.sx-lbl"
       },
       {
         "sel": "button.sx-item.is-open « ● Gmail · à traiter\nMécontent\n »",
-        "by": "div.sx-fld"
+        "by": "label.sx-lbl"
       },
       {
         "sel": "button.sx-item.is-open « ● Gmail · à traiter\nRemboursem »",
-        "by": "div.sx-fld"
+        "by": "label.sx-lbl"
       },
       {
         "sel": "button.sx-item.is-open « ● Ouvert sur Autre\nAutre\nHugo  »",
-        "by": "div.sx-fld"
+        "by": "label.sx-lbl"
       },
       {
         "sel": "button.sx-item.is-open « ● Ouvert sur Booking\nBooking\nR »",
-        "by": "div.sx-fld"
+        "by": "label.sx-lbl"
       },
       {
         "sel": "button.sx-item.is-open « ● Ouvert sur Booking\nBooking\nE »",
-        "by": "div.sx-fld"
+        "by": "label.sx-lbl"
       },
       {
         "sel": "button.sx-item.is-open « ● Non réglé\nEn direct\nAïcha Be »",
-        "by": "div.sx-fld"
+        "by": "label.sx-lbl"
       },
       {
         "sel": "button.sx-item.is-open « ○ À ouvrir sur Autre\nAutre\nWol »",
@@ -3637,7 +3350,7 @@
     ],
     "inputFont": [],
     "clipped": [],
-    "interactiveCount": 35
+    "interactiveCount": 34
   },
   {
     "page": "sinistres",
@@ -3657,52 +3370,52 @@
     ],
     "small": [
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Fiches de police »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Fiches de police »",
         "w": 133,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Arrivées »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Arrivées »",
         "w": 84,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Ménages »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Ménages »",
         "w": 88,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Check-list »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Check-list »",
         "w": 94,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Commande linge »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Commande linge »",
         "w": 137,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Linge Belleville »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Linge Belleville »",
         "w": 127,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Rapport transition »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Rapport transition »",
         "w": 145,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Coûts ménage »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Coûts ménage »",
         "w": 122,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item « Taxes de séjour / Espèces »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item « Taxes de séjour / Espèces »",
         "w": 193,
         "h": 42
       },
       {
-        "sel": "body > div#__next > nav.main-nav > a.main-nav-item.active « Sinistres »",
+        "sel": "body.sx-lock > div#__next > nav.main-nav > a.main-nav-item.active « Sinistres »",
         "w": 87,
         "h": 42
       },
@@ -3712,7 +3425,7 @@
         "h": 42
       },
       {
-        "sel": "body > div#__next > div.toolbar.sin-toolbar > button.primary « + Nouveau sinistre »",
+        "sel": "body.sx-lock > div#__next > div.toolbar.sin-toolbar > button.primary « + Nouveau sinistre »",
         "w": 148,
         "h": 31
       },
@@ -3831,31 +3544,6 @@
         "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Tout »",
         "w": 120,
         "h": 40
-      },
-      {
-        "sel": "aside.sx-panel.open > div.sx-sheet > div.sx-sheet-head > button.sx-close « ✕ »",
-        "w": 40,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail > div.sx-fld > div.sx-chips > button.sx-chip.on « Pas ouvert »",
-        "w": 115,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail > div.sx-fld > div.sx-chips > button.sx-chip « Ouvert »",
-        "w": 85,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail > div.sx-fld > div.sx-chips > button.sx-chip « Fermé »",
-        "w": 81,
-        "h": 40
-      },
-      {
-        "sel": "aside.sx-panel.open > div.sx-sheet > div.sx-detail > button.sx-delete « Supprimer ce sinistre… »",
-        "w": 181,
-        "h": 40
       }
     ],
     "covered": [
@@ -3894,7 +3582,7 @@
     ],
     "inputFont": [],
     "clipped": [],
-    "interactiveCount": 21
+    "interactiveCount": 20
   },
   {
     "page": "sinistres",
@@ -3921,31 +3609,6 @@
         "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Tout »",
         "w": 133,
         "h": 40
-      },
-      {
-        "sel": "aside.sx-panel.open > div.sx-sheet > div.sx-sheet-head > button.sx-close « ✕ »",
-        "w": 40,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail > div.sx-fld > div.sx-chips > button.sx-chip.on « Pas ouvert »",
-        "w": 115,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail > div.sx-fld > div.sx-chips > button.sx-chip « Ouvert »",
-        "w": 85,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail > div.sx-fld > div.sx-chips > button.sx-chip « Fermé »",
-        "w": 81,
-        "h": 40
-      },
-      {
-        "sel": "aside.sx-panel.open > div.sx-sheet > div.sx-detail > button.sx-delete « Supprimer ce sinistre… »",
-        "w": 181,
-        "h": 40
       }
     ],
     "covered": [
@@ -3959,15 +3622,15 @@
       },
       {
         "sel": "button.on « À traiter\n12 »",
-        "by": "div.sx-fld"
+        "by": "div.sx-lbl"
       },
       {
         "sel": "button « Clos »",
-        "by": "div.sx-fld"
+        "by": "div.sx-lbl"
       },
       {
         "sel": "button « Tout »",
-        "by": "div.sx-fld"
+        "by": "div.sx-lbl"
       },
       {
         "sel": "input « wolfgang »",
@@ -3984,7 +3647,7 @@
     ],
     "inputFont": [],
     "clipped": [],
-    "interactiveCount": 21
+    "interactiveCount": 20
   },
   {
     "page": "sinistres",
@@ -4011,31 +3674,6 @@
         "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Tout »",
         "w": 120,
         "h": 40
-      },
-      {
-        "sel": "aside.sx-panel.open > div.sx-sheet > div.sx-sheet-head > button.sx-close « ✕ »",
-        "w": 40,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail > div.sx-fld > div.sx-chips > button.sx-chip « Pas ouvert »",
-        "w": 115,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail > div.sx-fld > div.sx-chips > button.sx-chip « Ouvert »",
-        "w": 85,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail > div.sx-fld > div.sx-chips > button.sx-chip.on « Fermé »",
-        "w": 81,
-        "h": 40
-      },
-      {
-        "sel": "aside.sx-panel.open > div.sx-sheet > div.sx-detail > button.sx-delete « Supprimer ce sinistre… »",
-        "w": 181,
-        "h": 40
       }
     ],
     "covered": [
@@ -4049,23 +3687,23 @@
       },
       {
         "sel": "button « À traiter\n12 »",
-        "by": "label.sx-check"
+        "by": "div.sx-detail"
       },
       {
         "sel": "button.on « Clos »",
-        "by": "label.sx-check"
+        "by": "div.sx-detail"
       },
       {
         "sel": "button « Tout »",
-        "by": "label.sx-check"
+        "by": "div.sx-detail"
       },
       {
         "sel": "input « sophie »",
-        "by": "label.sx-check"
+        "by": "div.sx-detail"
       },
       {
         "sel": "select « tous »",
-        "by": "div.sx-detail"
+        "by": "label.sx-check"
       },
       {
         "sel": "button.sx-item.sel « ✓ Réglé\nAirbnb\nRépondu vite\nSo »",
@@ -4074,7 +3712,7 @@
     ],
     "inputFont": [],
     "clipped": [],
-    "interactiveCount": 21
+    "interactiveCount": 20
   },
   {
     "page": "sinistres",
@@ -4100,31 +3738,6 @@
       {
         "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Tout »",
         "w": 133,
-        "h": 40
-      },
-      {
-        "sel": "aside.sx-panel.open > div.sx-sheet > div.sx-sheet-head > button.sx-close « ✕ »",
-        "w": 40,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail > div.sx-fld > div.sx-chips > button.sx-chip « Pas ouvert »",
-        "w": 115,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail > div.sx-fld > div.sx-chips > button.sx-chip « Ouvert »",
-        "w": 85,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail > div.sx-fld > div.sx-chips > button.sx-chip.on « Fermé »",
-        "w": 81,
-        "h": 40
-      },
-      {
-        "sel": "aside.sx-panel.open > div.sx-sheet > div.sx-detail > button.sx-delete « Supprimer ce sinistre… »",
-        "w": 181,
         "h": 40
       }
     ],
@@ -4159,12 +3772,12 @@
       },
       {
         "sel": "button.sx-item.sel « ✓ Réglé\nAirbnb\nRépondu vite\nSo »",
-        "by": "label.sx-lbl"
+        "by": "div.sx-2col"
       }
     ],
     "inputFont": [],
     "clipped": [],
-    "interactiveCount": 21
+    "interactiveCount": 20
   },
   {
     "page": "sinistres",
@@ -4191,46 +3804,6 @@
         "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Tout »",
         "w": 120,
         "h": 40
-      },
-      {
-        "sel": "aside.sx-panel.open > div.sx-sheet > div.sx-sheet-head > button.sx-close « ✕ »",
-        "w": 40,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip.on « Chercher une réservation »",
-        "w": 234,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Saisie libre »",
-        "w": 119,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip.on « Booking »",
-        "w": 95,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Airbnb »",
-        "w": 83,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Expedia »",
-        "w": 93,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Autre plateforme »",
-        "w": 169,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « En direct »",
-        "w": 102,
-        "h": 40
       }
     ],
     "covered": [
@@ -4240,7 +3813,7 @@
       },
       {
         "sel": "button.primary « + Nouveau sinistre »",
-        "by": "div.sx-lbl"
+        "by": "div.sx-sheet"
       },
       {
         "sel": "button.on « À traiter\n12 »",
@@ -4313,7 +3886,7 @@
     ],
     "inputFont": [],
     "clipped": [],
-    "interactiveCount": 35
+    "interactiveCount": 34
   },
   {
     "page": "sinistres",
@@ -4340,46 +3913,6 @@
         "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Tout »",
         "w": 133,
         "h": 40
-      },
-      {
-        "sel": "aside.sx-panel.open > div.sx-sheet > div.sx-sheet-head > button.sx-close « ✕ »",
-        "w": 40,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip.on « Chercher une réservation »",
-        "w": 234,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Saisie libre »",
-        "w": 119,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip.on « Booking »",
-        "w": 95,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Airbnb »",
-        "w": 83,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Expedia »",
-        "w": 93,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Autre plateforme »",
-        "w": 169,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « En direct »",
-        "w": 102,
-        "h": 40
       }
     ],
     "covered": [
@@ -4389,7 +3922,7 @@
       },
       {
         "sel": "button.primary « + Nouveau sinistre »",
-        "by": "div.sx-lbl"
+        "by": "div.sx-sheet"
       },
       {
         "sel": "button.on « À traiter\n12 »",
@@ -4405,7 +3938,7 @@
       },
       {
         "sel": "input « Client, logement, n° de résa,  »",
-        "by": "div.sx-fld"
+        "by": "label.sx-lbl"
       },
       {
         "sel": "select « tous »",
@@ -4462,7 +3995,7 @@
     ],
     "inputFont": [],
     "clipped": [],
-    "interactiveCount": 35
+    "interactiveCount": 34
   },
   {
     "page": "sinistres",
@@ -4489,46 +4022,6 @@
         "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Tout »",
         "w": 120,
         "h": 40
-      },
-      {
-        "sel": "aside.sx-panel.open > div.sx-sheet > div.sx-sheet-head > button.sx-close « ✕ »",
-        "w": 40,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip.on « Chercher une réservation »",
-        "w": 234,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Saisie libre »",
-        "w": 119,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip.on « Booking »",
-        "w": 95,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Airbnb »",
-        "w": 83,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Expedia »",
-        "w": 93,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Autre plateforme »",
-        "w": 169,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « En direct »",
-        "w": 102,
-        "h": 40
       }
     ],
     "covered": [
@@ -4538,7 +4031,7 @@
       },
       {
         "sel": "button.primary « + Nouveau sinistre »",
-        "by": "div.sx-lbl"
+        "by": "div.sx-sheet"
       },
       {
         "sel": "button.on « À traiter\n12 »",
@@ -4606,12 +4099,12 @@
       },
       {
         "sel": "button.sx-item.is-open « ● Ouvert sur Booking\nBooking\nR »",
-        "by": "small"
+        "by": "button.sx-result"
       }
     ],
     "inputFont": [],
     "clipped": [],
-    "interactiveCount": 41
+    "interactiveCount": 40
   },
   {
     "page": "sinistres",
@@ -4638,46 +4131,6 @@
         "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Tout »",
         "w": 133,
         "h": 40
-      },
-      {
-        "sel": "aside.sx-panel.open > div.sx-sheet > div.sx-sheet-head > button.sx-close « ✕ »",
-        "w": 40,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip.on « Chercher une réservation »",
-        "w": 234,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Saisie libre »",
-        "w": 119,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip.on « Booking »",
-        "w": 95,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Airbnb »",
-        "w": 83,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Expedia »",
-        "w": 93,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Autre plateforme »",
-        "w": 169,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « En direct »",
-        "w": 102,
-        "h": 40
       }
     ],
     "covered": [
@@ -4687,7 +4140,7 @@
       },
       {
         "sel": "button.primary « + Nouveau sinistre »",
-        "by": "div.sx-lbl"
+        "by": "div.sx-sheet"
       },
       {
         "sel": "button.on « À traiter\n12 »",
@@ -4751,7 +4204,7 @@
       },
       {
         "sel": "button.sx-item.is-open « ○ À ouvrir sur Autre\nAutre\nWol »",
-        "by": "button.sx-result"
+        "by": "b"
       },
       {
         "sel": "button.sx-item.is-open « ● Ouvert sur Booking\nBooking\nR »",
@@ -4760,7 +4213,7 @@
     ],
     "inputFont": [],
     "clipped": [],
-    "interactiveCount": 41
+    "interactiveCount": 40
   },
   {
     "page": "sinistres",
@@ -4787,46 +4240,6 @@
         "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Tout »",
         "w": 120,
         "h": 40
-      },
-      {
-        "sel": "aside.sx-panel.open > div.sx-sheet > div.sx-sheet-head > button.sx-close « ✕ »",
-        "w": 40,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip.on « Chercher une réservation »",
-        "w": 234,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Saisie libre »",
-        "w": 119,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip.on « Booking »",
-        "w": 95,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Airbnb »",
-        "w": 83,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Expedia »",
-        "w": 93,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Autre plateforme »",
-        "w": 169,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « En direct »",
-        "w": 102,
-        "h": 40
       }
     ],
     "covered": [
@@ -4836,71 +4249,71 @@
       },
       {
         "sel": "button.primary « + Nouveau sinistre »",
-        "by": "div.sx-lbl"
+        "by": "div.sx-sheet"
       },
       {
         "sel": "button.on « À traiter\n12 »",
-        "by": "input"
+        "by": "div.sx-fld"
       },
       {
         "sel": "button « Clos »",
-        "by": "input"
+        "by": "div.sx-fld"
       },
       {
         "sel": "button « Tout »",
-        "by": "input"
+        "by": "div.sx-fld"
       },
       {
         "sel": "input « Client, logement, n° de résa,  »",
-        "by": "input"
+        "by": "div.sx-fld"
       },
       {
         "sel": "select « tous »",
-        "by": "input"
+        "by": "div.sx-fld"
       },
       {
         "sel": "button.sx-item.is-open « ● Gmail · à traiter\nAvis négat »",
-        "by": "input"
+        "by": "div.sx-fld"
       },
       {
         "sel": "button.sx-item.is-open « ● Gmail · à traiter\nReclamatio »",
-        "by": "input"
+        "by": "div.sx-fld"
       },
       {
         "sel": "button.sx-item.is-open « ● Gmail · à traiter\nAvis négat »",
-        "by": "input"
+        "by": "div.sx-fld"
       },
       {
         "sel": "button.sx-item.is-open « ● Gmail · à traiter\nLitige\nEn  »",
-        "by": "input"
+        "by": "div.sx-fld"
       },
       {
         "sel": "button.sx-item.is-open « ● Gmail · à traiter\nMécontent\n »",
-        "by": "input"
+        "by": "div.sx-fld"
       },
       {
         "sel": "button.sx-item.is-open « ● Gmail · à traiter\nRemboursem »",
-        "by": "input"
+        "by": "div.sx-fld"
       },
       {
         "sel": "button.sx-item.is-open « ● Ouvert sur Autre\nAutre\nHugo  »",
-        "by": "input"
+        "by": "div.sx-fld"
       },
       {
         "sel": "button.sx-item.is-open « ● Ouvert sur Booking\nBooking\nR »",
-        "by": "input"
+        "by": "div.sx-fld"
       },
       {
         "sel": "button.sx-item.is-open « ● Ouvert sur Booking\nBooking\nE »",
-        "by": "input"
+        "by": "div.sx-fld"
       },
       {
         "sel": "button.sx-item.is-open « ● Non réglé\nEn direct\nAïcha Be »",
-        "by": "input"
+        "by": "div.sx-fld"
       },
       {
         "sel": "button.sx-item.is-open « ○ À ouvrir sur Autre\nAutre\nWol »",
-        "by": "input"
+        "by": "div.sx-fld"
       },
       {
         "sel": "button.sx-item.is-open « ● Ouvert sur Booking\nBooking\nR »",
@@ -4909,7 +4322,7 @@
     ],
     "inputFont": [],
     "clipped": [],
-    "interactiveCount": 35
+    "interactiveCount": 34
   },
   {
     "page": "sinistres",
@@ -4936,46 +4349,6 @@
         "sel": "div.sx-main > div.sx-bar > div.sx-seg > button « Tout »",
         "w": 133,
         "h": 40
-      },
-      {
-        "sel": "aside.sx-panel.open > div.sx-sheet > div.sx-sheet-head > button.sx-close « ✕ »",
-        "w": 40,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip.on « Chercher une réservation »",
-        "w": 234,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Saisie libre »",
-        "w": 119,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip.on « Booking »",
-        "w": 95,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Airbnb »",
-        "w": 83,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Expedia »",
-        "w": 93,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « Autre plateforme »",
-        "w": 169,
-        "h": 40
-      },
-      {
-        "sel": "div.sx-detail.sx-form > div.sx-fld > div.sx-chips > button.sx-chip « En direct »",
-        "w": 102,
-        "h": 40
       }
     ],
     "covered": [
@@ -4985,7 +4358,7 @@
       },
       {
         "sel": "button.primary « + Nouveau sinistre »",
-        "by": "div.sx-lbl"
+        "by": "div.sx-sheet"
       },
       {
         "sel": "button.on « À traiter\n12 »",
@@ -5053,11 +4426,11 @@
       },
       {
         "sel": "button.sx-item.is-open « ● Ouvert sur Booking\nBooking\nR »",
-        "by": "div.sx-lbl"
+        "by": "div.sx-detail.sx-form"
       }
     ],
     "inputFont": [],
     "clipped": [],
-    "interactiveCount": 35
+    "interactiveCount": 34
   }
 ]
