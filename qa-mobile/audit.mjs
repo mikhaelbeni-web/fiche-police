@@ -28,6 +28,8 @@ const DEVICES = [
   { name: "android-360", browser: "chromium", viewport: { width: 360, height: 780 }, isMobile: true, hasTouch: true, deviceScaleFactor: 1 },
   { name: "iphone-390", browser: "webkit", viewport: { width: 390, height: 664 }, isMobile: true, hasTouch: true, deviceScaleFactor: 1 },
   { name: "iphone-430", browser: "webkit", viewport: { width: 430, height: 739 }, isMobile: true, hasTouch: true, deviceScaleFactor: 1 },
+  // Ordinateur : seulement si QA_PC=1 (captures de contrôle, pas d'audit tactile).
+  ...(process.env.QA_PC ? [{ name: "pc-1280", browser: "chromium", viewport: { width: 1280, height: 900 }, isMobile: false, hasTouch: false, deviceScaleFactor: 1 }] : []),
   { name: "iphone-paysage", browser: "webkit", viewport: { width: 844, height: 340 }, isMobile: true, hasTouch: true, deviceScaleFactor: 1, light: true },
 ];
 

@@ -1,52 +1,69 @@
 // pages/sinistres.js
-// Suivi des sinistres/réclamations clients : cause, statut de résolution,
-// et suivi côté Booking (ouvert/fermé, géré via Booking ou en direct).
-// 2e vue « Réclamations Gmail » : voir components/ReclamationsGmail.js.
+// Suivi des sinistres / réclamations clients, en UNE liste :
+//   - les réclamations repérées dans Gmail (collection "reclamations_gmail",
+//     voir components/ReclamationsGmail.js) ;
+//   - les sinistres saisis à la main (collection "sinistres") : cause, montant,
+//     suivi sur la plateforme (Booking, Airbnb…), problème réglé ou non.
+// La liste est en lecture (cartes compactes) ; on modifie un dossier dans sa
+// fiche : panneau à droite sur ordinateur, feuille plein écran sur téléphone.
+// Aucune donnée n'est migrée : les champs existants sont relus tels quels.
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import Head from "next/head";
 import CodeModal from "../components/CodeModal";
 import { useCodeGate } from "../hooks/useCodeGate";
-import ReclamationsGmail, { RECLAMATIONS_COLLECTION } from "../components/ReclamationsGmail";
+import {
+  RECLAMATIONS_COLLECTION, ReclamationDetail, PLATEFORMES, plateformeLabel, typeLabel,
+  fmtFr, euros, parseMontant, joursDepuis,
+} from "../components/ReclamationsGmail";
 
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
 const DELETE_PASSWORD = process.env.NEXT_PUBLIC_DELETE_PASSWORD || "2305";
 
 function isoDay(d) { return d.toISOString().slice(0, 10); }
-function fmtFr(d) {
-  if (!d) return "";
-  const x = new Date(d + "T12:00:00");
-  return isNaN(x) ? d : x.toLocaleDateString("fr-FR");
+function sansAccents(s) { return String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase(); }
+
+// Canal unique d'un sinistre : "direct" ou la plateforme (rétrocompatibilité :
+// les anciens sinistres avaient origine: "booking" sans champ canal).
+function canalSinistre(s) {
+  if (s.origine === "direct") return "direct";
+  return s.canal || (s.origine === "booking" ? "booking" : "autre");
 }
-function euros(n) {
-  if (n == null || n === "") return "—";
-  return Number(n).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+function statutPlateforme(s) { return s.statutPlateforme || s.statutBooking || "non_ouvert"; }
+
+// Pastille de statut d'un sinistre, en toutes lettres.
+function badgeSinistre(s) {
+  if (s.problemeRegle) return { cls: "ok", txt: "✓ Réglé" };
+  const c = canalSinistre(s);
+  if (c === "direct") return { cls: "warn", txt: "● Non réglé" };
+  const st = statutPlateforme(s);
+  if (st === "ouvert") return { cls: "warn", txt: `● Ouvert sur ${plateformeLabel(c)}` };
+  if (st === "ferme") return { cls: "warn", txt: `● Non réglé · fermé sur ${plateformeLabel(c)}` };
+  return { cls: "gr", txt: `○ À ouvrir sur ${plateformeLabel(c)}` };
 }
 
-const CANAUX = [
-  { value: "booking", label: "Booking.com" },
-  { value: "airbnb", label: "Airbnb" },
-  { value: "autre", label: "Autre plateforme" },
-];
-
-const STATUT_PLATEFORME = [
-  { value: "non_ouvert", label: "Pas encore ouvert" },
-  { value: "ouvert", label: "Ouvert" },
-  { value: "ferme", label: "Fermé" },
-];
+function ageCls(j) { return j == null ? "" : j > 5 ? "bad" : j > 2 ? "warn" : ""; }
 
 function Sinistres() {
   const { requestCode, codeModalProps } = useCodeGate(DELETE_PASSWORD, "Code requis pour cette suppression");
   const [ready, setReady] = useState(false);
   const [configured, setConfigured] = useState(true);
   const [fs, setFs] = useState(null);
-  const [status, setStatus] = useState("");
   const [sinistres, setSinistres] = useState([]);
-  const [showForm, setShowForm] = useState(false);
-  const [filterStatut, setFilterStatut] = useState("tous"); // tous | ouverts | regles
-  const [vue, setVue] = useState("sinistres"); // sinistres | gmail
   const [reclamations, setReclamations] = useState([]);
+  const [vue, setVue] = useState("a_traiter"); // a_traiter | clos | tout
+  const [q, setQ] = useState("");
+  const [canal, setCanal] = useState("tous");
+  const [sel, setSel] = useState(null); // { kind: "sin"|"gmail"|"new", id?, prefill? }
+  const [toast, setToast] = useState(null);
+  const toastTimer = useRef(null);
+
+  const notify = useCallback((msg, kind = "ok") => {
+    setToast({ msg, kind });
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), kind === "bad" ? 6000 : 2500);
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -61,31 +78,80 @@ function Sinistres() {
     })();
   }, []);
 
+  // Échap ferme la fiche (utile sur téléphone où elle couvre l'écran).
+  useEffect(() => {
+    function onKey(e) { if (e.key === "Escape") setSel(null); }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   async function loadSinistres(api) {
     const snap = await api.getDocs(api.query(api.collection(api.db, "sinistres"), api.orderBy("date", "desc")));
     setSinistres(snap.docs.map(d => ({ id: d.id, ...d.data() })));
   }
-
   async function loadReclamations(api) {
     const snap = await api.getDocs(api.query(api.collection(api.db, RECLAMATIONS_COLLECTION), api.orderBy("dateRecu", "desc")));
     setReclamations(snap.docs.map(d => ({ id: d.id, ...d.data() })));
   }
 
-  async function addSinistre(payload) {
+  async function addSinistre(payload, msg = "Sinistre enregistré.") {
     try {
-      setStatus("Enregistrement…");
-      await fs.addDoc(fs.collection(fs.db, "sinistres"), { ...payload, createdAt: new Date().toISOString() });
+      const ref = await fs.addDoc(fs.collection(fs.db, "sinistres"), { ...payload, createdAt: new Date().toISOString() });
       await loadSinistres(fs);
-      setShowForm(false);
-      setStatus("Sinistre enregistré.");
-    } catch (err) { setStatus("Erreur : " + err.message); }
+      notify(msg);
+      return ref.id;
+    } catch (err) { notify("Erreur : " + err.message, "bad"); return null; }
   }
 
-  async function updateSinistre(id, patch) {
+  async function updateSinistre(id, patch, msg = "Enregistré.") {
     try {
       await fs.updateDoc(fs.doc(fs.db, "sinistres", id), patch);
       await loadSinistres(fs);
-    } catch (err) { setStatus("Erreur : " + err.message); }
+      notify(msg);
+      return true;
+    } catch (err) { notify("Erreur : " + err.message, "bad"); return false; }
+  }
+
+  async function saveReclamation(id, patch, msg = "Enregistré.") {
+    try {
+      await fs.updateDoc(fs.doc(fs.db, RECLAMATIONS_COLLECTION, id), patch);
+      await loadReclamations(fs);
+      notify(msg);
+      return true;
+    } catch (err) { notify("Erreur : " + err.message, "bad"); return false; }
+  }
+
+  // Sinistre pré-rempli depuis une réclamation Gmail traitée.
+  async function sinistreDepuisReclamation(r) {
+    const p = r.plateformeRemboursement || r.plateforme;
+    const direct = p === "direct";
+    const canalSin = ["booking", "airbnb", "expedia"].includes(p) ? p : "autre";
+    const id = await addSinistre({
+      date: r.dateRecu || isoDay(new Date()),
+      clientMode: "gmail",
+      client: r.client || "Client inconnu",
+      residence: "",
+      appartement: r.logement || "",
+      unitNumber: "",
+      arrivee: "",
+      depart: "",
+      reservation: r.reservation || "",
+      motif: (r.motif || r.motifSuggere || r.resume || "").trim() || "Réclamation Gmail",
+      montant: r.rembourse === "oui" ? r.montantRembourse : null,
+      origine: direct ? "direct" : "plateforme",
+      canal: direct ? null : canalSin,
+      problemeRegle: false,
+      reponseRapide: false,
+      statutPlateforme: "non_ouvert",
+      note: (r.note || "").trim(),
+      reclamationId: r.id,
+    }, "Réclamation classée et sinistre créé.");
+    if (id) {
+      try {
+        await fs.updateDoc(fs.doc(fs.db, RECLAMATIONS_COLLECTION, r.id), { sinistreId: id });
+        await loadReclamations(fs);
+      } catch (err) { notify("Sinistre créé, mais lien non enregistré : " + err.message, "bad"); }
+    }
   }
 
   function deleteSinistre(s) {
@@ -94,18 +160,65 @@ function Sinistres() {
       try {
         await fs.deleteDoc(fs.doc(fs.db, "sinistres", s.id));
         await loadSinistres(fs);
-        setStatus("Sinistre supprimé.");
-      } catch (err) { setStatus("Erreur : " + err.message); }
+        setSel(null);
+        notify("Sinistre supprimé.");
+      } catch (err) { notify("Erreur : " + err.message, "bad"); }
     });
   }
 
-  const visibles = sinistres.filter(s => {
-    if (filterStatut === "ouverts") return !s.problemeRegle;
-    if (filterStatut === "regles") return !!s.problemeRegle;
-    return true;
-  });
+  // ---- Liste unifiée ----
+  const items = useMemo(() => {
+    const g = reclamations.map(r => ({
+      kind: "gmail", key: "g:" + r.id, id: r.id, raw: r,
+      date: r.dateRecu || "", client: r.client || "Client inconnu",
+      lieu: [r.logement, r.reservation && `résa ${r.reservation}`].filter(Boolean).join(" · "),
+      canal: r.traite && r.plateformeRemboursement ? r.plateformeRemboursement : (r.plateforme || "autre"),
+      motif: r.resume || r.motifSuggere || r.motif || "",
+      ouvert: !r.traite,
+      montant: r.traite ? (r.rembourse === "oui" ? r.montantRembourse : null) : r.montantDemande,
+      montantLbl: r.traite ? "remboursé" : "demandé",
+      search: sansAccents([r.client, r.logement, r.reservation, r.resume, r.motif, r.motifSuggere].join(" ")),
+    }));
+    const s = sinistres.map(x => ({
+      kind: "sin", key: "s:" + x.id, id: x.id, raw: x,
+      date: x.date || "", client: x.client || "Client inconnu",
+      lieu: [x.residence, x.appartement].filter(Boolean).join(" ") || "",
+      canal: canalSinistre(x),
+      motif: x.motif || "",
+      ouvert: !x.problemeRegle,
+      montant: x.montant > 0 ? x.montant : null,
+      montantLbl: "",
+      search: sansAccents([x.client, x.residence, x.appartement, x.reservation, x.motif, x.note].join(" ")),
+    }));
+    return [...g, ...s];
+  }, [reclamations, sinistres]);
 
-  const aTraiter = reclamations.filter(r => !r.traite).length;
+  const canalOk = it => canal === "tous" || it.canal === canal || (canal === "autre" && !PLATEFORMES.some(p => p.value === it.canal));
+  const qn = sansAccents(q.trim());
+  const filtres = items.filter(it => canalOk(it) && (!qn || it.search.includes(qn)));
+  const parVue = filtres.filter(it => vue === "tout" || (vue === "a_traiter" ? it.ouvert : !it.ouvert));
+  const tri = vue === "a_traiter"
+    ? (a, b) => a.date.localeCompare(b.date) // plus ancien d'abord : c'est lui qui attend le plus
+    : (a, b) => b.date.localeCompare(a.date);
+  const gmailListe = parVue.filter(i => i.kind === "gmail").sort(tri);
+  const sinListe = parVue.filter(i => i.kind === "sin").sort(tri);
+  const tousListe = [...parVue].sort(tri);
+
+  // ---- Chiffres ----
+  const mois = isoDay(new Date()).slice(0, 7);
+  const nomMois = new Date().toLocaleDateString("fr-FR", { month: "long" });
+  const gmailOuverts = reclamations.filter(r => !r.traite);
+  const nbATraiter = gmailOuverts.length + sinistres.filter(s => !s.problemeRegle).length;
+  const rembourseMois =
+    sinistres.filter(s => (s.date || "").startsWith(mois) && s.montant > 0).reduce((t, s) => t + Number(s.montant), 0) +
+    reclamations.filter(r => r.rembourse === "oui" && !r.sinistreId && r.montantRembourse > 0 && (r.traiteLe || r.dateRecu || "").startsWith(mois))
+      .reduce((t, r) => t + Number(r.montantRembourse), 0);
+  const demandeAttente = gmailOuverts.reduce((t, r) => t + (Number(r.montantDemande) || 0), 0);
+  const plusAncienne = gmailOuverts.reduce((m, r) => Math.max(m, joursDepuis(r.dateRecu) ?? 0), 0);
+
+  const selItem = sel && sel.kind !== "new"
+    ? (sel.kind === "gmail" ? reclamations.find(r => r.id === sel.id) : sinistres.find(s => s.id === sel.id))
+    : null;
 
   if (!ready) return <div className="menage-page"><div className="recap"><div className="empty-state">Chargement…</div></div></div>;
   if (!configured) {
@@ -120,103 +233,305 @@ function Sinistres() {
     );
   }
 
+  const renderItem = it => (
+    <ItemRow key={it.key} it={it} selected={!!sel && sel.kind === it.kind && sel.id === it.id}
+      onOpen={() => setSel({ kind: it.kind, id: it.id })} />
+  );
+
   return (
     <>
       <Head><title>Sinistres</title></Head>
       <div className="toolbar sin-toolbar">
         <h1>Sinistres</h1>
-        <div className="quick tabs">
-          <button onClick={() => setVue("sinistres")} className={vue === "sinistres" ? "primary" : ""}>Sinistres</button>
-          <button onClick={() => setVue("gmail")} className={vue === "gmail" ? "primary" : ""}>
-            Réclamations Gmail{aTraiter > 0 ? ` (${aTraiter})` : ""}
-          </button>
-        </div>
-        {vue === "sinistres" && (
-          <>
-            <div className="quick tabs">
-              <button onClick={() => setFilterStatut("tous")} className={filterStatut === "tous" ? "primary" : ""}>Tous</button>
-              <button onClick={() => setFilterStatut("ouverts")} className={filterStatut === "ouverts" ? "primary" : ""}>Non réglés</button>
-              <button onClick={() => setFilterStatut("regles")} className={filterStatut === "regles" ? "primary" : ""}>Réglés</button>
-            </div>
-            <button className="primary" onClick={() => setShowForm(s => !s)}>{showForm ? "Annuler" : "+ Nouveau sinistre"}</button>
-          </>
-        )}
-        <span className="status">{status}</span>
+        <button className="primary" onClick={() => setSel({ kind: "new" })}>+ Nouveau sinistre</button>
       </div>
 
-      <div className="menage-page sinistres-page">
-        {vue === "gmail" ? (
-          <div className="recap">
-            <ReclamationsGmail fs={fs} items={reclamations} onReload={() => loadReclamations(fs)} onStatus={setStatus} />
+      <div className={`sx-page ${sel ? "has-sel" : ""}`}>
+        <div className="sx-main">
+          <div className="sx-kpis">
+            <div className={`sx-kpi ${nbATraiter ? "hot" : ""}`}><b>{nbATraiter}</b><span>à traiter</span></div>
+            <div className="sx-kpi"><b>{euros(rembourseMois)}</b><span>remboursé en {nomMois}</span></div>
+            <div className="sx-kpi"><b>{euros(demandeAttente)}</b><span>demandé, sans réponse</span></div>
+            <div className={`sx-kpi ${plusAncienne > 5 ? "hot" : ""}`}><b>{gmailOuverts.length ? `${plusAncienne} j` : "—"}</b><span>plus ancienne en attente</span></div>
           </div>
-        ) : (
-        <div className="recap">
-          {showForm && <SinistreForm onSave={addSinistre} onCancel={() => setShowForm(false)} />}
 
-          <div className="recap-head">
-            <div>
-              <div className="recap-title">{visibles.length} sinistre(s)</div>
-              <div className="recap-sub">Réclamations clients — cause, résolution, suivi Booking</div>
+          <div className="sx-bar">
+            <div className="sx-seg" role="tablist" aria-label="Filtrer par état">
+              {[["a_traiter", "À traiter"], ["clos", "Clos"], ["tout", "Tout"]].map(([v, l]) => (
+                <button key={v} role="tab" aria-selected={vue === v} className={vue === v ? "on" : ""} onClick={() => setVue(v)}>
+                  {l}{v === "a_traiter" && nbATraiter > 0 && <span className="sx-n">{nbATraiter}</span>}
+                </button>
+              ))}
             </div>
+            <div className="sx-search">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
+              <input type="search" value={q} onChange={e => setQ(e.target.value)} placeholder="Client, logement, n° de résa, motif…" aria-label="Rechercher" />
+            </div>
+            <select value={canal} onChange={e => setCanal(e.target.value)} aria-label="Filtrer par canal">
+              <option value="tous">Tous canaux</option>
+              {PLATEFORMES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+            </select>
           </div>
 
-          {visibles.length === 0 && <div className="empty-state">Aucun sinistre sur ce filtre.</div>}
-
-          {visibles.map(s => (
-            <SinistreRow key={s.id} s={s} onUpdate={patch => updateSinistre(s.id, patch)} onDelete={() => deleteSinistre(s)} />
-          ))}
+          {vue === "a_traiter" ? (
+            <>
+              <div className="sx-sec">Réclamations Gmail à traiter · {gmailListe.length}</div>
+              {gmailListe.length === 0
+                ? <div className="sx-empty">{qn || canal !== "tous" ? "Aucune réclamation Gmail sur cette recherche." : "Aucune réclamation Gmail en attente."}</div>
+                : gmailListe.map(renderItem)}
+              <div className="sx-sec">Sinistres non réglés · {sinListe.length}</div>
+              {sinListe.length === 0
+                ? <div className="sx-empty">{qn || canal !== "tous" ? "Aucun sinistre non réglé sur cette recherche." : "Aucun sinistre en cours."}</div>
+                : sinListe.map(renderItem)}
+            </>
+          ) : (
+            <>
+              <div className="sx-sec">{tousListe.length} dossier(s)</div>
+              {tousListe.length === 0 && <div className="sx-empty">Aucun dossier sur cette recherche.</div>}
+              {tousListe.map(renderItem)}
+            </>
+          )}
         </div>
-        )}
+
+        <aside className={`sx-panel ${sel ? "open" : ""}`} aria-label="Fiche du dossier">
+          {sel && <div className="sx-backdrop" onClick={() => setSel(null)} />}
+          <div className="sx-sheet">
+            {sel ? (
+              <>
+                <div className="sx-sheet-head">
+                  <span>{sel.kind === "new" ? "Nouveau sinistre" : sel.kind === "gmail" ? "Réclamation Gmail" : "Sinistre"}</span>
+                  <button type="button" className="sx-close" onClick={() => setSel(null)} aria-label="Fermer la fiche">✕</button>
+                </div>
+                {sel.kind === "new" && (
+                  <SinistreForm
+                    onSave={async payload => { const id = await addSinistre(payload); if (id) setSel({ kind: "sin", id }); }}
+                    onCancel={() => setSel(null)} />
+                )}
+                {sel.kind === "gmail" && selItem && (
+                  <ReclamationDetail r={selItem}
+                    onSave={(patch, msg) => saveReclamation(selItem.id, patch, msg)}
+                    onCreateSinistre={sinistreDepuisReclamation}
+                    onOpenSinistre={id => setSel({ kind: "sin", id })} />
+                )}
+                {sel.kind === "sin" && selItem && (
+                  <SinistreDetail s={selItem}
+                    onUpdate={(patch, msg) => updateSinistre(selItem.id, patch, msg)}
+                    onDelete={() => deleteSinistre(selItem)}
+                    onOpenReclamation={id => setSel({ kind: "gmail", id })} />
+                )}
+                {sel.kind !== "new" && !selItem && <div className="sx-empty">Ce dossier n'existe plus.</div>}
+              </>
+            ) : (
+              <div className="sx-placeholder">Choisis un dossier dans la liste pour le traiter ou le modifier.</div>
+            )}
+          </div>
+        </aside>
       </div>
+
+      {toast && <div className={`sx-toast ${toast.kind}`} role="status" aria-live="polite">{toast.msg}</div>}
       <CodeModal {...codeModalProps} />
     </>
   );
 }
 
+// ---- Carte compacte de la liste ----
+function ItemRow({ it, selected, onOpen }) {
+  const r = it.raw;
+  const age = it.kind === "gmail" && it.ouvert ? joursDepuis(it.date) : null;
+  let badge;
+  if (it.kind === "gmail") {
+    badge = it.ouvert ? { cls: "bad", txt: "● Gmail · à traiter" }
+      : r.ignoree ? { cls: "ok", txt: "✓ Gmail · sans suite" } : { cls: "ok", txt: "✓ Gmail · traitée" };
+  } else badge = badgeSinistre(r);
+
+  return (
+    <button type="button" className={`sx-item ${selected ? "sel" : ""} ${it.ouvert ? "is-open" : "is-closed"}`} onClick={onOpen} aria-current={selected || undefined}>
+      <span className="sx-i-badges">
+        <span className={`sx-b ${badge.cls}`}>{badge.txt}</span>
+        {it.kind === "gmail" && r.type && <span className="sx-b gr">{typeLabel(r.type)}</span>}
+        <span className={`sx-b ${it.canal === "direct" ? "vi" : "info"}`}>{plateformeLabel(it.canal)}</span>
+        {it.kind === "sin" && it.canal !== "direct" && r.reponseRapide && <span className="sx-b ok">Répondu vite</span>}
+      </span>
+      <span className="sx-i-who">{it.client}</span>
+      <span className="sx-i-meta">{[it.lieu, fmtFr(it.date)].filter(Boolean).join(" · ")}</span>
+      {it.motif && <span className="sx-i-txt">{it.motif}</span>}
+      <span className="sx-i-end">
+        {age != null && <span className={`sx-age ${ageCls(age)}`}>il y a {age} j</span>}
+        {it.montant != null && it.montant !== "" && (
+          <span className={`sx-amt ${it.kind === "sin" ? "neg" : ""}`}>{euros(it.montant)}{it.montantLbl && <small> {it.montantLbl}</small>}</span>
+        )}
+        <span className="sx-chev" aria-hidden="true">›</span>
+      </span>
+    </button>
+  );
+}
+
+// ---- Fiche d'un sinistre ----
+function SinistreDetail({ s, onUpdate, onDelete, onOpenReclamation }) {
+  const c = canalSinistre(s);
+  const direct = c === "direct";
+  const st = statutPlateforme(s);
+  const init = () => ({ motif: s.motif || "", montant: s.montant ?? "", note: s.note || "", date: s.date || "" });
+  const [f, setF] = useState(init);
+  const [err, setErr] = useState("");
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { setF(init()); setErr(""); }, [s.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const dirty = f.motif !== (s.motif || "") || String(f.montant ?? "") !== String(s.montant ?? "") || f.note !== (s.note || "") || f.date !== (s.date || "");
+  const badge = badgeSinistre(s);
+
+  async function enregistrer() {
+    const m = parseMontant(f.montant);
+    if (!f.motif.trim()) { setErr("La cause est obligatoire."); return; }
+    if (m != null && (isNaN(m) || m < 0)) { setErr("Montant invalide."); return; }
+    setErr(""); setBusy(true);
+    await onUpdate({ motif: f.motif.trim(), montant: m, note: f.note.trim(), date: f.date || s.date }, "Modifications enregistrées.");
+    setBusy(false);
+  }
+
+  return (
+    <div className="sx-detail">
+      <div className="sx-d-badges">
+        <span className={`sx-b ${badge.cls}`}>{badge.txt}</span>
+        <span className={`sx-b ${direct ? "vi" : "info"}`}>{plateformeLabel(c)}</span>
+      </div>
+      <h2 className="sx-d-title">{s.client}</h2>
+      <div className="sx-d-meta">
+        {[[s.residence, s.appartement].filter(Boolean).join(" "), s.reservation && `résa ${s.reservation}`].filter(Boolean).join(" · ") || "Logement non renseigné"}
+        {s.arrivee && <><br />Séjour du {fmtFr(s.arrivee)} au {fmtFr(s.depart)}</>}
+      </div>
+      {s.reclamationId && (
+        <p className="sx-d-link"><button type="button" className="sx-linkbtn" onClick={() => onOpenReclamation(s.reclamationId)}>Voir la réclamation Gmail ›</button></p>
+      )}
+
+      <div className="sx-fld">
+        <div className="sx-lbl">Problème réglé ?</div>
+        <div className="sx-yn" role="group">
+          <button type="button" className={`sx-btn ${!s.problemeRegle ? "on-warn" : ""}`} aria-pressed={!s.problemeRegle}
+            onClick={() => s.problemeRegle && onUpdate({ problemeRegle: false }, "Remis en « non réglé ».")}>Non réglé</button>
+          <button type="button" className={`sx-btn ${s.problemeRegle ? "on-ok" : ""}`} aria-pressed={!!s.problemeRegle}
+            onClick={() => !s.problemeRegle && onUpdate({ problemeRegle: true }, "Sinistre réglé.")}>Réglé</button>
+        </div>
+      </div>
+
+      {!direct && (
+        <>
+          <div className="sx-fld">
+            <div className="sx-lbl">Dossier sur {plateformeLabel(c)}</div>
+            <div className="sx-chips">
+              {[["non_ouvert", "Pas ouvert"], ["ouvert", "Ouvert"], ["ferme", "Fermé"]].map(([v, l]) => (
+                <button type="button" key={v} className={`sx-chip ${st === v ? "on" : ""}`} aria-pressed={st === v}
+                  onClick={() => st !== v && onUpdate({ statutPlateforme: v }, `Dossier ${plateformeLabel(c)} : ${l.toLowerCase()}.`)}>{l}</button>
+              ))}
+            </div>
+          </div>
+          <label className="sx-check">
+            <input type="checkbox" checked={!!s.reponseRapide} onChange={e => onUpdate({ reponseRapide: e.target.checked }, "Enregistré.")} />
+            Répondu rapidement à la plateforme
+          </label>
+        </>
+      )}
+
+      <div className="sx-form sx-edit">
+        <div className="sx-fld">
+          <label className="sx-lbl" htmlFor={`sm-${s.id}`}>Cause / motif</label>
+          <textarea id={`sm-${s.id}`} rows={2} value={f.motif} onChange={e => setF({ ...f, motif: e.target.value })} />
+        </div>
+        <div className="sx-2col">
+          <div className="sx-fld">
+            <label className="sx-lbl" htmlFor={`sa-${s.id}`}>Montant remboursé (€)</label>
+            <input id={`sa-${s.id}`} inputMode="decimal" value={f.montant ?? ""} onChange={e => setF({ ...f, montant: e.target.value })} />
+          </div>
+          <div className="sx-fld">
+            <label className="sx-lbl" htmlFor={`sd-${s.id}`}>Date</label>
+            <input id={`sd-${s.id}`} type="date" value={f.date} onChange={e => setF({ ...f, date: e.target.value })} />
+          </div>
+        </div>
+        <div className="sx-fld">
+          <label className="sx-lbl" htmlFor={`sn-${s.id}`}>Note <span className="sx-opt">(facultatif)</span></label>
+          <textarea id={`sn-${s.id}`} rows={2} value={f.note} onChange={e => setF({ ...f, note: e.target.value })} />
+        </div>
+        {err && <div className="sx-err">{err}</div>}
+        {dirty && (
+          <div className="sx-foot">
+            <button type="button" className="sx-btn" onClick={() => { setF(init()); setErr(""); }} disabled={busy}>Annuler</button>
+            <button type="button" className="sx-btn pri" onClick={enregistrer} disabled={busy}>{busy ? "Enregistrement…" : "Enregistrer"}</button>
+          </div>
+        )}
+      </div>
+
+      <button type="button" className="sx-delete" onClick={onDelete}>Supprimer ce sinistre…</button>
+    </div>
+  );
+}
+
 // ---- Formulaire de création ----
+const GERE = [
+  { value: "booking", label: "Booking" },
+  { value: "airbnb", label: "Airbnb" },
+  { value: "expedia", label: "Expedia" },
+  { value: "autre", label: "Autre plateforme" },
+  { value: "direct", label: "En direct" },
+];
+
 function SinistreForm({ onSave, onCancel }) {
   const [clientMode, setClientMode] = useState("hostaway"); // hostaway | manuel
   const [query, setQuery] = useState("");
   const [searching, setSearching] = useState(false);
   const [results, setResults] = useState([]);
-  const [picked, setPicked] = useState(null); // réservation choisie
+  const [searchMsg, setSearchMsg] = useState("");
+  const [picked, setPicked] = useState(null);
   const [manualClient, setManualClient] = useState("");
-
   const [motif, setMotif] = useState("");
   const [montant, setMontant] = useState("");
-  const [origine, setOrigine] = useState("plateforme"); // plateforme | direct
-  const [canal, setCanal] = useState("booking"); // booking | airbnb | autre (si origine === "plateforme")
-  const [problemeRegle, setProblemeRegle] = useState(false);
-  const [reponseRapide, setReponseRapide] = useState(false);
-  const [statutPlateforme, setStatutPlateforme] = useState("non_ouvert");
+  const [gere, setGere] = useState("booking");
   const [note, setNote] = useState("");
   const [date, setDate] = useState(isoDay(new Date()));
-  const [formStatus, setFormStatus] = useState("");
+  const [errs, setErrs] = useState({});
+  const [busy, setBusy] = useState(false);
+  const timer = useRef(null);
 
-  async function runSearch(q) {
-    setQuery(q);
+  function onQuery(v) {
+    setQuery(v);
     setPicked(null);
-    if (q.trim().length < 2) { setResults([]); return; }
+    clearTimeout(timer.current);
+    if (v.trim().length < 2) { setResults([]); setSearchMsg(""); return; }
+    timer.current = setTimeout(() => runSearch(v.trim()), 300);
+  }
+
+  async function runSearch(qq) {
+    const acc = window.localStorage.getItem(ACCOUNT_KEY) || "";
+    const key = window.localStorage.getItem(KEY_KEY) || "";
+    if (!acc || !key) { setSearchMsg("Identifiants Hostaway non configurés (onglet Fiches de police) : utilise la saisie libre."); return; }
     setSearching(true);
     try {
-      const acc = window.localStorage.getItem(ACCOUNT_KEY) || "";
-      const key = window.localStorage.getItem(KEY_KEY) || "";
-      if (!acc || !key) { setFormStatus("Identifiants Hostaway non configurés (onglet Fiches de police) — utilise la saisie manuelle."); setSearching(false); return; }
-      const res = await fetch(`/api/reservation-search?q=${encodeURIComponent(q.trim())}`, {
+      const res = await fetch(`/api/reservation-search?q=${encodeURIComponent(qq)}`, {
         headers: { "x-hostaway-account": acc, "x-hostaway-key": key },
       });
       const d = await res.json();
-      if (!res.ok) { setFormStatus("Erreur recherche : " + (d.error || res.status)); setResults([]); }
-      else { setResults(d.items || []); setFormStatus(""); }
-    } catch (err) { setFormStatus("Erreur : " + err.message); }
+      if (!res.ok) { setSearchMsg("Erreur de recherche : " + (d.error || res.status)); setResults([]); }
+      else { setResults(d.items || []); setSearchMsg((d.items || []).length ? "" : "Aucune réservation trouvée. Vérifie l'orthographe ou passe en saisie libre."); }
+    } catch (err) { setSearchMsg("Erreur : " + err.message); }
     setSearching(false);
   }
 
-  function submit() {
+  function pick(r) {
+    setPicked(r); setResults([]); setErrs(e => ({ ...e, client: "" }));
+    const ch = (r.channel || "").toLowerCase();
+    setGere(ch.includes("airbnb") ? "airbnb" : ch.includes("booking") ? "booking" : ch.includes("expedia") ? "expedia" : "autre");
+  }
+
+  async function submit() {
     const client = clientMode === "hostaway" ? (picked?.client || "") : manualClient.trim();
-    if (!client) { setFormStatus("Choisis ou saisis un client."); return; }
-    if (!motif.trim()) { setFormStatus("La cause est obligatoire."); return; }
-    onSave({
+    const m = parseMontant(montant);
+    const e = {};
+    if (!client) e.client = clientMode === "hostaway" ? "Choisis une réservation dans la liste." : "Saisis le nom du client.";
+    if (!motif.trim()) e.motif = "La cause est obligatoire.";
+    if (m != null && (isNaN(m) || m < 0)) e.montant = "Montant invalide.";
+    setErrs(e);
+    if (Object.keys(e).length) return;
+    setBusy(true);
+    await onSave({
       date,
       clientMode,
       client,
@@ -227,163 +542,99 @@ function SinistreForm({ onSave, onCancel }) {
       depart: picked?.depart || "",
       reservation: picked?.reservation || "",
       motif: motif.trim(),
-      montant: montant === "" ? null : Number(montant),
-      origine,
-      canal: origine === "plateforme" ? canal : null,
-      problemeRegle,
-      reponseRapide,
-      statutPlateforme,
+      montant: m,
+      origine: gere === "direct" ? "direct" : "plateforme",
+      canal: gere === "direct" ? null : gere,
+      problemeRegle: false,
+      reponseRapide: false,
+      statutPlateforme: "non_ouvert",
       note: note.trim(),
     });
+    setBusy(false);
   }
 
   return (
-    <div className="linen-form" style={{ marginBottom: 20 }}>
-      <div className="linen-form-row">
-        <label>Date de la réclamation <input type="date" value={date} onChange={e => setDate(e.target.value)} /></label>
-      </div>
-
-      <div className="linen-form-row">
-        <label>Client
-          <select value={clientMode} onChange={e => { setClientMode(e.target.value); setPicked(null); setResults([]); setQuery(""); }}>
-            <option value="hostaway">Rechercher dans les réservations</option>
-            <option value="manuel">Saisie manuelle</option>
-          </select>
-        </label>
-
-        {clientMode === "hostaway" ? (
-          <label style={{ minWidth: 320, position: "relative" }}>Nom du client
-            <input type="text" value={picked ? picked.client : query} onChange={e => runSearch(e.target.value)}
-              placeholder="Tape au moins 2 lettres du nom…" style={{ width: "100%" }} />
-            {searching && <span className="note">Recherche…</span>}
-            {!picked && results.length > 0 && (
-              <div className="sin-results" style={{ border: "1px solid #ddd", borderRadius: 6, marginTop: 4, maxHeight: 220, overflowY: "auto", background: "#fff", position: "relative", zIndex: 5 }}>
-                {results.map((r, i) => (
-                  <div key={i} className="sin-result" onClick={() => {
-                    setPicked(r); setResults([]);
-                    const ch = (r.channel || "").toLowerCase();
-                    if (ch.includes("airbnb")) setCanal("airbnb");
-                    else if (ch.includes("booking")) setCanal("booking");
-                    else setCanal("autre");
-                  }}
-                    style={{ padding: "8px 10px", cursor: "pointer", borderBottom: "1px solid #f0f0f0", fontSize: 13 }}>
-                    <strong>{r.client}</strong> — {r.residence} {r.appartement} ({r.unitNumber})
-                    <div className="card-meta">{fmtFr(r.arrivee)} → {fmtFr(r.depart)} · {r.channel}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-            {picked && (
-              <div className="pick-ok">
-                {picked.residence} {picked.appartement} · {fmtFr(picked.arrivee)} → {fmtFr(picked.depart)}
-                {" "}<button type="button" onClick={() => { setPicked(null); setQuery(""); }} className="ghost">changer</button>
-              </div>
-            )}
-          </label>
-        ) : (
-          <label style={{ minWidth: 260 }}>Nom du client
-            <input type="text" value={manualClient} onChange={e => setManualClient(e.target.value)} style={{ width: "100%" }} />
-          </label>
-        )}
-      </div>
-
-      <div className="linen-form-row">
-        <label style={{ flex: 1 }}>Cause du remboursement / motif (obligatoire)
-          <input type="text" value={motif} onChange={e => setMotif(e.target.value)}
-            placeholder="ex. chauffage en panne, ménage insuffisant…" style={{ width: "100%" }} />
-        </label>
-        <label>Montant remboursé/réduit € <input type="number" min="0" step="0.01" value={montant} onChange={e => setMontant(e.target.value)} style={{ width: 120 }} /></label>
-      </div>
-
-      <div className="linen-form-row">
-        <label>Géré
-          <select value={origine} onChange={e => setOrigine(e.target.value)}>
-            <option value="plateforme">Sur une plateforme</option>
-            <option value="direct">En direct (téléphone)</option>
-          </select>
-        </label>
-        {origine === "plateforme" && (
-          <label>Plateforme
-            <select value={canal} onChange={e => setCanal(e.target.value)}>
-              {CANAUX.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
-          </label>
-        )}
-        {origine === "plateforme" && (
-          <label>Statut sur la plateforme
-            <select value={statutPlateforme} onChange={e => setStatutPlateforme(e.target.value)}>
-              {STATUT_PLATEFORME.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
-          </label>
-        )}
-      </div>
-
-      <div className="linen-form-row">
-        <label style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-          <input type="checkbox" checked={reponseRapide} onChange={e => setReponseRapide(e.target.checked)} />
-          Répondu rapidement à Booking
-        </label>
-        <label style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-          <input type="checkbox" checked={problemeRegle} onChange={e => setProblemeRegle(e.target.checked)} />
-          Problème réglé
-        </label>
-      </div>
-
-      <div className="linen-form-row">
-        <label style={{ flex: 1 }}>Note (optionnel) <input type="text" value={note} onChange={e => setNote(e.target.value)} style={{ width: "100%" }} /></label>
-      </div>
-
-      {formStatus && <div className="msg warn">{formStatus}</div>}
-      <button className="primary" onClick={submit}>Enregistrer le sinistre</button>
-      <button onClick={onCancel} className="ghost" style={{ marginLeft: 8 }}>Annuler</button>
-    </div>
-  );
-}
-
-// ---- Ligne d'un sinistre existant ----
-const CANAL_LABEL = { booking: "Booking.com", airbnb: "Airbnb", autre: "Autre plateforme" };
-
-function SinistreRow({ s, onUpdate, onDelete }) {
-  // Rétrocompatibilité : les sinistres créés avant l'ajout d'Airbnb avaient
-  // origine: "booking" directement (pas de champ canal séparé).
-  const isDirect = s.origine === "direct";
-  const canal = s.canal || (s.origine === "booking" ? "booking" : null);
-
-  return (
-    <div className={`resid card sin-card ${s.problemeRegle ? "card-ok" : "card-warn"}`}>
-      <div className="card-head">
-        <div>
-          <strong>{s.client}</strong>{" "}
-          {s.residence && <span className="card-meta">· {s.residence} {s.appartement}</span>}
-          <span className="card-meta"> · {fmtFr(s.date)}</span>
-        </div>
-        <div className="row-actions">
-          <span className={`pill ${isDirect ? "violet" : "info"}`}>
-            {isDirect ? "En direct" : (CANAL_LABEL[canal] || "Plateforme")}
-          </span>
-          <button onClick={onDelete} className="ghost danger" title="Supprimer" aria-label="Supprimer">✕</button>
+    <div className="sx-detail sx-form">
+      <div className="sx-fld">
+        <div className="sx-lbl">Client</div>
+        <div className="sx-chips">
+          <button type="button" className={`sx-chip ${clientMode === "hostaway" ? "on" : ""}`} aria-pressed={clientMode === "hostaway"} onClick={() => setClientMode("hostaway")}>Chercher une réservation</button>
+          <button type="button" className={`sx-chip ${clientMode === "manuel" ? "on" : ""}`} aria-pressed={clientMode === "manuel"} onClick={() => { setClientMode("manuel"); setPicked(null); setResults([]); }}>Saisie libre</button>
         </div>
       </div>
 
-      <div className="card-body">{s.motif}</div>
-      {s.montant != null && <div className="card-montant t-bad">Montant : {euros(s.montant)}</div>}
-      {s.note && <div className="card-quote">{s.note}</div>}
+      {clientMode === "hostaway" ? (
+        <div className="sx-fld">
+          <label className="sx-lbl" htmlFor="sf-q">Nom du client</label>
+          {picked ? (
+            <div className="sx-picked">
+              <div><b>{picked.client}</b><br /><small>{picked.residence} {picked.appartement} · {fmtFr(picked.arrivee)} → {fmtFr(picked.depart)} · {picked.channel}</small></div>
+              <button type="button" className="sx-btn" onClick={() => { setPicked(null); setQuery(""); }}>Changer</button>
+            </div>
+          ) : (
+            <>
+              <input id="sf-q" type="search" value={query} onChange={e => onQuery(e.target.value)} placeholder="Au moins 2 lettres du nom" autoComplete="off" />
+              {searching && <div className="sx-hint">Recherche…</div>}
+              {searchMsg && <div className="sx-hint">{searchMsg}</div>}
+              {results.length > 0 && (
+                <div className="sx-results" role="listbox">
+                  {results.map((r, i) => (
+                    <button type="button" key={i} className="sx-result" onClick={() => pick(r)}>
+                      <b>{r.client}</b> · {r.residence} {r.appartement}
+                      <small>{fmtFr(r.arrivee)} → {fmtFr(r.depart)} · {r.channel}</small>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+          {errs.client && <div className="sx-err">{errs.client}</div>}
+        </div>
+      ) : (
+        <div className="sx-fld">
+          <label className="sx-lbl" htmlFor="sf-c">Nom du client</label>
+          <input id="sf-c" value={manualClient} onChange={e => { setManualClient(e.target.value); setErrs(x => ({ ...x, client: "" })); }} />
+          {errs.client && <div className="sx-err">{errs.client}</div>}
+        </div>
+      )}
 
-      <div className="card-controls">
-        <label className="check">
-          <input type="checkbox" checked={!!s.reponseRapide} onChange={e => onUpdate({ reponseRapide: e.target.checked })} />
-          Répondu rapidement
-        </label>
-        <label className="check">
-          <input type="checkbox" checked={!!s.problemeRegle} onChange={e => onUpdate({ problemeRegle: e.target.checked })} />
-          Problème réglé
-        </label>
-        <label className="inline-field">
-          Statut plateforme{" "}
-          <select value={s.statutPlateforme || s.statutBooking || "non_ouvert"} onChange={e => onUpdate({ statutPlateforme: e.target.value })}>
-            {STATUT_PLATEFORME.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
-        </label>
+      <div className="sx-fld">
+        <label className="sx-lbl" htmlFor="sf-m">Cause / motif <span className="sx-req">(obligatoire)</span></label>
+        <input id="sf-m" value={motif} onChange={e => { setMotif(e.target.value); setErrs(x => ({ ...x, motif: "" })); }} />
+        <div className="sx-hint">Exemples : chauffage en panne, ménage insuffisant.</div>
+        {errs.motif && <div className="sx-err">{errs.motif}</div>}
+      </div>
+
+      <div className="sx-2col">
+        <div className="sx-fld">
+          <label className="sx-lbl" htmlFor="sf-a">Montant remboursé (€)</label>
+          <input id="sf-a" inputMode="decimal" value={montant} onChange={e => { setMontant(e.target.value); setErrs(x => ({ ...x, montant: "" })); }} />
+          {errs.montant && <div className="sx-err">{errs.montant}</div>}
+        </div>
+        <div className="sx-fld">
+          <label className="sx-lbl" htmlFor="sf-d">Date de la réclamation</label>
+          <input id="sf-d" type="date" value={date} onChange={e => setDate(e.target.value)} />
+        </div>
+      </div>
+
+      <div className="sx-fld">
+        <div className="sx-lbl">Géré</div>
+        <div className="sx-chips">
+          {GERE.map(g => (
+            <button type="button" key={g.value} className={`sx-chip ${gere === g.value ? "on" : ""}`} aria-pressed={gere === g.value} onClick={() => setGere(g.value)}>{g.label}</button>
+          ))}
+        </div>
+        {picked && <div className="sx-hint">Déduit de la réservation, modifiable.</div>}
+      </div>
+
+      <div className="sx-fld">
+        <label className="sx-lbl" htmlFor="sf-n">Note <span className="sx-opt">(facultatif)</span></label>
+        <input id="sf-n" value={note} onChange={e => setNote(e.target.value)} />
+      </div>
+
+      <div className="sx-foot">
+        <button type="button" className="sx-btn" onClick={onCancel} disabled={busy}>Annuler</button>
+        <button type="button" className="sx-btn pri" onClick={submit} disabled={busy}>{busy ? "Enregistrement…" : "Enregistrer le sinistre"}</button>
       </div>
     </div>
   );

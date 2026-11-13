@@ -45,6 +45,7 @@ jobs:
           for i in $(seq 1 60); do curl -s 127.0.0.1:8080 >/dev/null && curl -s 127.0.0.1:3000/api/auth >/dev/null && break; sleep 2; done
           tail -5 emu.log
       - name: Audit
+        env: { QA_PC: "1" }
         run: node qa-mobile/audit.mjs ${{ github.event.inputs.pages }}
       - name: Résultats sur la branche (captures + rapport)
         if: always()

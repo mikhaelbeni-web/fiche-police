@@ -1,26 +1,88 @@
 [
  {
-  "name": "sinistres-liste-tous",
-  "steps": []
- },
- {
-  "name": "sinistres-filtre-non-regles",
+  "name": "clos",
   "steps": [
    {
-    "click": "button >> text=\"Non réglés\""
+    "click": "button[role=tab] >> text=Clos"
    }
   ]
  },
  {
-  "name": "sinistres-filtre-regles",
+  "name": "tout",
   "steps": [
    {
-    "click": "button >> text=\"Réglés\""
+    "click": "button[role=tab] >> text=Tout"
    }
   ]
  },
  {
-  "name": "sinistres-formulaire-nouveau",
+  "name": "recherche",
+  "steps": [
+   {
+    "fill": ".sx-search input",
+    "value": "lantiez"
+   }
+  ]
+ },
+ {
+  "name": "fiche-gmail",
+  "steps": [
+   {
+    "click": ".sx-item >> nth=0"
+   }
+  ]
+ },
+ {
+  "name": "fiche-gmail-rembourse-oui",
+  "steps": [
+   {
+    "click": ".sx-item >> nth=0"
+   },
+   {
+    "click": ".sx-yn button >> nth=0"
+   }
+  ]
+ },
+ {
+  "name": "fiche-gmail-erreurs",
+  "steps": [
+   {
+    "click": ".sx-item >> nth=0"
+   },
+   {
+    "click": ".sx-foot button.pri"
+   }
+  ]
+ },
+ {
+  "name": "fiche-sinistre",
+  "steps": [
+   {
+    "fill": ".sx-search input",
+    "value": "wolfgang"
+   },
+   {
+    "click": ".sx-item >> nth=0"
+   }
+  ]
+ },
+ {
+  "name": "fiche-sinistre-regle",
+  "steps": [
+   {
+    "click": "button[role=tab] >> text=Clos"
+   },
+   {
+    "fill": ".sx-search input",
+    "value": "sophie"
+   },
+   {
+    "click": ".sx-item >> nth=0"
+   }
+  ]
+ },
+ {
+  "name": "nouveau",
   "steps": [
    {
     "click": "text=+ Nouveau sinistre"
@@ -28,76 +90,25 @@
   ]
  },
  {
-  "name": "sinistres-formulaire-saisie-manuelle",
+  "name": "nouveau-recherche-resultats",
   "steps": [
    {
     "click": "text=+ Nouveau sinistre"
    },
    {
-    "select": ".linen-form select >> nth=0",
-    "value": "manuel"
-   }
-  ]
- },
- {
-  "name": "sinistres-formulaire-recherche-resultats",
-  "steps": [
-   {
-    "click": "text=+ Nouveau sinistre"
-   },
-   {
-    "fill": "input[placeholder^=\"Tape au moins 2 lettres\"]",
+    "fill": "#sf-q",
     "value": "ma"
    }
   ]
  },
  {
-  "name": "sinistres-ouvrir-select-statut",
+  "name": "nouveau-erreurs",
   "steps": [
    {
-    "click": ".card-controls select >> nth=0"
-   }
-  ]
- },
- {
-  "name": "vue-reclamations-a-traiter",
-  "steps": [
-   {
-    "click": "text=/Réclamations Gmail/"
-   }
-  ]
- },
- {
-  "name": "vue-reclamations-traitees",
-  "steps": [
-   {
-    "click": "text=/Réclamations Gmail/"
+    "click": "text=+ Nouveau sinistre"
    },
    {
-    "click": "button:has-text(\"Traitées\")"
-   }
-  ]
- },
- {
-  "name": "vue-reclamations-toutes",
-  "steps": [
-   {
-    "click": "text=/Réclamations Gmail/"
-   },
-   {
-    "click": "button:has-text(\"Toutes\")"
-   }
-  ]
- },
- {
-  "name": "vue-reclamations-montant-visible",
-  "steps": [
-   {
-    "click": "text=/Réclamations Gmail/"
-   },
-   {
-    "select": ".card-controls select >> nth=0",
-    "value": "oui"
+    "click": "text=Enregistrer le sinistre"
    }
   ]
  }
