@@ -150,3 +150,73 @@ test("export CSV", () => {
   assert.ok(csv.startsWith("﻿Date;Heure (Paris);Classe"));
   assert.match(csv, /2026-11-05;20:00;ALERTE;COSY 10;Cosy 10/);
 });
+
+// ---------- Visites hors réservation (mikhael, 13/11) ----------
+// Résa 1 : Cosy 10 du 03/11 (15 h) au 05/11 (11 h). Novembre : Paris = UTC+1.
+const V = (events, interpretations, settings) => c.visitesHorsReservation({ devices: DEVICES, events, mapping: MAPPING, reservations: RESAS, personnel: PERSONNEL, settings, interpretations });
+const evIn = (iso) => ev(iso, "MANUAL_UNLOCK", { description: "Unlocked manually from inside" });
+
+test("texte d'un événement réel : les identifiants aléatoires ne sont pas lus", () => {
+  const e = { _id: "x", lockRef: "AutoOpenLock99", userRef: "unlock", keyId: "1", activityType: "BLUETOOTH_SET_TIME", description: "Unknown activity: BLUETOOTH_SET_TIME", extra: { description: "", unlockResult: [] }, pinType: "" };
+  assert.equal(c.eventText(e), "BLUETOOTH_SET_TIME | Unknown activity: BLUETOOTH_SET_TIME");
+  assert.equal(c.eventKind(e), null);
+  assert.equal(c.eventKind(ev("2026-11-01T10:00:00Z", "CREATE_NEW_PIN_VIA_BLUETOOTH")), null);
+});
+
+test("visite : entrée puis sortie, durée calculée ; pendant la réservation rien n'apparaît", () => {
+  const rows = V({ IGL_COSY10: [
+    ev("2026-11-04T21:00:00Z"),                       // 22 h le 04, client présent : ignoré
+    ev("2026-11-05T11:30:00Z"), evIn("2026-11-05T13:15:00Z"), // 12 h 30 → 14 h 15, après le départ de 11 h
+  ] });
+  assert.equal(rows.length, 1);
+  const v = rows[0];
+  assert.equal(v.date, "2026-11-05");
+  assert.equal(v.entree, "12:30"); assert.equal(v.sortie, "14:15"); assert.equal(v.dureeMin, 105);
+  assert.equal(v.nuit, false); assert.equal(v.classe, "jour");
+  assert.match(v.interpretation, /1 h 45 dans l'appartement/);
+  assert.match(v.precedent, /Client A, départ 05\/11 11 h/);
+});
+
+test("visite de nuit sans réservation : ALERTE, même si elle commence avant 19 h", () => {
+  const rows = V({ IGL_ZEN: [ev("2026-11-06T17:30:00Z"), evIn("2026-11-06T18:40:00Z")] }); // 18 h 30 → 19 h 40
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].nuit, true); assert.equal(rows[0].classe, "alerte");
+});
+
+test("heures d'arrivée 15 h et de départ 11 h : l'arrivée à 14 h est hors réservation", () => {
+  const rows = V({ IGL_COSY10: [ev("2026-11-03T13:00:00Z"), ev("2026-11-03T15:00:00Z")] }); // 14 h et 16 h le 03
+  assert.deepEqual(rows.map(r => r.entree), ["14:00"]);
+});
+
+test("sortie sans entrée et entrée sans sortie sont signalées", () => {
+  const rows = V({ IGL_ZEN: [evIn("2026-11-07T01:00:00Z"), ev("2026-11-08T09:00:00Z")] });
+  assert.equal(rows.length, 2);
+  assert.match(rows.find(r => r.date === "2026-11-07").interpretation, /sans entrée enregistrée/);
+  assert.match(rows.find(r => r.date === "2026-11-08").interpretation, /sortie non enregistrée/);
+});
+
+test("ouvertures répétées en quelques minutes : une seule visite", () => {
+  const rows = V({ IGL_ZEN: [ev("2026-11-06T10:00:00Z"), ev("2026-11-06T10:02:00Z"), evIn("2026-11-06T10:40:00Z"), evIn("2026-11-06T10:45:00Z")] });
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].dureeMin, 45);
+});
+
+test("interprétation validée par mikhael : remplace la proposition, la visite n'est plus « à confirmer »", () => {
+  const e = ev("2026-11-06T22:00:00Z", "PIN_ACCESS");
+  assert.equal(c.eventKind(e), null, "proposition : rien d'une ouverture");
+  assert.equal(V({ IGL_ZEN: [e] }).length, 0);
+  const interp = { PIN_ACCESS: { nature: "entree", valide: true } };
+  const rows = V({ IGL_ZEN: [e] }, interp);
+  assert.equal(rows.length, 1); assert.equal(rows[0].aConfirmer, false); assert.equal(rows[0].nuit, true);
+  assert.equal(V({ IGL_ZEN: [ev("2026-11-06T22:00:00Z")] })[0].aConfirmer, true);
+  const t = c.typesLus({ IGL_ZEN: [e, e, ev("2026-11-06T22:00:00Z")] }, interp);
+  assert.deepEqual(t.map(x => [x.type, x.nombre, x.nature, x.valide]), [["UNLOCK", 1, "entree", false], ["PIN_ACCESS", 2, "entree", true]]);
+});
+
+test("configuration : interprétations nettoyées, réglages arrivée/départ", () => {
+  const cfg = c.sanitizeConfig({ interpretations: { PIN_UNLOCK: { nature: "entree", valide: true } }, reglages: { heureArrivee: 16, heureDepart: 10 } });
+  assert.deepEqual(cfg.interpretations, { PIN_UNLOCK: { nature: "entree", valide: true } });
+  assert.equal(cfg.reglages.heureArrivee, 16); assert.equal(cfg.reglages.heureDepart, 10);
+  assert.throws(() => c.sanitizeConfig({ interpretations: { X: { nature: "ouvrir" } } }), /inconnue/);
+  assert.equal(c.sanitizeConfig({}).reglages.heureArrivee, 15);
+});
