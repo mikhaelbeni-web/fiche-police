@@ -2292,12 +2292,18 @@ body {
     .sx-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
     .sx-kpi b { font-size: 18px; }
     .sx-seg { flex: 1 1 100%; }
-    .sx-seg button { flex: 1; justify-content: center; min-height: 40px; padding: 0 8px; }
+    .sx-seg button { flex: 1; justify-content: center; padding: 0 8px; }
     .sx-search { flex: 1 1 100%; }
     .sx-search input { font-size: 16px; }
     .sx-bar select { flex: 1 1 100%; font-size: 16px; }
     .sx-fld input:not([type=checkbox]), .sx-fld textarea { font-size: 16px; }
     .sx-2col { grid-template-columns: 1fr; }
+  }
+
+  /* Écrans tactiles (téléphone en paysage, tablette) : cibles de 44 px. */
+  @media (pointer: coarse) {
+    .sx-seg button, .sx-chip, .sx-delete { min-height: 44px; }
+    .sx-close { width: 44px; height: 44px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
