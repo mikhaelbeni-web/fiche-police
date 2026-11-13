@@ -15,6 +15,7 @@ export default function Correspondance() {
   const [err, setErr] = useState(null);
   const [busy, setBusy] = useState("load");
   const [saved, setSaved] = useState("");
+  const [edition, setEdition] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -42,7 +43,10 @@ export default function Correspondance() {
     try {
       const mapping = {};
       for (const r of rows) mapping[r.id] = { cible: r.cible, nom: r.nom, valide: r.valide };
-      const out = await adminCall(router, "/api/admin/igloohome/config", { method: "PUT", body: JSON.stringify({ config: { ...config, mapping } }) });
+      // Configuration relue juste avant l'écriture : ne pas écraser ce qui a été enregistré
+      // ailleurs (interprétations, réglages, personnel) depuis l'ouverture de la page.
+      const { config: fresh } = await adminCall(router, "/api/admin/igloohome/config");
+      const out = await adminCall(router, "/api/admin/igloohome/config", { method: "PUT", body: JSON.stringify({ config: { ...fresh, mapping } }) });
       setConfig(out.config);
       setRows(rs => rs.map(r => ({ ...r, enregistre: true })));
       setSaved("Correspondance enregistrée.");
@@ -59,6 +63,15 @@ export default function Correspondance() {
   const sansSerrure = IGLOO_APARTMENTS.filter(a => !counts.has(a.id));
   const doublons = [...counts].filter(([, n]) => n > 1).map(([id]) => apartmentName(id));
   const nonValides = rows.filter(r => !r.valide).length;
+  const sures = rows.filter(r => !r.valide && r.suggestion.confiance === "sure" && r.cible === r.suggestion.cible);
+  if (!edition && nonValides === 0 && rows.length > 0 && !saved) {
+    return (
+      <div className="rg-resume">
+        <span className="rg-ok">✓ {rows.length}/{rows.length} serrures validées</span>
+        <button onClick={() => setEdition(true)}>Modifier</button>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-block">
@@ -99,6 +112,7 @@ export default function Correspondance() {
       {bridges.length > 0 && <div className="admin-note">Bridges / étages ignorés : {bridges.map(b => b.nom || b.id).join(", ")}.</div>}
 
       <div className="admin-actions">
+        {sures.length > 0 && <button onClick={() => { setSaved(""); setRows(rs => rs.map(r => sures.includes(r) ? { ...r, valide: true } : r)); }}>Valider les {sures.length} proposition(s) sûre(s)</button>}
         <button className="primary" onClick={save} disabled={!!busy || doublons.length > 0}>{busy === "save" ? "Enregistrement…" : "Enregistrer la correspondance"}</button>
         <span className="admin-note">{nonValides ? `${nonValides} ligne(s) non validée(s)` : "Toutes les lignes sont validées"}</span>
       </div>

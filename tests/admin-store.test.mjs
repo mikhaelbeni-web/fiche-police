@@ -146,3 +146,44 @@ test("webhook igloohome : jeton secret obligatoire, envoi enregistré chiffré, 
     globalThis.fetch = realFetch;
   }
 });
+
+test("suivi : décisions et dernier résultat chiffrés, sans événement brut ni PIN", async () => {
+  store._resetStoreForTests();
+  const f = fakeGoogle();
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = f;
+  try {
+    const suivi = (await import("../pages/api/admin/igloohome/suivi.js")).default;
+    const lr = res();
+    await login(req({ method: "POST", cookies: [accessCookie()], body: { password: ADMIN_PASSWORD } }), lr);
+    const admin = [accessCookie(), `fp_admin=${encodeURIComponent(setCookieValue(lr, "fp_admin"))}`];
+
+    let r = res();
+    await suivi(req({ method: "GET", cookies: [accessCookie()] }), r);
+    assert.equal(r.statusCode, 404, "réceptionniste : 404");
+
+    r = res();
+    await suivi(req({ method: "PUT", cookies: admin, body: { decision: { cle: "IGL1:1762470000000", statut: "normal", note: "ménage" } } }), r);
+    assert.equal(r.statusCode, 200);
+    r = res();
+    await suivi(req({ method: "PUT", cookies: admin, body: { decision: { cle: "../x", statut: "normal" } } }), r);
+    assert.equal(r.statusCode, 400);
+
+    const visite = { cle: "IGL1:1762470000000", date: "2026-11-06", nuit: true, appartement: "Zen 62", evenements: [{ date: "2026-11-06", heure: "23:00", nature: "entree", type: "PIN_UNLOCK", brut: { pin: "4821" } }], brut: { pin: "4821" } };
+    r = res();
+    await suivi(req({ method: "PUT", cookies: admin, body: { dernier: { from: "2026-10-01", to: "2026-10-31", visites: [visite], types: [] } } }), r);
+    assert.equal(r.statusCode, 200);
+    const written = f.calls.filter(c => c.method === "PATCH").map(c => c.body).join("");
+    assert.ok(!written.includes("4821") && !written.includes("Zen 62"), "chiffré, et rien en clair");
+
+    r = res();
+    await suivi(req({ method: "GET", cookies: admin }), r);
+    assert.equal(r.body.suivi.decisions["IGL1:1762470000000"].statut, "normal");
+    assert.equal(r.body.suivi.decisions["IGL1:1762470000000"].note, "ménage");
+    const v = r.body.suivi.dernier.visites[0];
+    assert.equal(v.appartement, "Zen 62");
+    assert.ok(!JSON.stringify(r.body).includes("4821"), "le PIN n'est jamais gardé");
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});

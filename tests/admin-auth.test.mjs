@@ -21,7 +21,8 @@ const igloWebhookAdmin = (await import("../pages/api/admin/igloohome/webhook.js"
 const hostawayResas = (await import("../pages/api/admin/hostaway/reservations.js")).default;
 
 // Toutes les routes /api/admin/* qui exigent l'admin (login/logout exclues : publiques par nature).
-const PROTECTED_ROUTES = { session, igloDevices, igloActivity, igloConfig, igloDiag, igloWebhookAdmin, hostawayResas };
+const igloSuivi = (await import("../pages/api/admin/igloohome/suivi.js")).default;
+const PROTECTED_ROUTES = { igloSuivi, session, igloDevices, igloActivity, igloConfig, igloDiag, igloWebhookAdmin, hostawayResas };
 
 async function adminCookie() {
   const r = res();
