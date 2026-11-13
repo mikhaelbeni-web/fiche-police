@@ -88,9 +88,18 @@ protégées côté serveur.
 - Lecture longue : au-delà de 40 s, la route d'historique renvoie `suite` (curseur) et le
   navigateur la rappelle avec `&cursor=`. « Profondeur de l'historique lu » donne, par serrure,
   le plus ancien événement lu.
-- Onglets de l'Espace admin : Croisement (période, rejeu d'un mois, filtres, export CSV),
-  Correspondance (serrure → appartement, proposition d'après les noms, chaque ligne doit
-  être validée), Codes du personnel, Test de connexion.
+- Onglets de l'Espace admin (refonte du 13/11, ordinateur d'abord) :
+  - **Surveillance** (`components/admin/Croisement.js`) : période en raccourcis, résumé chiffré,
+    barre de progression, une ligne par visite (entrée, sortie, durée, frise des réservations
+    autour), décision « Normal » / « À vérifier » + note ;
+  - **Réglages** (`components/admin/Reglages.js`) : horaires, interprétation des types d'action
+    (un clic choisit et valide), serrures (correspondance, « Valider les propositions sûres »),
+    codes du personnel ;
+  - **Technique** : webhook et test de connexion.
+- Suivi (`/api/admin/igloohome/suivi`, document chiffré `admin_prive/igloohome_suivi`) :
+  décisions par visite (clé `serrure:horodatage`) et dernier résultat (visites et résumés,
+  jamais d'événement brut ni de PIN). Chaque enregistrement de configuration relit la
+  configuration juste avant d'écrire, pour ne rien écraser.
 - Moteur : `lib/croisement.js` (pur, testé par `tests/croisement.test.mjs`). Il tourne dans le
   navigateur de l'admin : une lecture d'historique par serrure, pour éviter les délais
   maximum des fonctions Vercel.

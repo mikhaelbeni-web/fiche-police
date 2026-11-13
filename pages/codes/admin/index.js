@@ -9,8 +9,7 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import CodesTabs from "../../../components/CodesTabs";
-import Correspondance from "../../../components/admin/Correspondance";
-import Personnel from "../../../components/admin/Personnel";
+import Reglages from "../../../components/admin/Reglages";
 import Croisement from "../../../components/admin/Croisement";
 import Webhook from "../../../components/admin/Webhook";
 import { adminPageProps } from "../../../lib/adminAuth";
@@ -84,7 +83,7 @@ export default function EspaceAdmin({ adminExpiresAt }) {
   const [hist, setHist] = useState(null);
   const [histErr, setHistErr] = useState(null);
   const [selected, setSelected] = useState(null);
-  const [tab, setTab] = useState("croisement");
+  const [tab, setTab] = useState("surveillance");
 
   async function logout() {
     setBusy("logout");
@@ -143,23 +142,24 @@ export default function EspaceAdmin({ adminExpiresAt }) {
               <button className="ghost" onClick={logout} disabled={busy === "logout"}>Se déconnecter</button>
             </div>
           </div>
-          <p className="admin-note">
-            igloohome est interrogé en <b>lecture seule</b> : liste des serrures et historique,
-            rien d&apos;autre (aucune ouverture, aucun PIN). Hostaway aussi.
-          </p>
-
-          <div className="admin-subtabs">
-            {[["croisement", "Croisement"], ["correspondance", "Correspondance"], ["personnel", "Codes du personnel"], ["webhook", "Webhook (test)"], ["connexion", "Test de connexion"]].map(([k, l]) => (
-              <button key={k} className={tab === k ? "on" : ""} onClick={() => setTab(k)}>{l}</button>
+          <nav className="adm-tabs" role="tablist" aria-label="Espace admin">
+            {[["surveillance", "Surveillance", "Visites dans les appartements vides"], ["reglages", "Réglages", "Horaires, types d'action, serrures, personnel"], ["technique", "Technique", "Webhook et test de connexion"]].map(([k, l, d]) => (
+              <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} onClick={() => setTab(k)}>
+                <b>{l}</b><span>{d}</span>
+              </button>
             ))}
-          </div>
+          </nav>
 
-          {tab === "croisement" && <Croisement />}
-          {tab === "correspondance" && <Correspondance />}
-          {tab === "personnel" && <Personnel />}
-          {tab === "webhook" && <Webhook />}
+          {tab === "surveillance" && <Croisement onReglages={() => setTab("reglages")} />}
+          {tab === "reglages" && <Reglages />}
+          {tab === "technique" && <>
+            <section className="rg-card">
+              <h3>Webhook igloohome</h3>
+              <Webhook />
+            </section>
+          </>}
 
-          {tab === "connexion" && <>
+          {tab === "technique" && <section className="rg-card"><h3>Test de connexion</h3>
           <div className="admin-block">
             <button className="primary" onClick={testConnexion} disabled={!!busy}>
               {busy === "devices" ? "Connexion…" : "Tester la connexion igloohome"}
@@ -256,7 +256,8 @@ export default function EspaceAdmin({ adminExpiresAt }) {
               )}
             </div>
           )}
-          </>}
+          </section>}
+          <p className="adm-foot">igloohome et Hostaway sont lus en <b>lecture seule</b> : aucune ouverture, aucun code créé, aucune réservation modifiée.</p>
         </div>
       </div>
     </>

@@ -28,7 +28,8 @@ export default function Personnel() {
     setBusy("save"); setErr(null); setSaved("");
     try {
       const personnel = list.filter(p => p.nom.trim() || p.code.trim());
-      const out = await adminCall(router, "/api/admin/igloohome/config", { method: "PUT", body: JSON.stringify({ config: { ...config, personnel } }) });
+      const { config: fresh } = await adminCall(router, "/api/admin/igloohome/config"); // ne rien écraser
+      const out = await adminCall(router, "/api/admin/igloohome/config", { method: "PUT", body: JSON.stringify({ config: { ...fresh, personnel } }) });
       setConfig(out.config); setList(out.config.personnel); setSaved("Codes du personnel enregistrés.");
     } catch (e) { setErr(e); }
     finally { setBusy(""); }

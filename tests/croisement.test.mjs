@@ -220,3 +220,20 @@ test("configuration : interprétations nettoyées, réglages arrivée/départ", 
   assert.throws(() => c.sanitizeConfig({ interpretations: { X: { nature: "ouvrir" } } }), /inconnue/);
   assert.equal(c.sanitizeConfig({}).reglages.heureArrivee, 15);
 });
+
+test("libellés en français des types d'action", () => {
+  assert.equal(c.libelleType("BLUETOOTH_SET_TIME"), "Réglage de l'heure (Bluetooth)");
+  assert.equal(c.libelleType("PIN_UNLOCK"), "Ouverture par code");
+  assert.equal(c.libelleType("MANUAL_UNLOCK"), "Ouverture manuelle");
+  assert.equal(c.libelleType("AUTO_LOCK"), "Verrouillage automatique");
+  assert.equal(c.libelleType("BATTERY_LOW"), "Battery low");
+});
+
+test("visite : clé stable et bornes de la frise", () => {
+  const v = V({ IGL_COSY10: [ev("2026-11-05T11:30:00Z"), evIn("2026-11-05T13:15:00Z")] })[0];
+  assert.match(v.cle, /^IGL_COSY10:\d+$/);
+  assert.equal(v.videDebut, Date.UTC(2026, 10, 5, 11), "départ du client à 11 h");
+  assert.equal(v.videFin, null, "pas de réservation suivante");
+  assert.equal(v.debutWall, Date.UTC(2026, 10, 5, 12, 30));
+  assert.equal(v.finWall, Date.UTC(2026, 10, 5, 14, 15));
+});
