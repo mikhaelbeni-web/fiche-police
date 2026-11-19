@@ -9,8 +9,9 @@ import fs from "node:fs";
 import path from "node:path";
 
 const BASE = process.env.BASE_URL || "http://127.0.0.1:3000";
-const sig = crypto.createHmac("sha256", process.env.SESSION_SECRET).update("ok").digest("hex");
-const ACCESS = `fp_session=${encodeURIComponent("ok." + sig)}`;
+const accessPayload = `v2.${Math.floor(Date.now() / 1000) + 5 * 3600}`;
+const sig = crypto.createHmac("sha256", process.env.SESSION_SECRET).update(accessPayload).digest("hex");
+const ACCESS = `fp_session=${encodeURIComponent(accessPayload + "." + sig)}`;
 
 let failures = 0;
 async function check(name, fn) {

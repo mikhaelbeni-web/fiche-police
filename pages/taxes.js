@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
 import CodeModal from "../components/CodeModal";
 import { useCodeGate } from "../hooks/useCodeGate";
+import { useInterrupteur5h } from "../hooks/useEcheance";
 import { listStaff, ensureStaff, deleteStaff } from "../lib/staff";
 
 const KEY_KEY = "hostaway_api_key";
@@ -458,7 +459,7 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
   const [amount, setAmount] = useState("");
   const [saisiPar, setSaisiPar] = useState("");
   const [staffList, setStaffList] = useState([]);
-  const [staffAdmin, setStaffAdmin] = useState(false);
+  const [staffAdmin, setStaffAdmin] = useInterrupteur5h(); // se referme seul 5 h après le code
   const [newStaffName, setNewStaffName] = useState("");
   const [clientMode, setClientMode] = useState("taxe"); // taxe | recherche | autre
   const [taxeClients, setTaxeClients] = useState([]);
