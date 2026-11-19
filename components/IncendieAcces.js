@@ -1,14 +1,15 @@
 // components/IncendieAcces.js
 // Code d'accès de l'onglet Sécurité incendie. Le code est choisi par le
 // gérant à la première ouverture ; seule son empreinte (SHA-256) est stockée
-// dans Firestore (incendie_config/acces). Une fois saisi, il est retenu pour
-// la session du navigateur. Depuis l'écran du code, « Importer un document »
+// dans Firestore (incendie_config/acces). Une fois saisi, il est retenu 5 h au
+// plus (et jamais au-delà de la fermeture de l'onglet), puis l'onglet se reverrouille. Depuis l'écran du code, « Importer un document »
 // permet d'importer un fichier sans ouvrir le suivi : le code est demandé,
 // seul le formulaire d'import s'affiche, puis l'onglet se reverrouille.
 // Barrière d'usage côté client : les règles
 // Firestore étant ouvertes, ce n'est pas une protection forte des données.
 
 import { useState, useEffect, useCallback } from "react";
+import { useEcheance, DUREE_CODE_MS } from "../hooks/useEcheance";
 
 const SESSION_KEY = "incendie_acces_ok";
 const CONFIG = ["incendie_config", "acces"];
@@ -18,8 +19,17 @@ async function empreinte(code) {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-function lireSession() { try { return window.sessionStorage.getItem(SESSION_KEY) === "1"; } catch { return false; } }
-function ecrireSession(v) { try { v ? window.sessionStorage.setItem(SESSION_KEY, "1") : window.sessionStorage.removeItem(SESSION_KEY); } catch {} }
+// Valeur stockée : l'heure (ms) à laquelle l'accès expire. Une ancienne valeur "1" est refusée.
+function lireEcheance() {
+  try {
+    const v = Number(window.sessionStorage.getItem(SESSION_KEY));
+    return v > Date.now() && v <= Date.now() + DUREE_CODE_MS ? v : null;
+  } catch { return null; }
+}
+function lireSession() { return lireEcheance() !== null; }
+function ecrireSession(v) {
+  try { v ? window.sessionStorage.setItem(SESSION_KEY, String(Date.now() + DUREE_CODE_MS)) : window.sessionStorage.removeItem(SESSION_KEY); } catch {}
+}
 
 export default function IncendieAcces({ children }) {
   const [etat, setEtat] = useState("chargement"); // chargement | creation | verrou | ouvert | import | hors_firebase
@@ -63,6 +73,11 @@ export default function IncendieAcces({ children }) {
   const finImport = useCallback(msg => { setFichiers(null); setInfo(msg || ""); setEtat("verrou"); }, []);
 
   const verrouiller = useCallback(() => { ecrireSession(false); setEtat("verrou"); }, []);
+
+  // Onglet resté ouvert : il se reverrouille de lui-même à la fin des 5 h.
+  const [echeance, setEcheance] = useState(null);
+  useEffect(() => { setEcheance(etat === "ouvert" ? lireEcheance() || Date.now() : null); }, [etat]);
+  useEcheance(echeance, () => { setChanger(false); setInfo("Accès terminé (5 h) : retape le code."); verrouiller(); });
 
   if (etat === "hors_firebase") return children({ verrouiller: null, changerCode: null });
   if (etat === "chargement") return <div className="menage-page"><div className="recap"><div className="empty-state">Chargement…</div></div></div>;

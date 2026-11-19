@@ -13,6 +13,7 @@ import { getCurrentStaff, setCurrentStaff, listStaff, ensureStaff, deleteStaff }
 import StaffBar from "../components/StaffBar";
 import CodeModal from "../components/CodeModal";
 import { useCodeGate } from "../hooks/useCodeGate";
+import { useInterrupteur5h } from "../hooks/useEcheance";
 
 // Code admin pour ajouter/modifier/supprimer une ligne de tâche du planning.
 // Distinct du code de suppression 2305 utilisé ailleurs — celui-ci ouvre un vrai
@@ -89,7 +90,7 @@ function Checklist() {
   const [morning, setMorning] = useState(SEED_MORNING);
   const [afternoon, setAfternoon] = useState(SEED_AFTERNOON);
   const [weekly, setWeekly] = useState(SEED_WEEKLY);
-  const [adminMode, setAdminMode] = useState(false);
+  const [adminMode, setAdminMode] = useInterrupteur5h(); // se referme seul 5 h après le code
 
   const isToday = dateStr === todayISO();
   const weekday = isoWeekday(new Date(dateStr + "T12:00:00"));
