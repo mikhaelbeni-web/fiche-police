@@ -199,7 +199,7 @@ function Codes({ isAdmin }) {
 }
 
 // Rendu serveur : seul le serveur sait si la session est admin. Pour un
-// non-admin, isAdmin = false et le sous-onglet « Espace admin » n'est pas rendu.
+// non-admin, isAdmin = false : seul le petit lien « 🔒 Admin » (vers la connexion) est rendu.
 export function getServerSideProps(ctx) {
   return codesPageProps(ctx);
 }
