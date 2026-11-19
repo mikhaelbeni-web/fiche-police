@@ -2148,6 +2148,7 @@ body {
 .admin-block { margin-top: 18px; }
 .admin-ok { margin: 10px 0; font-size: 13px; color: #1d6b3a; }
 .admin-err { margin: 10px 0; padding: 10px; border: 1px solid #e3b4b4; background: #fbebeb; border-radius: 6px; font-size: 13px; }
+.admin-expiree { margin: 8px 0 12px; padding: 10px 12px; border: 1px solid #e6cf9a; background: #fdf6e3; border-radius: 6px; font-size: 14px; line-height: 1.4; }
 .admin-tbl td, .admin-tbl th { font-size: 12px; text-align: left; vertical-align: top; word-break: break-word; }
 .admin-tbl tr.sel td { background: #e7f1fb; }
 .admin-page details { margin-top: 10px; }
