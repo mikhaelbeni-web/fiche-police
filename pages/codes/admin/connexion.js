@@ -45,6 +45,11 @@ export default function ConnexionAdmin() {
       <div className="menage-page codes-page">
         <div className="recap" style={{ maxWidth: 360 }}>
           <div className="recap-title">Connexion admin</div>
+          {router.query.expiree && (
+            <div className="admin-expiree" role="status">
+              Session admin terminée (5 h après la connexion). Ressaisis le mot de passe pour continuer.
+            </div>
+          )}
           <form onSubmit={submit} className="linen-form">
             <label>Mot de passe admin
               <input type="password" autoComplete="current-password" autoFocus value={password}

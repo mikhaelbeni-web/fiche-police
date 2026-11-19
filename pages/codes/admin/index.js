@@ -12,6 +12,7 @@ import CodesTabs from "../../../components/CodesTabs";
 import Reglages from "../../../components/admin/Reglages";
 import Croisement from "../../../components/admin/Croisement";
 import Webhook from "../../../components/admin/Webhook";
+import { useAdminExpiry, ADMIN_EXPIRED_URL } from "../../../components/admin/useAdminExpiry";
 import { adminPageProps } from "../../../lib/adminAuth";
 
 export function getServerSideProps(ctx) {
@@ -75,8 +76,9 @@ function Erreur({ e }) {
   );
 }
 
-export default function EspaceAdmin({ adminExpiresAt }) {
+export default function EspaceAdmin({ adminExpiresAt, serverNowMs }) {
   const router = useRouter();
+  useAdminExpiry(router, adminExpiresAt, serverNowMs);
   const [busy, setBusy] = useState("");
   const [devices, setDevices] = useState(null);
   const [devErr, setDevErr] = useState(null);
@@ -93,7 +95,7 @@ export default function EspaceAdmin({ adminExpiresAt }) {
 
   async function call(url) {
     const r = await fetch(url, { headers: { Accept: "application/json" } });
-    if (r.status === 404) { router.replace("/codes"); throw { error: "Session admin expirée." }; }
+    if (r.status === 404) { router.replace(ADMIN_EXPIRED_URL); throw { error: "Session admin expirée." }; }
     const d = await r.json().catch(() => ({ error: `Réponse illisible (HTTP ${r.status}).` }));
     if (!r.ok || d.ok === false) throw d;
     return d;

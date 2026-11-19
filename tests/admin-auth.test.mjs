@@ -107,11 +107,22 @@ test("admin : la route session répond 200", async () => {
   assert.equal(r.body.admin, true);
 });
 
-test("la session admin expire au bout de 8 h", () => {
+test("la session admin expire au bout de 5 h", () => {
   const now = Date.now();
   const { token } = auth.makeAdminToken(now);
-  assert.ok(auth.verifyAdminToken(token, now + 7.9 * 3600 * 1000) > 0);
-  assert.equal(auth.verifyAdminToken(token, now + 8 * 3600 * 1000 + 1000), 0);
+  assert.ok(auth.verifyAdminToken(token, now + 4.9 * 3600 * 1000) > 0);
+  assert.equal(auth.verifyAdminToken(token, now + 5 * 3600 * 1000 + 1000), 0);
+});
+
+test("l'usage ne prolonge pas la session admin (aucun nouveau cookie hors connexion)", async () => {
+  const cookies = [accessCookie(), await adminCookie()];
+  const r = res();
+  session(req({ cookies }), r);
+  assert.equal(r.statusCode, 200);
+  assert.equal(r.headers["set-cookie"], undefined);
+  const p = auth.adminPageProps(ctx(cookies));
+  assert.ok(p.props.adminExpiresAt <= Date.now() / 1000 + auth.ADMIN_TTL_SECONDS);
+  assert.ok(Math.abs(p.props.serverNowMs - Date.now()) < 5000);
 });
 
 test("changer le mot de passe admin invalide les sessions admin existantes", async () => {
@@ -139,14 +150,14 @@ test("connexion : sans code d'accès 404, mauvais mot de passe 401 sans cookie",
   assert.equal(r2.headers["set-cookie"], undefined);
 });
 
-test("connexion : cookie HttpOnly, Secure, SameSite=Strict, 8 h", async () => {
+test("connexion : cookie HttpOnly, Secure, SameSite=Strict, 5 h", async () => {
   const r = res();
   await login(req({ method: "POST", cookies: [accessCookie()], body: { password: ADMIN_PASSWORD } }), r);
   const h = r.headers["set-cookie"];
   assert.match(h, /HttpOnly/);
   assert.match(h, /Secure/);
   assert.match(h, /SameSite=Strict/);
-  assert.match(h, /Max-Age=28800/);
+  assert.match(h, /Max-Age=18000/);
 });
 
 test("connexion : bloquée après 5 échecs depuis la même adresse", async () => {
