@@ -1,6 +1,6 @@
 // tests/codes-tabs.test.mjs
-// Rendu réel du sous-onglet : pour un non-admin, rien n'est produit (pas de
-// lien, pas de texte « Espace admin »), donc rien à masquer en CSS.
+// Rendu réel du sous-onglet : pour un non-admin, seul un lien discret vers la
+// connexion est produit (pas de texte « Espace admin »).
 // Nécessite react, react-dom et next installés (npm ci) ; ignoré sinon.
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -16,11 +16,13 @@ if (React) {
   deps = { React: React.default || React, renderToStaticMarkup, CodesTabs };
 }
 
-test("non-admin : le sous-onglet « Espace admin » n'existe pas dans le rendu", { skip: !deps && "react non installé" }, () => {
+test("non-admin : seulement le lien discret vers la connexion, pas d'« Espace admin »", { skip: !deps && "react non installé" }, () => {
   const { React, renderToStaticMarkup, CodesTabs } = deps;
   for (const isAdmin of [false, undefined, null, "true", 1]) {
     const html = renderToStaticMarkup(React.createElement(CodesTabs, { isAdmin, current: "/codes" }));
-    assert.equal(html, "", `isAdmin=${String(isAdmin)}`);
+    assert.match(html, /href="\/codes\/admin\/connexion"/, `isAdmin=${String(isAdmin)}`);
+    assert.doesNotMatch(html, /Espace admin/, `isAdmin=${String(isAdmin)}`);
+    assert.doesNotMatch(html, /href="\/codes\/admin"/, `isAdmin=${String(isAdmin)}`);
   }
 });
 
