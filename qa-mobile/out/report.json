@@ -2,6 +2,24 @@
   {
     "page": "taxes",
     "state": "(chargement)",
+    "device": "android-360",
+    "stepError": null,
+    "errors": [
+      "Failed to load resource: the server responded with a status of 400 (Bad Request)"
+    ],
+    "scrollWidth": 360,
+    "vw": 360,
+    "overflow": [],
+    "offscreen": [],
+    "small": [],
+    "covered": [],
+    "inputFont": [],
+    "clipped": [],
+    "interactiveCount": 27
+  },
+  {
+    "page": "taxes",
+    "state": "(chargement)",
     "device": "pc-1440",
     "stepError": null,
     "errors": [],
@@ -216,12 +234,10 @@
   },
   {
     "page": "taxes",
-    "state": "(chargement)",
+    "state": "impayees-controle-detail",
     "device": "android-360",
     "stepError": null,
-    "errors": [
-      "Failed to load resource: the server responded with a status of 400 (Bad Request)"
-    ],
+    "errors": [],
     "scrollWidth": 360,
     "vw": 360,
     "overflow": [],
@@ -449,12 +465,12 @@
   },
   {
     "page": "taxes",
-    "state": "impayees-controle-detail",
-    "device": "android-360",
+    "state": "(chargement)",
+    "device": "iphone-430",
     "stepError": null,
     "errors": [],
-    "scrollWidth": 360,
-    "vw": 360,
+    "scrollWidth": 430,
+    "vw": 430,
     "overflow": [],
     "offscreen": [],
     "small": [],
@@ -652,22 +668,6 @@
     ],
     "clipped": [],
     "interactiveCount": 33
-  },
-  {
-    "page": "taxes",
-    "state": "(chargement)",
-    "device": "iphone-430",
-    "stepError": null,
-    "errors": [],
-    "scrollWidth": 430,
-    "vw": 430,
-    "overflow": [],
-    "offscreen": [],
-    "small": [],
-    "covered": [],
-    "inputFont": [],
-    "clipped": [],
-    "interactiveCount": 27
   },
   {
     "page": "taxes",
@@ -933,6 +933,38 @@
   },
   {
     "page": "taxes",
+    "state": "impayees-controle-detail",
+    "device": "iphone-430",
+    "stepError": null,
+    "errors": [],
+    "scrollWidth": 430,
+    "vw": 430,
+    "overflow": [],
+    "offscreen": [],
+    "small": [],
+    "covered": [],
+    "inputFont": [],
+    "clipped": [],
+    "interactiveCount": 27
+  },
+  {
+    "page": "taxes",
+    "state": "impayees-controle-detail",
+    "device": "iphone-390",
+    "stepError": null,
+    "errors": [],
+    "scrollWidth": 390,
+    "vw": 390,
+    "overflow": [],
+    "offscreen": [],
+    "small": [],
+    "covered": [],
+    "inputFont": [],
+    "clipped": [],
+    "interactiveCount": 27
+  },
+  {
+    "page": "taxes",
     "state": "impayees-filtre-belleville",
     "device": "android-360",
     "stepError": null,
@@ -1129,35 +1161,171 @@
   },
   {
     "page": "taxes",
-    "state": "impayees-controle-detail",
-    "device": "iphone-390",
+    "state": "especes",
+    "device": "android-360",
     "stepError": null,
     "errors": [],
-    "scrollWidth": 390,
-    "vw": 390,
+    "scrollWidth": 360,
+    "vw": 360,
     "overflow": [],
     "offscreen": [],
-    "small": [],
+    "small": [
+      {
+        "sel": "div.esp-kpis > div.esp-kpi.esp-kpi-main > div.s > button.ghost.esp-mini « Actualiser »",
+        "w": 78,
+        "h": 23
+      },
+      {
+        "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field > select « Taxe de séjour à régler (Belleville) Rec »",
+        "w": 282,
+        "h": 40
+      },
+      {
+        "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field > select « — Choisir le client — Marie-Christine Du »",
+        "w": 282,
+        "h": 40
+      },
+      {
+        "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field > input « Taxe de séjour, nuit supplémentaire… »",
+        "w": 282,
+        "h": 40
+      },
+      {
+        "sel": "div.esp-row > label.esp-field.esp-montant > span.esp-euro > input « 0,00 »",
+        "w": 266,
+        "h": 40
+      },
+      {
+        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field.esp-w-s > input « 2026-11-08 »",
+        "w": 282,
+        "h": 40
+      },
+      {
+        "sel": "div.esp-signature > div.esp-row > label.esp-field > select « — Mon nom — Amina Bastien »",
+        "w": 282,
+        "h": 40
+      },
+      {
+        "sel": "div.esp-signature > div.esp-row > label.esp-field.esp-w-s > input",
+        "w": 282,
+        "h": 40
+      },
+      {
+        "sel": "section.esp-card.esp-form > div.esp-signature > div.esp-help > button.ghost.esp-mini « Première utilisation : choisir mon code »",
+        "w": 249,
+        "h": 23
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "div.esp-grid > section.esp-card.esp-liste > div > button.ghost.esp-mini « Redéfinir le solde de départ (admin) »",
+        "w": 231,
+        "h": 23
+      }
+    ],
     "covered": [],
     "inputFont": [],
-    "clipped": [],
-    "interactiveCount": 27
-  },
-  {
-    "page": "taxes",
-    "state": "impayees-controle-detail",
-    "device": "iphone-430",
-    "stepError": null,
-    "errors": [],
-    "scrollWidth": 430,
-    "vw": 430,
-    "overflow": [],
-    "offscreen": [],
-    "small": [],
-    "covered": [],
-    "inputFont": [],
-    "clipped": [],
-    "interactiveCount": 27
+    "clipped": [
+      {
+        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
+        "sw": 358,
+        "cw": 1
+      },
+      {
+        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
+        "sw": 358,
+        "cw": 1
+      },
+      {
+        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
+        "sw": 358,
+        "cw": 1
+      },
+      {
+        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
+        "sw": 358,
+        "cw": 1
+      },
+      {
+        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
+        "sw": 358,
+        "cw": 1
+      },
+      {
+        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
+        "sw": 358,
+        "cw": 1
+      },
+      {
+        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
+        "sw": 358,
+        "cw": 1
+      },
+      {
+        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
+        "sw": 358,
+        "cw": 1
+      }
+    ],
+    "interactiveCount": 33
   },
   {
     "page": "taxes",
@@ -1444,230 +1612,6 @@
   },
   {
     "page": "taxes",
-    "state": "especes",
-    "device": "android-360",
-    "stepError": null,
-    "errors": [],
-    "scrollWidth": 360,
-    "vw": 360,
-    "overflow": [],
-    "offscreen": [
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 535,
-        "right": 568
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 535,
-        "right": 568
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 452,
-        "right": 485
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 452,
-        "right": 485
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 407,
-        "right": 440
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 407,
-        "right": 440
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 377,
-        "right": 410
-      },
-      {
-        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 377,
-        "right": 410
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 377,
-        "right": 410
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 426,
-        "right": 459
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 380,
-        "right": 413
-      }
-    ],
-    "small": [
-      {
-        "sel": "div.esp-kpis > div.esp-kpi.esp-kpi-main > div.s > button.ghost.esp-mini « Actualiser »",
-        "w": 78,
-        "h": 23
-      },
-      {
-        "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field > select « Taxe de séjour à régler (Belleville) Rec »",
-        "w": 282,
-        "h": 40
-      },
-      {
-        "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field > select « — Choisir le client — Marie-Christine Du »",
-        "w": 282,
-        "h": 40
-      },
-      {
-        "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field > input « Taxe de séjour, nuit supplémentaire… »",
-        "w": 282,
-        "h": 40
-      },
-      {
-        "sel": "div.esp-row > label.esp-field.esp-montant > span.esp-euro > input « 0,00 »",
-        "w": 266,
-        "h": 40
-      },
-      {
-        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field.esp-w-s > input « 2026-11-08 »",
-        "w": 282,
-        "h": 40
-      },
-      {
-        "sel": "div.esp-signature > div.esp-row > label.esp-field > select « — Mon nom — Amina Bastien »",
-        "w": 282,
-        "h": 40
-      },
-      {
-        "sel": "div.esp-signature > div.esp-row > label.esp-field.esp-w-s > input",
-        "w": 282,
-        "h": 40
-      },
-      {
-        "sel": "section.esp-card.esp-form > div.esp-signature > div.esp-help > button.ghost.esp-mini « Première utilisation : choisir mon code »",
-        "w": 249,
-        "h": 23
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "div.esp-grid > section.esp-card.esp-liste > div > button.ghost.esp-mini « Redéfinir le solde de départ (admin) »",
-        "w": 231,
-        "h": 23
-      }
-    ],
-    "covered": [],
-    "inputFont": [],
-    "clipped": [
-      {
-        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 358,
-        "cw": 1
-      },
-      {
-        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 358,
-        "cw": 1
-      },
-      {
-        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 358,
-        "cw": 1
-      },
-      {
-        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 358,
-        "cw": 1
-      },
-      {
-        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 358,
-        "cw": 1
-      },
-      {
-        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 358,
-        "cw": 1
-      },
-      {
-        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 358,
-        "cw": 1
-      },
-      {
-        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 358,
-        "cw": 1
-      }
-    ],
-    "interactiveCount": 33
-  },
-  {
-    "page": "taxes",
     "state": "impayees-taxes-masquees",
     "device": "iphone-430",
     "stepError": null,
@@ -1707,63 +1651,7 @@
     "scrollWidth": 360,
     "vw": 360,
     "overflow": [],
-    "offscreen": [
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 535,
-        "right": 568
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 535,
-        "right": 568
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 452,
-        "right": 485
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 452,
-        "right": 485
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 407,
-        "right": 440
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 407,
-        "right": 440
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 377,
-        "right": 410
-      },
-      {
-        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 377,
-        "right": 410
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 377,
-        "right": 410
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 426,
-        "right": 459
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 380,
-        "right": 413
-      }
-    ],
+    "offscreen": [],
     "small": [
       {
         "sel": "div.esp-kpis > div.esp-kpi.esp-kpi-main > div.s > button.ghost.esp-mini « Actualiser »",
@@ -2207,6 +2095,201 @@
   },
   {
     "page": "taxes",
+    "state": "impayees-filtre-belleville",
+    "device": "iphone-430",
+    "stepError": null,
+    "errors": [],
+    "scrollWidth": 430,
+    "vw": 430,
+    "overflow": [],
+    "offscreen": [],
+    "small": [],
+    "covered": [],
+    "inputFont": [],
+    "clipped": [],
+    "interactiveCount": 20
+  },
+  {
+    "page": "taxes",
+    "state": "impayees-filtre-belleville",
+    "device": "iphone-390",
+    "stepError": null,
+    "errors": [],
+    "scrollWidth": 390,
+    "vw": 390,
+    "overflow": [],
+    "offscreen": [],
+    "small": [],
+    "covered": [],
+    "inputFont": [],
+    "clipped": [],
+    "interactiveCount": 20
+  },
+  {
+    "page": "taxes",
+    "state": "especes-depense",
+    "device": "android-360",
+    "stepError": null,
+    "errors": [],
+    "scrollWidth": 360,
+    "vw": 360,
+    "overflow": [],
+    "offscreen": [],
+    "small": [
+      {
+        "sel": "div.esp-kpis > div.esp-kpi.esp-kpi-main > div.s > button.ghost.esp-mini « Actualiser »",
+        "w": 78,
+        "h": 23
+      },
+      {
+        "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field > input « ex. fournitures ménage, réparation serru »",
+        "w": 282,
+        "h": 40
+      },
+      {
+        "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field > input « ex. Leroy Merlin, Monoprix… »",
+        "w": 282,
+        "h": 40
+      },
+      {
+        "sel": "div.esp-row > label.esp-field.esp-montant > span.esp-euro > input « 0,00 »",
+        "w": 266,
+        "h": 40
+      },
+      {
+        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field.esp-w-s > input « 2026-11-08 »",
+        "w": 282,
+        "h": 40
+      },
+      {
+        "sel": "div.esp-signature > div.esp-row > label.esp-field > select « — Mon nom — Amina Bastien »",
+        "w": 282,
+        "h": 40
+      },
+      {
+        "sel": "div.esp-signature > div.esp-row > label.esp-field.esp-w-s > input",
+        "w": 282,
+        "h": 40
+      },
+      {
+        "sel": "section.esp-card.esp-form > div.esp-signature > div.esp-help > button.ghost.esp-mini « Première utilisation : choisir mon code »",
+        "w": 249,
+        "h": 23
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "div.esp-grid > section.esp-card.esp-liste > div > button.ghost.esp-mini « Redéfinir le solde de départ (admin) »",
+        "w": 231,
+        "h": 23
+      }
+    ],
+    "covered": [],
+    "inputFont": [],
+    "clipped": [
+      {
+        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
+        "sw": 358,
+        "cw": 1
+      },
+      {
+        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
+        "sw": 358,
+        "cw": 1
+      },
+      {
+        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
+        "sw": 358,
+        "cw": 1
+      },
+      {
+        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
+        "sw": 358,
+        "cw": 1
+      },
+      {
+        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
+        "sw": 358,
+        "cw": 1
+      },
+      {
+        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
+        "sw": 358,
+        "cw": 1
+      },
+      {
+        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
+        "sw": 358,
+        "cw": 1
+      },
+      {
+        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
+        "sw": 358,
+        "cw": 1
+      }
+    ],
+    "interactiveCount": 32
+  },
+  {
+    "page": "taxes",
     "state": "especes-depense",
     "device": "pc-1440",
     "stepError": null,
@@ -2481,257 +2564,6 @@
   },
   {
     "page": "taxes",
-    "state": "especes-depense",
-    "device": "android-360",
-    "stepError": null,
-    "errors": [],
-    "scrollWidth": 360,
-    "vw": 360,
-    "overflow": [],
-    "offscreen": [
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 535,
-        "right": 568
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 535,
-        "right": 568
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 452,
-        "right": 485
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 452,
-        "right": 485
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 407,
-        "right": 440
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 407,
-        "right": 440
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 377,
-        "right": 410
-      },
-      {
-        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 377,
-        "right": 410
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 377,
-        "right": 410
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 426,
-        "right": 459
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 380,
-        "right": 413
-      }
-    ],
-    "small": [
-      {
-        "sel": "div.esp-kpis > div.esp-kpi.esp-kpi-main > div.s > button.ghost.esp-mini « Actualiser »",
-        "w": 78,
-        "h": 23
-      },
-      {
-        "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field > input « ex. fournitures ménage, réparation serru »",
-        "w": 282,
-        "h": 40
-      },
-      {
-        "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field > input « ex. Leroy Merlin, Monoprix… »",
-        "w": 282,
-        "h": 40
-      },
-      {
-        "sel": "div.esp-row > label.esp-field.esp-montant > span.esp-euro > input « 0,00 »",
-        "w": 266,
-        "h": 40
-      },
-      {
-        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field.esp-w-s > input « 2026-11-08 »",
-        "w": 282,
-        "h": 40
-      },
-      {
-        "sel": "div.esp-signature > div.esp-row > label.esp-field > select « — Mon nom — Amina Bastien »",
-        "w": 282,
-        "h": 40
-      },
-      {
-        "sel": "div.esp-signature > div.esp-row > label.esp-field.esp-w-s > input",
-        "w": 282,
-        "h": 40
-      },
-      {
-        "sel": "section.esp-card.esp-form > div.esp-signature > div.esp-help > button.ghost.esp-mini « Première utilisation : choisir mon code »",
-        "w": 249,
-        "h": 23
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "div.esp-grid > section.esp-card.esp-liste > div > button.ghost.esp-mini « Redéfinir le solde de départ (admin) »",
-        "w": 231,
-        "h": 23
-      }
-    ],
-    "covered": [],
-    "inputFont": [],
-    "clipped": [
-      {
-        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 358,
-        "cw": 1
-      },
-      {
-        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 358,
-        "cw": 1
-      },
-      {
-        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 358,
-        "cw": 1
-      },
-      {
-        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 358,
-        "cw": 1
-      },
-      {
-        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 358,
-        "cw": 1
-      },
-      {
-        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 358,
-        "cw": 1
-      },
-      {
-        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 358,
-        "cw": 1
-      },
-      {
-        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 358,
-        "cw": 1
-      }
-    ],
-    "interactiveCount": 32
-  },
-  {
-    "page": "taxes",
-    "state": "impayees-filtre-belleville",
-    "device": "iphone-430",
-    "stepError": null,
-    "errors": [],
-    "scrollWidth": 430,
-    "vw": 430,
-    "overflow": [],
-    "offscreen": [],
-    "small": [],
-    "covered": [],
-    "inputFont": [],
-    "clipped": [],
-    "interactiveCount": 20
-  },
-  {
-    "page": "taxes",
-    "state": "impayees-filtre-belleville",
-    "device": "iphone-390",
-    "stepError": null,
-    "errors": [],
-    "scrollWidth": 390,
-    "vw": 390,
-    "overflow": [],
-    "offscreen": [],
-    "small": [],
-    "covered": [],
-    "inputFont": [],
-    "clipped": [],
-    "interactiveCount": 20
-  },
-  {
-    "page": "taxes",
     "state": "especes-client-taxe",
     "device": "android-360",
     "stepError": null,
@@ -2739,63 +2571,7 @@
     "scrollWidth": 360,
     "vw": 360,
     "overflow": [],
-    "offscreen": [
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 535,
-        "right": 568
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 535,
-        "right": 568
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 452,
-        "right": 485
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 452,
-        "right": 485
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 407,
-        "right": 440
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 407,
-        "right": 440
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 377,
-        "right": 410
-      },
-      {
-        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 377,
-        "right": 410
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 377,
-        "right": 410
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 426,
-        "right": 459
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 380,
-        "right": 413
-      }
-    ],
+    "offscreen": [],
     "small": [
       {
         "sel": "div.esp-kpis > div.esp-kpi.esp-kpi-main > div.s > button.ghost.esp-mini « Actualiser »",
@@ -3251,63 +3027,7 @@
     "scrollWidth": 430,
     "vw": 430,
     "overflow": [],
-    "offscreen": [
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 429,
-        "right": 462
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 486,
-        "right": 519
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 430,
-        "right": 463
-      }
-    ],
+    "offscreen": [],
     "small": [
       {
         "sel": "div.esp-kpis > div.esp-kpi.esp-kpi-main > div.s > button.ghost.esp-mini « Actualiser »",
@@ -3475,63 +3195,7 @@
     "scrollWidth": 390,
     "vw": 390,
     "overflow": [],
-    "offscreen": [
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 429,
-        "right": 462
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 486,
-        "right": 519
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 430,
-        "right": 463
-      }
-    ],
+    "offscreen": [],
     "small": [
       {
         "sel": "div.esp-kpis > div.esp-kpi.esp-kpi-main > div.s > button.ghost.esp-mini « Actualiser »",
@@ -3685,6 +3349,187 @@
       {
         "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
         "sw": 387,
+        "cw": 1
+      }
+    ],
+    "interactiveCount": 33
+  },
+  {
+    "page": "taxes",
+    "state": "especes-client-recherche",
+    "device": "android-360",
+    "stepError": null,
+    "errors": [],
+    "scrollWidth": 360,
+    "vw": 360,
+    "overflow": [],
+    "offscreen": [],
+    "small": [
+      {
+        "sel": "div.esp-kpis > div.esp-kpi.esp-kpi-main > div.s > button.ghost.esp-mini « Actualiser »",
+        "w": 78,
+        "h": 23
+      },
+      {
+        "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field > select « Taxe de séjour à régler (Belleville) Rec »",
+        "w": 282,
+        "h": 40
+      },
+      {
+        "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field.esp-search > input « ma »",
+        "w": 282,
+        "h": 40
+      },
+      {
+        "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field > input « Taxe de séjour, nuit supplémentaire… »",
+        "w": 282,
+        "h": 40
+      },
+      {
+        "sel": "div.esp-row > label.esp-field.esp-montant > span.esp-euro > input « 0,00 »",
+        "w": 266,
+        "h": 40
+      },
+      {
+        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field.esp-w-s > input « 2026-11-08 »",
+        "w": 282,
+        "h": 40
+      },
+      {
+        "sel": "div.esp-signature > div.esp-row > label.esp-field > select « — Mon nom — Amina Bastien »",
+        "w": 282,
+        "h": 40
+      },
+      {
+        "sel": "div.esp-signature > div.esp-row > label.esp-field.esp-w-s > input",
+        "w": 282,
+        "h": 40
+      },
+      {
+        "sel": "section.esp-card.esp-form > div.esp-signature > div.esp-help > button.ghost.esp-mini « Première utilisation : choisir mon code »",
+        "w": 249,
+        "h": 23
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "div.esp-grid > section.esp-card.esp-liste > div > button.ghost.esp-mini « Redéfinir le solde de départ (admin) »",
+        "w": 231,
+        "h": 23
+      }
+    ],
+    "covered": [
+      {
+        "sel": "input « Taxe de séjour, nuit supplémen »",
+        "by": "li"
+      },
+      {
+        "sel": "input « 0,00 »",
+        "by": "li"
+      },
+      {
+        "sel": "input « 2026-11-08 »",
+        "by": "span.esp-muted"
+      }
+    ],
+    "inputFont": [],
+    "clipped": [
+      {
+        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
+        "sw": 358,
+        "cw": 1
+      },
+      {
+        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
+        "sw": 358,
+        "cw": 1
+      },
+      {
+        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
+        "sw": 358,
+        "cw": 1
+      },
+      {
+        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
+        "sw": 358,
+        "cw": 1
+      },
+      {
+        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
+        "sw": 358,
+        "cw": 1
+      },
+      {
+        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
+        "sw": 358,
+        "cw": 1
+      },
+      {
+        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
+        "sw": 358,
+        "cw": 1
+      },
+      {
+        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
+        "sw": 358,
         "cw": 1
       }
     ],
@@ -3996,114 +3841,58 @@
   },
   {
     "page": "taxes",
-    "state": "especes-client-recherche",
-    "device": "android-360",
+    "state": "especes-controle-detail",
+    "device": "iphone-430",
     "stepError": null,
     "errors": [],
-    "scrollWidth": 360,
-    "vw": 360,
+    "scrollWidth": 430,
+    "vw": 430,
     "overflow": [],
-    "offscreen": [
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 535,
-        "right": 568
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 535,
-        "right": 568
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 452,
-        "right": 485
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 452,
-        "right": 485
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 407,
-        "right": 440
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 407,
-        "right": 440
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 377,
-        "right": 410
-      },
-      {
-        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 377,
-        "right": 410
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 377,
-        "right": 410
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 426,
-        "right": 459
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 380,
-        "right": 413
-      }
-    ],
+    "offscreen": [],
     "small": [
       {
         "sel": "div.esp-kpis > div.esp-kpi.esp-kpi-main > div.s > button.ghost.esp-mini « Actualiser »",
-        "w": 78,
+        "w": 87,
         "h": 23
       },
       {
-        "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field > select « Taxe de séjour à régler (Belleville) Rec »",
-        "w": 282,
-        "h": 40
+        "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field > select « taxe »",
+        "w": 352,
+        "h": 43
       },
       {
-        "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field.esp-search > input « ma »",
-        "w": 282,
-        "h": 40
+        "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field > select",
+        "w": 352,
+        "h": 43
       },
       {
         "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field > input « Taxe de séjour, nuit supplémentaire… »",
-        "w": 282,
+        "w": 352,
         "h": 40
       },
       {
         "sel": "div.esp-row > label.esp-field.esp-montant > span.esp-euro > input « 0,00 »",
-        "w": 266,
+        "w": 333,
         "h": 40
       },
       {
         "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field.esp-w-s > input « 2026-11-08 »",
-        "w": 282,
+        "w": 352,
         "h": 40
       },
       {
-        "sel": "div.esp-signature > div.esp-row > label.esp-field > select « — Mon nom — Amina Bastien »",
-        "w": 282,
-        "h": 40
+        "sel": "div.esp-signature > div.esp-row > label.esp-field > select",
+        "w": 352,
+        "h": 43
       },
       {
         "sel": "div.esp-signature > div.esp-row > label.esp-field.esp-w-s > input",
-        "w": 282,
+        "w": 352,
         "h": 40
       },
       {
         "sel": "section.esp-card.esp-form > div.esp-signature > div.esp-help > button.ghost.esp-mini « Première utilisation : choisir mon code »",
-        "w": 249,
+        "w": 285,
         "h": 23
       },
       {
@@ -4168,64 +3957,219 @@
       },
       {
         "sel": "div.esp-grid > section.esp-card.esp-liste > div > button.ghost.esp-mini « Redéfinir le solde de départ (admin) »",
-        "w": 231,
+        "w": 268,
         "h": 23
       }
     ],
-    "covered": [
-      {
-        "sel": "input « Taxe de séjour, nuit supplémen »",
-        "by": "li"
-      },
-      {
-        "sel": "input « 0,00 »",
-        "by": "li"
-      },
-      {
-        "sel": "input « 2026-11-08 »",
-        "by": "span.esp-muted"
-      }
-    ],
+    "covered": [],
     "inputFont": [],
     "clipped": [
       {
         "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 358,
+        "sw": 387,
         "cw": 1
       },
       {
         "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 358,
+        "sw": 387,
         "cw": 1
       },
       {
         "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 358,
+        "sw": 387,
         "cw": 1
       },
       {
         "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 358,
+        "sw": 387,
         "cw": 1
       },
       {
         "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 358,
+        "sw": 387,
         "cw": 1
       },
       {
         "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 358,
+        "sw": 387,
         "cw": 1
       },
       {
         "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 358,
+        "sw": 387,
         "cw": 1
       },
       {
         "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 358,
+        "sw": 387,
+        "cw": 1
+      }
+    ],
+    "interactiveCount": 33
+  },
+  {
+    "page": "taxes",
+    "state": "especes-controle-detail",
+    "device": "iphone-390",
+    "stepError": null,
+    "errors": [],
+    "scrollWidth": 390,
+    "vw": 390,
+    "overflow": [],
+    "offscreen": [],
+    "small": [
+      {
+        "sel": "div.esp-kpis > div.esp-kpi.esp-kpi-main > div.s > button.ghost.esp-mini « Actualiser »",
+        "w": 87,
+        "h": 23
+      },
+      {
+        "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field > select « taxe »",
+        "w": 312,
+        "h": 43
+      },
+      {
+        "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field > select",
+        "w": 312,
+        "h": 43
+      },
+      {
+        "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field > input « Taxe de séjour, nuit supplémentaire… »",
+        "w": 312,
+        "h": 40
+      },
+      {
+        "sel": "div.esp-row > label.esp-field.esp-montant > span.esp-euro > input « 0,00 »",
+        "w": 293,
+        "h": 40
+      },
+      {
+        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field.esp-w-s > input « 2026-11-08 »",
+        "w": 312,
+        "h": 40
+      },
+      {
+        "sel": "div.esp-signature > div.esp-row > label.esp-field > select",
+        "w": 312,
+        "h": 43
+      },
+      {
+        "sel": "div.esp-signature > div.esp-row > label.esp-field.esp-w-s > input",
+        "w": 312,
+        "h": 40
+      },
+      {
+        "sel": "section.esp-card.esp-form > div.esp-signature > div.esp-help > button.ghost.esp-mini « Première utilisation : choisir mon code »",
+        "w": 285,
+        "h": 23
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
+        "w": 33,
+        "h": 44
+      },
+      {
+        "sel": "div.esp-grid > section.esp-card.esp-liste > div > button.ghost.esp-mini « Redéfinir le solde de départ (admin) »",
+        "w": 268,
+        "h": 23
+      }
+    ],
+    "covered": [],
+    "inputFont": [],
+    "clipped": [
+      {
+        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
+        "sw": 387,
+        "cw": 1
+      },
+      {
+        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
+        "sw": 387,
+        "cw": 1
+      },
+      {
+        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
+        "sw": 387,
+        "cw": 1
+      },
+      {
+        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
+        "sw": 387,
+        "cw": 1
+      },
+      {
+        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
+        "sw": 387,
+        "cw": 1
+      },
+      {
+        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
+        "sw": 387,
+        "cw": 1
+      },
+      {
+        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
+        "sw": 387,
+        "cw": 1
+      },
+      {
+        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
+        "sw": 387,
         "cw": 1
       }
     ],
@@ -4240,63 +4184,7 @@
     "scrollWidth": 360,
     "vw": 360,
     "overflow": [],
-    "offscreen": [
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 535,
-        "right": 568
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 535,
-        "right": 568
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 452,
-        "right": 485
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 452,
-        "right": 485
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 407,
-        "right": 440
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 407,
-        "right": 440
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 377,
-        "right": 410
-      },
-      {
-        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 377,
-        "right": 410
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 377,
-        "right": 410
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 426,
-        "right": 459
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 380,
-        "right": 413
-      }
-    ],
+    "offscreen": [],
     "small": [
       {
         "sel": "div.esp-kpis > div.esp-kpi.esp-kpi-main > div.s > button.ghost.esp-mini « Actualiser »",
@@ -4309,17 +4197,17 @@
         "h": 40
       },
       {
-        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field > input",
+        "sel": "section.esp-card.esp-form > div.esp-row.esp-row-client > label.esp-field > input",
         "w": 282,
         "h": 40
       },
       {
-        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field.esp-w-s > input",
+        "sel": "section.esp-card.esp-form > div.esp-row.esp-row-client > label.esp-field.esp-w-s > input",
         "w": 282,
         "h": 40
       },
       {
-        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field.esp-w-s > input",
+        "sel": "section.esp-card.esp-form > div.esp-row.esp-row-client > label.esp-field.esp-w-s > input",
         "w": 282,
         "h": 40
       },
@@ -4567,18 +4455,18 @@
         "h": 40
       },
       {
-        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field > input",
-        "w": 78,
+        "sel": "section.esp-card.esp-form > div.esp-row.esp-row-client > label.esp-field > input",
+        "w": 402,
         "h": 40
       },
       {
-        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field.esp-w-s > input",
-        "w": 150,
+        "sel": "section.esp-card.esp-form > div.esp-row.esp-row-client > label.esp-field.esp-w-s > input",
+        "w": 195,
         "h": 40
       },
       {
-        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field.esp-w-s > input",
-        "w": 150,
+        "sel": "section.esp-card.esp-form > div.esp-row.esp-row-client > label.esp-field.esp-w-s > input",
+        "w": 195,
         "h": 40
       },
       {
@@ -4694,15 +4582,15 @@
         "fontSize": 15
       },
       {
-        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field > input",
+        "sel": "section.esp-card.esp-form > div.esp-row.esp-row-client > label.esp-field > input",
         "fontSize": 15
       },
       {
-        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field.esp-w-s > input",
+        "sel": "section.esp-card.esp-form > div.esp-row.esp-row-client > label.esp-field.esp-w-s > input",
         "fontSize": 15
       },
       {
-        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field.esp-w-s > input",
+        "sel": "section.esp-card.esp-form > div.esp-row.esp-row-client > label.esp-field.esp-w-s > input",
         "fontSize": 15
       },
       {
@@ -4768,70 +4656,14 @@
   },
   {
     "page": "taxes",
-    "state": "especes-controle-detail",
+    "state": "especes-depense",
     "device": "iphone-430",
     "stepError": null,
     "errors": [],
     "scrollWidth": 430,
     "vw": 430,
     "overflow": [],
-    "offscreen": [
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 429,
-        "right": 462
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 486,
-        "right": 519
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 430,
-        "right": 463
-      }
-    ],
+    "offscreen": [],
     "small": [
       {
         "sel": "div.esp-kpis > div.esp-kpi.esp-kpi-main > div.s > button.ghost.esp-mini « Actualiser »",
@@ -4839,17 +4671,12 @@
         "h": 23
       },
       {
-        "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field > select « taxe »",
+        "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field > input « ex. fournitures ménage, réparation serru »",
         "w": 352,
-        "h": 43
+        "h": 40
       },
       {
-        "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field > select",
-        "w": 352,
-        "h": 43
-      },
-      {
-        "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field > input « Taxe de séjour, nuit supplémentaire… »",
+        "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field > input « ex. Leroy Merlin, Monoprix… »",
         "w": 352,
         "h": 40
       },
@@ -4988,74 +4815,18 @@
         "cw": 1
       }
     ],
-    "interactiveCount": 33
+    "interactiveCount": 32
   },
   {
     "page": "taxes",
-    "state": "especes-controle-detail",
+    "state": "especes-depense",
     "device": "iphone-390",
     "stepError": null,
     "errors": [],
     "scrollWidth": 390,
     "vw": 390,
     "overflow": [],
-    "offscreen": [
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 429,
-        "right": 462
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 486,
-        "right": 519
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 430,
-        "right": 463
-      }
-    ],
+    "offscreen": [],
     "small": [
       {
         "sel": "div.esp-kpis > div.esp-kpi.esp-kpi-main > div.s > button.ghost.esp-mini « Actualiser »",
@@ -5063,17 +4834,12 @@
         "h": 23
       },
       {
-        "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field > select « taxe »",
+        "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field > input « ex. fournitures ménage, réparation serru »",
         "w": 312,
-        "h": 43
+        "h": 40
       },
       {
-        "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field > select",
-        "w": 312,
-        "h": 43
-      },
-      {
-        "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field > input « Taxe de séjour, nuit supplémentaire… »",
+        "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field > input « ex. Leroy Merlin, Monoprix… »",
         "w": 312,
         "h": 40
       },
@@ -5212,7 +4978,7 @@
         "cw": 1
       }
     ],
-    "interactiveCount": 33
+    "interactiveCount": 32
   },
   {
     "page": "taxes",
@@ -5223,63 +4989,7 @@
     "scrollWidth": 360,
     "vw": 360,
     "overflow": [],
-    "offscreen": [
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 535,
-        "right": 568
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 535,
-        "right": 568
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 452,
-        "right": 485
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 452,
-        "right": 485
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 407,
-        "right": 440
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 407,
-        "right": 440
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 377,
-        "right": 410
-      },
-      {
-        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 377,
-        "right": 410
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 377,
-        "right": 410
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 426,
-        "right": 459
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 380,
-        "right": 413
-      }
-    ],
+    "offscreen": [],
     "small": [
       {
         "sel": "div.esp-kpis > div.esp-kpi.esp-kpi-main > div.s > button.ghost.esp-mini « Actualiser »",
@@ -5292,17 +5002,17 @@
         "h": 40
       },
       {
-        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field > input « Jo Li »",
+        "sel": "section.esp-card.esp-form > div.esp-row.esp-row-client > label.esp-field > input « Jo Li »",
         "w": 282,
         "h": 40
       },
       {
-        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field.esp-w-s > input « 21 »",
+        "sel": "section.esp-card.esp-form > div.esp-row.esp-row-client > label.esp-field.esp-w-s > input « 21 »",
         "w": 282,
         "h": 40
       },
       {
-        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field.esp-w-s > input « 2026-08-02 »",
+        "sel": "section.esp-card.esp-form > div.esp-row.esp-row-client > label.esp-field.esp-w-s > input « 2026-08-02 »",
         "w": 282,
         "h": 40
       },
@@ -5550,18 +5260,18 @@
         "h": 40
       },
       {
-        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field > input « Jo Li »",
-        "w": 78,
+        "sel": "section.esp-card.esp-form > div.esp-row.esp-row-client > label.esp-field > input « Jo Li »",
+        "w": 402,
         "h": 40
       },
       {
-        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field.esp-w-s > input « 21 »",
-        "w": 150,
+        "sel": "section.esp-card.esp-form > div.esp-row.esp-row-client > label.esp-field.esp-w-s > input « 21 »",
+        "w": 195,
         "h": 40
       },
       {
-        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field.esp-w-s > input « 2026-08-02 »",
-        "w": 150,
+        "sel": "section.esp-card.esp-form > div.esp-row.esp-row-client > label.esp-field.esp-w-s > input « 2026-08-02 »",
+        "w": 195,
         "h": 40
       },
       {
@@ -5682,15 +5392,15 @@
         "fontSize": 15
       },
       {
-        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field > input « Jo Li »",
+        "sel": "section.esp-card.esp-form > div.esp-row.esp-row-client > label.esp-field > input « Jo Li »",
         "fontSize": 15
       },
       {
-        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field.esp-w-s > input « 21 »",
+        "sel": "section.esp-card.esp-form > div.esp-row.esp-row-client > label.esp-field.esp-w-s > input « 21 »",
         "fontSize": 15
       },
       {
-        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field.esp-w-s > input « 2026-08-02 »",
+        "sel": "section.esp-card.esp-form > div.esp-row.esp-row-client > label.esp-field.esp-w-s > input « 2026-08-02 »",
         "fontSize": 15
       },
       {
@@ -5756,444 +5466,6 @@
   },
   {
     "page": "taxes",
-    "state": "especes-depense",
-    "device": "iphone-430",
-    "stepError": null,
-    "errors": [],
-    "scrollWidth": 430,
-    "vw": 430,
-    "overflow": [],
-    "offscreen": [
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 429,
-        "right": 462
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 486,
-        "right": 519
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 430,
-        "right": 463
-      }
-    ],
-    "small": [
-      {
-        "sel": "div.esp-kpis > div.esp-kpi.esp-kpi-main > div.s > button.ghost.esp-mini « Actualiser »",
-        "w": 87,
-        "h": 23
-      },
-      {
-        "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field > input « ex. fournitures ménage, réparation serru »",
-        "w": 352,
-        "h": 40
-      },
-      {
-        "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field > input « ex. Leroy Merlin, Monoprix… »",
-        "w": 352,
-        "h": 40
-      },
-      {
-        "sel": "div.esp-row > label.esp-field.esp-montant > span.esp-euro > input « 0,00 »",
-        "w": 333,
-        "h": 40
-      },
-      {
-        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field.esp-w-s > input « 2026-11-08 »",
-        "w": 352,
-        "h": 40
-      },
-      {
-        "sel": "div.esp-signature > div.esp-row > label.esp-field > select",
-        "w": 352,
-        "h": 43
-      },
-      {
-        "sel": "div.esp-signature > div.esp-row > label.esp-field.esp-w-s > input",
-        "w": 352,
-        "h": 40
-      },
-      {
-        "sel": "section.esp-card.esp-form > div.esp-signature > div.esp-help > button.ghost.esp-mini « Première utilisation : choisir mon code »",
-        "w": 285,
-        "h": 23
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "div.esp-grid > section.esp-card.esp-liste > div > button.ghost.esp-mini « Redéfinir le solde de départ (admin) »",
-        "w": 268,
-        "h": 23
-      }
-    ],
-    "covered": [],
-    "inputFont": [],
-    "clipped": [
-      {
-        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 387,
-        "cw": 1
-      },
-      {
-        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 387,
-        "cw": 1
-      },
-      {
-        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 387,
-        "cw": 1
-      },
-      {
-        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 387,
-        "cw": 1
-      },
-      {
-        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 387,
-        "cw": 1
-      },
-      {
-        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 387,
-        "cw": 1
-      },
-      {
-        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 387,
-        "cw": 1
-      },
-      {
-        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 387,
-        "cw": 1
-      }
-    ],
-    "interactiveCount": 32
-  },
-  {
-    "page": "taxes",
-    "state": "especes-depense",
-    "device": "iphone-390",
-    "stepError": null,
-    "errors": [],
-    "scrollWidth": 390,
-    "vw": 390,
-    "overflow": [],
-    "offscreen": [
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 429,
-        "right": 462
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 486,
-        "right": 519
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 430,
-        "right": 463
-      }
-    ],
-    "small": [
-      {
-        "sel": "div.esp-kpis > div.esp-kpi.esp-kpi-main > div.s > button.ghost.esp-mini « Actualiser »",
-        "w": 87,
-        "h": 23
-      },
-      {
-        "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field > input « ex. fournitures ménage, réparation serru »",
-        "w": 312,
-        "h": 40
-      },
-      {
-        "sel": "div.esp-grid > section.esp-card.esp-form > label.esp-field > input « ex. Leroy Merlin, Monoprix… »",
-        "w": 312,
-        "h": 40
-      },
-      {
-        "sel": "div.esp-row > label.esp-field.esp-montant > span.esp-euro > input « 0,00 »",
-        "w": 293,
-        "h": 40
-      },
-      {
-        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field.esp-w-s > input « 2026-11-08 »",
-        "w": 312,
-        "h": 40
-      },
-      {
-        "sel": "div.esp-signature > div.esp-row > label.esp-field > select",
-        "w": 312,
-        "h": 43
-      },
-      {
-        "sel": "div.esp-signature > div.esp-row > label.esp-field.esp-w-s > input",
-        "w": 312,
-        "h": 40
-      },
-      {
-        "sel": "section.esp-card.esp-form > div.esp-signature > div.esp-help > button.ghost.esp-mini « Première utilisation : choisir mon code »",
-        "w": 285,
-        "h": 23
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "w": 33,
-        "h": 44
-      },
-      {
-        "sel": "div.esp-grid > section.esp-card.esp-liste > div > button.ghost.esp-mini « Redéfinir le solde de départ (admin) »",
-        "w": 268,
-        "h": 23
-      }
-    ],
-    "covered": [],
-    "inputFont": [],
-    "clipped": [
-      {
-        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 387,
-        "cw": 1
-      },
-      {
-        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 387,
-        "cw": 1
-      },
-      {
-        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 387,
-        "cw": 1
-      },
-      {
-        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 387,
-        "cw": 1
-      },
-      {
-        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 387,
-        "cw": 1
-      },
-      {
-        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 387,
-        "cw": 1
-      },
-      {
-        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 387,
-        "cw": 1
-      },
-      {
-        "sel": "section.esp-card.esp-liste > div.esp-jour > table.tbl.esp-tbl > thead.sr-only « TYPE OPÉRATION SAISI PAR MONTANT ACTION »",
-        "sw": 387,
-        "cw": 1
-      }
-    ],
-    "interactiveCount": 32
-  },
-  {
-    "page": "taxes",
     "state": "especes-solde-depart-form",
     "device": "android-360",
     "stepError": null,
@@ -6201,63 +5473,7 @@
     "scrollWidth": 360,
     "vw": 360,
     "overflow": [],
-    "offscreen": [
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 535,
-        "right": 568
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 535,
-        "right": 568
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 452,
-        "right": 485
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 452,
-        "right": 485
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 407,
-        "right": 440
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 407,
-        "right": 440
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 377,
-        "right": 410
-      },
-      {
-        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 377,
-        "right": 410
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 377,
-        "right": 410
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 426,
-        "right": 459
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 380,
-        "right": 413
-      }
-    ],
+    "offscreen": [],
     "small": [
       {
         "sel": "div.esp-kpis > div.esp-kpi.esp-kpi-main > div.s > button.ghost.esp-mini « Actualiser »",
@@ -6736,63 +5952,7 @@
     "scrollWidth": 430,
     "vw": 430,
     "overflow": [],
-    "offscreen": [
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 429,
-        "right": 462
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 486,
-        "right": 519
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 430,
-        "right": 463
-      }
-    ],
+    "offscreen": [],
     "small": [
       {
         "sel": "div.esp-kpis > div.esp-kpi.esp-kpi-main > div.s > button.ghost.esp-mini « Actualiser »",
@@ -6960,63 +6120,7 @@
     "scrollWidth": 390,
     "vw": 390,
     "overflow": [],
-    "offscreen": [
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 429,
-        "right": 462
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 486,
-        "right": 519
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 430,
-        "right": 463
-      }
-    ],
+    "offscreen": [],
     "small": [
       {
         "sel": "div.esp-kpis > div.esp-kpi.esp-kpi-main > div.s > button.ghost.esp-mini « Actualiser »",
@@ -7184,63 +6288,7 @@
     "scrollWidth": 360,
     "vw": 360,
     "overflow": [],
-    "offscreen": [
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 535,
-        "right": 568
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 535,
-        "right": 568
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 452,
-        "right": 485
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 452,
-        "right": 485
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 407,
-        "right": 440
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 407,
-        "right": 440
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 377,
-        "right": 410
-      },
-      {
-        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 377,
-        "right": 410
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 377,
-        "right": 410
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 426,
-        "right": 459
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 380,
-        "right": 413
-      }
-    ],
+    "offscreen": [],
     "small": [
       {
         "sel": "div.esp-kpis > div.esp-kpi.esp-kpi-main > div.s > button.ghost.esp-mini « Actualiser »",
@@ -7865,63 +6913,7 @@
     "scrollWidth": 430,
     "vw": 430,
     "overflow": [],
-    "offscreen": [
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 429,
-        "right": 462
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 486,
-        "right": 519
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 430,
-        "right": 463
-      }
-    ],
+    "offscreen": [],
     "small": [
       {
         "sel": "div.esp-kpis > div.esp-kpi.esp-kpi-main > div.s > button.ghost.esp-mini « Actualiser »",
@@ -8102,63 +7094,7 @@
     "scrollWidth": 390,
     "vw": 390,
     "overflow": [],
-    "offscreen": [
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 429,
-        "right": 462
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 486,
-        "right": 519
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 430,
-        "right": 463
-      }
-    ],
+    "offscreen": [],
     "small": [
       {
         "sel": "div.esp-kpis > div.esp-kpi.esp-kpi-main > div.s > button.ghost.esp-mini « Actualiser »",
@@ -8339,63 +7275,7 @@
     "scrollWidth": 430,
     "vw": 430,
     "overflow": [],
-    "offscreen": [
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 429,
-        "right": 462
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 486,
-        "right": 519
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 430,
-        "right": 463
-      }
-    ],
+    "offscreen": [],
     "small": [
       {
         "sel": "div.esp-kpis > div.esp-kpi.esp-kpi-main > div.s > button.ghost.esp-mini « Actualiser »",
@@ -8408,17 +7288,17 @@
         "h": 43
       },
       {
-        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field > input",
+        "sel": "section.esp-card.esp-form > div.esp-row.esp-row-client > label.esp-field > input",
         "w": 352,
         "h": 40
       },
       {
-        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field.esp-w-s > input",
+        "sel": "section.esp-card.esp-form > div.esp-row.esp-row-client > label.esp-field.esp-w-s > input",
         "w": 352,
         "h": 40
       },
       {
-        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field.esp-w-s > input",
+        "sel": "section.esp-card.esp-form > div.esp-row.esp-row-client > label.esp-field.esp-w-s > input",
         "w": 352,
         "h": 40
       },
@@ -8573,63 +7453,7 @@
     "scrollWidth": 390,
     "vw": 390,
     "overflow": [],
-    "offscreen": [
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 429,
-        "right": 462
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 486,
-        "right": 519
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 430,
-        "right": 463
-      }
-    ],
+    "offscreen": [],
     "small": [
       {
         "sel": "div.esp-kpis > div.esp-kpi.esp-kpi-main > div.s > button.ghost.esp-mini « Actualiser »",
@@ -8642,17 +7466,17 @@
         "h": 43
       },
       {
-        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field > input",
+        "sel": "section.esp-card.esp-form > div.esp-row.esp-row-client > label.esp-field > input",
         "w": 312,
         "h": 40
       },
       {
-        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field.esp-w-s > input",
+        "sel": "section.esp-card.esp-form > div.esp-row.esp-row-client > label.esp-field.esp-w-s > input",
         "w": 312,
         "h": 40
       },
       {
-        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field.esp-w-s > input",
+        "sel": "section.esp-card.esp-form > div.esp-row.esp-row-client > label.esp-field.esp-w-s > input",
         "w": 312,
         "h": 40
       },
@@ -8807,63 +7631,7 @@
     "scrollWidth": 430,
     "vw": 430,
     "overflow": [],
-    "offscreen": [
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 429,
-        "right": 462
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 486,
-        "right": 519
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 430,
-        "right": 463
-      }
-    ],
+    "offscreen": [],
     "small": [
       {
         "sel": "div.esp-kpis > div.esp-kpi.esp-kpi-main > div.s > button.ghost.esp-mini « Actualiser »",
@@ -8876,17 +7644,17 @@
         "h": 43
       },
       {
-        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field > input « Jo Li »",
+        "sel": "section.esp-card.esp-form > div.esp-row.esp-row-client > label.esp-field > input « Jo Li »",
         "w": 352,
         "h": 40
       },
       {
-        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field.esp-w-s > input « 21 »",
+        "sel": "section.esp-card.esp-form > div.esp-row.esp-row-client > label.esp-field.esp-w-s > input « 21 »",
         "w": 352,
         "h": 40
       },
       {
-        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field.esp-w-s > input « 2026-08-02 »",
+        "sel": "section.esp-card.esp-form > div.esp-row.esp-row-client > label.esp-field.esp-w-s > input « 2026-08-02 »",
         "w": 352,
         "h": 40
       },
@@ -9041,63 +7809,7 @@
     "scrollWidth": 390,
     "vw": 390,
     "overflow": [],
-    "offscreen": [
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 429,
-        "right": 462
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 486,
-        "right": 519
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 430,
-        "right": 463
-      }
-    ],
+    "offscreen": [],
     "small": [
       {
         "sel": "div.esp-kpis > div.esp-kpi.esp-kpi-main > div.s > button.ghost.esp-mini « Actualiser »",
@@ -9110,17 +7822,17 @@
         "h": 43
       },
       {
-        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field > input « Jo Li »",
+        "sel": "section.esp-card.esp-form > div.esp-row.esp-row-client > label.esp-field > input « Jo Li »",
         "w": 312,
         "h": 40
       },
       {
-        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field.esp-w-s > input « 21 »",
+        "sel": "section.esp-card.esp-form > div.esp-row.esp-row-client > label.esp-field.esp-w-s > input « 21 »",
         "w": 312,
         "h": 40
       },
       {
-        "sel": "section.esp-card.esp-form > div.esp-row > label.esp-field.esp-w-s > input « 2026-08-02 »",
+        "sel": "section.esp-card.esp-form > div.esp-row.esp-row-client > label.esp-field.esp-w-s > input « 2026-08-02 »",
         "w": 312,
         "h": 40
       },
@@ -9275,63 +7987,7 @@
     "scrollWidth": 430,
     "vw": 430,
     "overflow": [],
-    "offscreen": [
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 429,
-        "right": 462
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 486,
-        "right": 519
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 430,
-        "right": 463
-      }
-    ],
+    "offscreen": [],
     "small": [
       {
         "sel": "div.esp-kpis > div.esp-kpi.esp-kpi-main > div.s > button.ghost.esp-mini « Actualiser »",
@@ -9499,63 +8155,7 @@
     "scrollWidth": 390,
     "vw": 390,
     "overflow": [],
-    "offscreen": [
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 429,
-        "right": 462
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 486,
-        "right": 519
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 430,
-        "right": 463
-      }
-    ],
+    "offscreen": [],
     "small": [
       {
         "sel": "div.esp-kpis > div.esp-kpi.esp-kpi-main > div.s > button.ghost.esp-mini « Actualiser »",
@@ -9723,63 +8323,7 @@
     "scrollWidth": 430,
     "vw": 430,
     "overflow": [],
-    "offscreen": [
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 429,
-        "right": 462
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 486,
-        "right": 519
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 430,
-        "right": 463
-      }
-    ],
+    "offscreen": [],
     "small": [
       {
         "sel": "div.esp-kpis > div.esp-kpi.esp-kpi-main > div.s > button.ghost.esp-mini « Actualiser »",
@@ -9947,63 +8491,7 @@
     "scrollWidth": 390,
     "vw": 390,
     "overflow": [],
-    "offscreen": [
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 630,
-        "right": 663
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 520,
-        "right": 553
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 463,
-        "right": 496
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr.esp-sig.info > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 443,
-        "right": 476
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 429,
-        "right": 462
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 486,
-        "right": 519
-      },
-      {
-        "sel": "tbody > tr > td.tx-actions > button.ghost.danger « ✕ »",
-        "left": 430,
-        "right": 463
-      }
-    ],
+    "offscreen": [],
     "small": [
       {
         "sel": "div.esp-kpis > div.esp-kpi.esp-kpi-main > div.s > button.ghost.esp-mini « Actualiser »",
