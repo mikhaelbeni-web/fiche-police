@@ -264,3 +264,18 @@ test("double envoi, date future, ordre d'annulation des récupérations", async 
     assert.equal(x.statusCode, 200, JSON.stringify(x.body));
   });
 });
+
+test("deux récupérations dans la même milliseconde : la seconde reste la plus récente", async () => {
+  store._resetStoreForTests();
+  const f = fauxFirestore();
+  const fige = () => new Date("2026-11-20T10:00:00.000Z");
+  const admin = { nom: "admin", id: "admin", role: "admin" };
+  const a = await J.recuperer({ acteur: admin, montant: 0, note: "", entryIds: [], contexte: ctx, fetchImpl: f, maintenant: fige }).catch(e => e);
+  // Caisse vide : refusée ; on part d'un solde de départ.
+  assert.ok(a instanceof Error);
+  await J.soldeDepart({ date: "2026-11-20", montant: 50, contexte: ctx, fetchImpl: f, maintenant: fige });
+  const r1 = await J.recuperer({ acteur: admin, montant: 10, note: "", entryIds: [], contexte: ctx, fetchImpl: f, maintenant: fige });
+  const r2 = await J.recuperer({ acteur: admin, montant: 10, note: "", entryIds: [], contexte: ctx, fetchImpl: f, maintenant: fige });
+  assert.ok(r2.resultat.createdAt > r1.resultat.createdAt);
+  assert.equal(r2.resultat.totalAvant, 40, "la base est bien la récupération précédente");
+});
