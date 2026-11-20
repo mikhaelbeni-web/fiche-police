@@ -2332,6 +2332,9 @@ details.sv-banner { display: block; }
 .esp-field { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 12px; flex: 1; min-width: 0; }
 .esp-field input, .esp-field select { font-size: 15px; min-height: 40px; padding: 6px 10px; width: 100%; font-weight: 400; }
 .esp-row { display: flex; gap: 12px; }
+.esp-row-client { flex-wrap: wrap; }
+.esp-row-client > .esp-field { flex: 1 1 140px; }
+.esp-row-client > .esp-field:first-child { flex-basis: 100%; }
 .esp-w-s { flex: 0 0 150px; }
 .esp-montant input { font-size: 22px; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
 .esp-euro { display: flex; align-items: center; gap: 6px; font-size: 18px; }
@@ -2353,7 +2356,9 @@ details.sv-banner { display: block; }
 .esp-jour { margin-top: 14px; }
 .esp-jour-head { display: flex; justify-content: space-between; font-weight: 700; font-size: 13.5px; padding: 6px 10px; background: #f3f5f8; border-radius: 6px; }
 .esp-jour-head .ok { color: var(--ok); } .esp-jour-head .bad { color: var(--bad); }
-.esp-tbl { width: 100%; margin: 0; }
+.esp-tbl, .tbl.esp-tbl { width: 100%; min-width: 0; margin: 0; table-layout: fixed; }
+.tbl.esp-tbl td { white-space: normal; overflow-wrap: anywhere; }
+.esp-tbl td.tx-actions { width: 48px; text-align: center; }
 .esp-tbl td { vertical-align: top; padding: 9px 10px; border-bottom: 1px solid #eef1f4; }
 .esp-type { width: 118px; }
 .esp-qui { width: 150px; font-size: 13.5px; }
@@ -2371,7 +2376,14 @@ details.sv-banner { display: block; }
 }
 @media (max-width: 600px) {
   .recap.esp { padding: 14px 12px; }
-  .esp-kpis { grid-template-columns: 1fr; }
+  .esp-kpis { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .esp-kpi-main { grid-column: 1 / -1; }
+  .esp-kpi { padding: 10px 12px; }
+  .esp-kpi .n { font-size: 19px; }
+  .esp-kpi-main .n { font-size: 30px; }
+  .esp-controle-head { flex-wrap: wrap; }
+  .esp-controle-head .push-right { margin-left: 24px; }
+  .esp-mt { width: 96px; font-size: 14px; }
   .esp-row { flex-direction: column; gap: 0; }
   .esp-row .esp-field { margin-bottom: 12px; }
   .esp-w-s { flex: 1; }

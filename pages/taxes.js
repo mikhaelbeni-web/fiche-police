@@ -821,7 +821,7 @@ function CashCurrent({ entries, unrecovered, recoveries, etat, controle, majLe, 
               )}
 
               {clientMode === "autre" && (
-                <div className="esp-row">
+                <div className="esp-row esp-row-client">
                   <label className="esp-field">Nom du client <input type="text" value={client} onChange={e => setClient(e.target.value)} /></label>
                   <label className="esp-field esp-w-s">Appartement <input type="text" value={appartement} onChange={e => setAppartement(e.target.value)} /></label>
                   <label className="esp-field esp-w-s">Arrivée <input type="date" value={arrivalDate} onChange={e => setArrivalDate(e.target.value)} /></label>
