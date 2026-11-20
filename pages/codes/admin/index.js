@@ -12,7 +12,6 @@ import CodesTabs from "../../../components/CodesTabs";
 import Reglages from "../../../components/admin/Reglages";
 import Croisement from "../../../components/admin/Croisement";
 import Webhook from "../../../components/admin/Webhook";
-import Especes from "../../../components/admin/Especes";
 import { useAdminExpiry, ADMIN_EXPIRED_URL } from "../../../components/admin/useAdminExpiry";
 import { adminPageProps } from "../../../lib/adminAuth";
 
@@ -146,7 +145,7 @@ export default function EspaceAdmin({ adminExpiresAt, serverNowMs }) {
             </div>
           </div>
           <nav className="adm-tabs" role="tablist" aria-label="Espace admin">
-            {[["surveillance", "Surveillance", "Visites dans les appartements vides"], ["reglages", "Réglages", "Horaires, types d'action, serrures, personnel"], ["especes", "Espèces", "Personnel de caisse, journal, contrôle"], ["technique", "Technique", "Webhook et test de connexion"]].map(([k, l, d]) => (
+            {[["surveillance", "Surveillance", "Visites dans les appartements vides"], ["reglages", "Réglages", "Horaires, types d'action, serrures, personnel"], ["technique", "Technique", "Webhook et test de connexion"]].map(([k, l, d]) => (
               <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} onClick={() => setTab(k)}>
                 <b>{l}</b><span>{d}</span>
               </button>
@@ -155,7 +154,6 @@ export default function EspaceAdmin({ adminExpiresAt, serverNowMs }) {
 
           {tab === "surveillance" && <Croisement onReglages={() => setTab("reglages")} />}
           {tab === "reglages" && <Reglages />}
-          {tab === "especes" && <section className="rg-card"><Especes /></section>}
           {tab === "technique" && <>
             <section className="rg-card">
               <h3>Webhook igloohome</h3>

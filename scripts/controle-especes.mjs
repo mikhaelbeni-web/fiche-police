@@ -3,19 +3,41 @@
 //
 //   node --import ./tests/loader.mjs scripts/controle-especes.mjs [--etat fichier.json] [--json]
 //
-// 1. relit cash_entries, cash_recoveries et, s'il existe, le journal cash_audit ;
+// 1. relit cash_entries et cash_recoveries ;
 // 2. recalcule la caisse et cherche les anomalies (lib/especesControle.js) ;
-// 3. contrôle la chaîne d'empreintes du journal (analyser() de lib/especesJournal.js) ;
-// 4. avec --etat : compare à la photo de la veille (lignes disparues, montants retouchés,
-//    nouvelles lignes), puis remplace la photo. C'est le seul moyen de voir un effacement
-//    physique tant que le journal n'est pas ouvert.
+// 3. avec --etat : compare à la photo de la veille (lignes disparues, montants retouchés,
+//    nouvelles lignes), puis remplace la photo. C'est le seul moyen de voir une ligne
+//    effacée directement dans la base (la page, elle, n'efface plus rien).
 //
 // Base fermée (après la bascule des règles) : passer un jeton dans FIRESTORE_BEARER.
 // N'écrit jamais dans Firestore.
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import crypto from "node:crypto";
 import { controlerCaisse, jourParis } from "../lib/especesControle.js";
-import { champsDepuisFs, analyser, canonique } from "../lib/especesJournal.js";
+
+// Valeurs Firestore REST -> JS.
+function depuisFs(v) {
+  if (!v || typeof v !== "object" || "nullValue" in v) return null;
+  if ("booleanValue" in v) return v.booleanValue;
+  if ("integerValue" in v) return Number(v.integerValue);
+  if ("doubleValue" in v) return Number(v.doubleValue);
+  if ("stringValue" in v) return v.stringValue;
+  if ("timestampValue" in v) return v.timestampValue;
+  if ("arrayValue" in v) return (v.arrayValue.values || []).map(depuisFs);
+  if ("mapValue" in v) return champsDepuisFs(v.mapValue.fields || {});
+  return null;
+}
+function champsDepuisFs(fields) {
+  const out = {};
+  for (const [k, v] of Object.entries(fields || {})) out[k] = depuisFs(v);
+  return out;
+}
+// JSON stable (clés triées) : même contenu -> même empreinte.
+function canonique(v) {
+  if (v === null || typeof v !== "object") return JSON.stringify(v ?? null);
+  if (Array.isArray(v)) return "[" + v.map(canonique).join(",") + "]";
+  return "{" + Object.keys(v).filter(k => v[k] !== undefined).sort().map(k => JSON.stringify(k) + ":" + canonique(v[k])).join(",") + "}";
+}
 
 const PROJET = process.env.FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "beylev-linge";
 const BASE = `https://firestore.googleapis.com/v1/projects/${PROJET}/databases/(default)/documents`;
@@ -41,22 +63,12 @@ async function lister(coll) {
 
 const empreinte = champs => crypto.createHash("sha256").update(canonique(champs)).digest("hex");
 
-const [entreesL, recupsL, journalL, teteL] = await Promise.all([
-  lister("cash_entries"), lister("cash_recoveries"), lister("cash_audit"), lister("cash_audit_meta"),
-]);
+const [entreesL, recupsL] = await Promise.all([lister("cash_entries"), lister("cash_recoveries")]);
 const entrees = entreesL.map(d => ({ id: d.id, ...d.champs }));
 const recups = recupsL.map(d => ({ id: d.id, ...d.champs }));
 
 const controle = controlerCaisse(entrees, recups);
 const anomalies = [...controle.anomalies];
-
-// Journal d'audit (PR #59) : chaîne d'empreintes et cohérence base / journal.
-let journal = { ouvert: false };
-if (journalL.length) {
-  const tete = teteL.find(d => d.id === "tete")?.champs || null;
-  journal = analyser({ evenements: journalL.map(d => d.champs), tete, entrees: entreesL, recups: recupsL });
-  for (const a of journal.anomalies) anomalies.unshift({ niveau: "grave", code: `journal_${a.type}`, titre: "Journal d'audit : " + a.type.replace(/_/g, " "), detail: `${a.cible ? a.cible + " : " : ""}${a.detail}`, ids: a.cible ? [a.cible.split("/").pop()] : [] });
-}
 
 // Comparaison avec la photo précédente.
 const photo = Object.fromEntries([
@@ -87,7 +99,7 @@ const ordre = { grave: 0, attention: 1, info: 2 };
 anomalies.sort((a, b) => ordre[a.niveau] - ordre[b.niveau]);
 const resultat = {
   controleLe: controle.controleLe, jour: jourParis(),
-  caisse: controle.etat, journal: { ouvert: journal.ouvert, ok: journal.ok ?? null, tete: journal.tete || null },
+  caisse: controle.etat,
   nbLignes: entrees.length, nbRecuperations: recups.length,
   photoPrecedente: photoPrecedente?.le || null, nouvelles, anomalies,
 };
@@ -101,7 +113,6 @@ if (args.includes("--json")) {
   l.push(`Contrôle des espèces du ${resultat.jour}`);
   l.push(`En caisse selon le logiciel : ${euros(e.total)} (reliquat ${euros(e.baseline)} + encaissé ${euros(e.sumClient)} − dépensé ${euros(e.sumExpense)}, ${e.nbEnCours} ligne(s) en cours)`);
   l.push(`Dernière récupération : ${e.derniere ? `${e.derniere.date}, ${euros(e.derniere.amountRecovered)} récupérés` : "aucune"}`);
-  l.push(`Journal d'audit : ${journal.ouvert ? (journal.ok ? `intact, ${journal.nbEvenements} événements, tête n° ${journal.tete.seq} ${journal.tete.hash.slice(0, 12)}` : "ANOMALIES") : "pas encore ouvert"}`);
   const graves = anomalies.filter(a => a.niveau === "grave").length;
   l.push(graves ? `${graves} anomalie(s) grave(s)` : (anomalies.length ? "Rien de grave" : "Aucune anomalie"));
   for (const a of anomalies) l.push(`- [${a.niveau}] ${a.titre} : ${a.detail}`);

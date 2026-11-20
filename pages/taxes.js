@@ -3,7 +3,10 @@ import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
 import CodeModal from "../components/CodeModal";
 import { useCodeGate } from "../hooks/useCodeGate";
+import { useInterrupteur5h } from "../hooks/useEcheance";
+import { listStaff, ensureStaff, deleteStaff, getCurrentStaff, setCurrentStaff } from "../lib/staff";
 import { controlerCaisse, etatCaisse, jourParis } from "../lib/especesControle";
+import { ajouterLigne, supprimerLigne, recuperer, annulerRecuperation, soldeDepart, nouvelleCle } from "../lib/especesEcritures";
 
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
@@ -20,10 +23,12 @@ function euros(n) {
   return Number(n).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
 }
 
-// Code demandé avant de masquer une taxe impayée. Ce n'est pas une vraie sécurité
-// (comparaison faite dans le navigateur) : juste un frein contre une fausse
-// manœuvre. Les espèces n'en dépendent plus : leurs suppressions et récupérations
-// sont contrôlées par le serveur (/api/especes, Espace admin, codes personnels).
+// Code demandé avant de masquer une taxe impayée et, côté espèces, avant toute
+// suppression (avec motif), récupération, annulation ou solde de départ. Ce n'est pas une
+// vraie sécurité (comparaison faite dans le navigateur) — juste un frein
+// volontaire contre une action accidentelle ou par une personne non autorisée
+// à qui l'accès à l'app a été partagé. Changeable via NEXT_PUBLIC_DELETE_PASSWORD
+// sur Vercel.
 const DELETE_PASSWORD = process.env.NEXT_PUBLIC_DELETE_PASSWORD || "2305";
 
 function ControleExclusions({ data }) {
@@ -349,21 +354,10 @@ function TaxesImpayees() {
 // et chaque dépense hôtel. Suivi du solde en caisse. Mikhael passe régulièrement récupérer
 // une partie des espèces, laisse un reliquat en caisse — chaque récupération est tracée
 // et exportable en Excel (CSV), avec un historique complet consultable à tout moment.
-// Écritures : toutes par /api/especes (journal d'audit côté serveur, voir
-// lib/especesJournal.js). Le navigateur ne fait plus que lire Firestore.
-async function especesApi(body) {
-  const r = await fetch("/api/especes", {
-    method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify(body),
-  });
-  const d = await r.json().catch(() => ({ error: `Réponse illisible (HTTP ${r.status}).` }));
-  if (!r.ok || d.ok === false) throw new Error(d.error || `Erreur HTTP ${r.status}`);
-  return d;
-}
-
+// Écritures : lib/especesEcritures.js (transactions, rien n'est plus effacé).
+// Contrôle de caisse : lib/especesControle.js, recalculé à chaque affichage.
 function CashManagement() {
-  const [personnel, setPersonnel] = useState([]);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { requestCode, codeModalProps } = useCodeGate(DELETE_PASSWORD, "Code requis");
   const [ready, setReady] = useState(false);
   const [configured, setConfigured] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -381,10 +375,10 @@ function CashManagement() {
         const { isFirebaseConfigured } = await import("../lib/firebase");
         if (!isFirebaseConfigured()) { setConfigured(false); setReady(true); return; }
         const { db } = await import("../lib/firebase");
-        const { collection, getDocs, query, orderBy } = await import("firebase/firestore");
-        const api = { db, collection, getDocs, query, orderBy };
+        const { collection, doc, getDocs, query, orderBy, setDoc, deleteDoc, runTransaction } = await import("firebase/firestore");
+        const api = { db, collection, doc, getDocs, query, orderBy, setDoc, deleteDoc, runTransaction };
         setFs(api);
-        await Promise.all([loadAll(api), loadPersonnel()]);
+        await loadAll(api);
       } catch (err) {
         setLoadError(err.message || String(err));
       }
@@ -402,14 +396,6 @@ function CashManagement() {
     setEntries(eSnap.docs.map(d => ({ id: d.id, ...d.data() })).sort(parDate));
     setRecoveries(rSnap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || ""))));
     setMajLe(new Date());
-  }
-
-  async function loadPersonnel() {
-    try {
-      const r = await fetch("/api/especes", { headers: { Accept: "application/json" } });
-      const d = await r.json();
-      if (r.ok) { setPersonnel(d.personnel || []); setIsAdmin(Boolean(d.isAdmin)); }
-    } catch { /* liste vide : la saisie affichera un message */ }
   }
 
   if (!ready) return <div className="menage-page"><div className="recap"><div className="empty-state" aria-busy="true">Chargement de la caisse…</div></div></div>;
@@ -451,17 +437,18 @@ function CashManagement() {
         <div className="recap esp">
           {!showHistory ? (
             <CashCurrent
+              fs={fs} requestCode={requestCode}
               entries={activeEntries} unrecovered={unrecovered} recoveries={activeRecoveries}
-              personnel={personnel} isAdmin={isAdmin} reloadPersonnel={loadPersonnel}
               etat={etat} controle={controle} majLe={majLe}
               showRecoverForm={showRecoverForm} setShowRecoverForm={setShowRecoverForm}
               reload={reload} setStatus={setStatus}
             />
           ) : (
-            <CashHistory recoveries={recoveries} entries={entries} isAdmin={isAdmin} reload={reload} setStatus={setStatus} />
+            <CashHistory fs={fs} requestCode={requestCode} recoveries={recoveries} entries={entries} reload={reload} setStatus={setStatus} />
           )}
         </div>
       </div>
+      <CodeModal {...codeModalProps} />
     </>
   );
 }
@@ -488,11 +475,6 @@ function euros2(n) {
 function lireMontant(v) {
   const n = Number(String(v ?? "").replace(/\s/g, "").replace(",", "."));
   return Number.isFinite(n) ? Math.round(n * 100) / 100 : NaN;
-}
-function nouvelleCle() {
-  const a = new Uint8Array(12);
-  (globalThis.crypto || window.crypto).getRandomValues(a);
-  return Array.from(a, b => b.toString(16).padStart(2, "0")).join("");
 }
 const normNom = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").trim().toLowerCase();
 
@@ -549,7 +531,7 @@ function ControleCaisse({ controle }) {
 }
 
 // ---- Vue courante : chiffres clés, saisie, opérations depuis la dernière récupération ----
-function CashCurrent({ entries, unrecovered, recoveries, etat, controle, majLe, showRecoverForm, setShowRecoverForm, reload, setStatus, personnel, isAdmin, reloadPersonnel }) {
+function CashCurrent({ fs, requestCode, entries, unrecovered, recoveries, etat, controle, majLe, showRecoverForm, setShowRecoverForm, reload, setStatus }) {
   const today = jourParis();
   const [mode, setMode] = useState("client"); // client | expense
   const [date, setDate] = useState(today);
@@ -560,9 +542,10 @@ function CashCurrent({ entries, unrecovered, recoveries, etat, controle, majLe, 
   const [designation, setDesignation] = useState("");
   const [fournisseur, setFournisseur] = useState("");
   const [amount, setAmount] = useState("");
-  const [saisiPar, setSaisiPar] = useState(""); // identifiant de la personne (liste de l'Espace admin)
-  const [pin, setPin] = useState("");
-  const [showActivation, setShowActivation] = useState(false);
+  const [saisiPar, setSaisiPar] = useState("");
+  const [staffList, setStaffList] = useState([]);
+  const [staffAdmin, setStaffAdmin] = useInterrupteur5h(); // se referme seul 5 h après le code
+  const [newStaffName, setNewStaffName] = useState("");
   const [busy, setBusy] = useState(false);
   const [cle, setCle] = useState("");
   const [confirmeDoublon, setConfirmeDoublon] = useState(false);
@@ -576,6 +559,46 @@ function CashCurrent({ entries, unrecovered, recoveries, etat, controle, majLe, 
   const [showStartForm, setShowStartForm] = useState(false);
 
   useEffect(() => { setCle(nouvelleCle()); }, []);
+
+  // Réceptionnistes : liste partagée avec la Check-list (Firestore « staff_members »).
+  // Le dernier nom choisi sur cet appareil est proposé d'office.
+  useEffect(() => {
+    (async () => {
+      try {
+        const liste = await listStaff(fs);
+        setStaffList(liste);
+        const moi = getCurrentStaff();
+        if (moi && liste.includes(moi)) setSaisiPar(moi);
+      } catch { /* collection pas encore créée */ }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function choisirMoi(nom) { setSaisiPar(nom); setCurrentStaff(nom); }
+
+  function toggleStaffAdmin() {
+    if (staffAdmin) { setStaffAdmin(false); return; }
+    requestCode(() => setStaffAdmin(true));
+  }
+
+  async function addStaffName() {
+    const name = newStaffName.trim();
+    if (!name) return;
+    try {
+      await ensureStaff(fs, name);
+      setNewStaffName("");
+      setStaffList(await listStaff(fs));
+    } catch (err) { setStatus("Erreur : " + err.message); }
+  }
+
+  async function removeStaffName(name) {
+    if (!window.confirm(`Retirer « ${name} » de la liste des réceptionnistes ?`)) return;
+    try {
+      await deleteStaff(fs, name);
+      if (saisiPar === name) setSaisiPar("");
+      setStaffList(await listStaff(fs));
+    } catch (err) { setStatus("Erreur : " + err.message); }
+  }
 
   // Clients Belleville avec une taxe de séjour à régler (Hostaway) : un paiement en
   // espèces sert le plus souvent à encaisser cette taxe.
@@ -598,7 +621,7 @@ function CashCurrent({ entries, unrecovered, recoveries, etat, controle, majLe, 
 
   function viderFormulaire() {
     setClient(""); setAppartement(""); setArrivalDate(""); setReservationId(""); setDesignation("");
-    setFournisseur(""); setAmount(""); setPin(""); setSearchQuery(""); setSearchResults([]);
+    setFournisseur(""); setAmount(""); setSearchQuery(""); setSearchResults([]);
     setConfirmeDoublon(false); setDate(jourParis()); setCle(nouvelleCle());
   }
 
@@ -610,16 +633,18 @@ function CashCurrent({ entries, unrecovered, recoveries, etat, controle, majLe, 
     setConfirmeDoublon(false);
   }
 
-  async function setStartingBalance(startDate, startAmount) {
+  function setStartingBalance(startDate, startAmount) {
     const amt = lireMontant(startAmount);
     if (!(amt > 0)) { setStatus("Montant de départ invalide."); return; }
-    try {
-      setStatus("Enregistrement du solde de départ…");
-      await especesApi({ action: "solde_depart", date: startDate, montant: amt });
-      setShowStartForm(false);
-      await reload();
-      setStatus(`Solde de départ de ${euros2(amt)} enregistré au ${fmtFrShort(startDate)}.`);
-    } catch (err) { setStatus("Erreur : " + err.message); }
+    requestCode(async () => {
+      try {
+        setStatus("Enregistrement du solde de départ…");
+        await soldeDepart(fs, { date: startDate, montant: amt, recups: recoveries });
+        setShowStartForm(false);
+        await reload();
+        setStatus(`Solde de départ de ${euros2(amt)} enregistré au ${fmtFrShort(startDate)}.`);
+      } catch (err) { setStatus("Erreur : " + err.message); }
+    });
   }
 
   // Recherche parmi toutes les réservations (quel que soit le statut de paiement).
@@ -658,19 +683,18 @@ function CashCurrent({ entries, unrecovered, recoveries, etat, controle, majLe, 
   if (mode === "client" && !client.trim()) manque.push("le client");
   if (mode === "expense" && !designation.trim()) manque.push("la raison de la dépense");
   if (!saisiPar) manque.push("ton nom");
-  if (!pin) manque.push("ton code");
   const bloqueDoublon = Boolean(doublon) && !confirmeDoublon;
   const peutEnregistrer = manque.length === 0 && !bloqueDoublon && !busy && ecartDate >= 0;
 
   async function addEntry() {
     if (!peutEnregistrer) return;
-    const ligne = { type: mode, date, amount: amt, designation: designation.trim(), cle };
+    const ligne = { type: mode, date, amount: amt, designation: designation.trim(), saisiPar };
     if (mode === "client") Object.assign(ligne, { client: client.trim(), appartement: appartement.trim(), arrivalDate: arrivalDate || "", reservationId });
     else ligne.fournisseur = fournisseur.trim();
-    const qui = personnel.find(p => p.id === saisiPar)?.nom || "";
+    const qui = saisiPar;
     setBusy(true); setRetour(null);
     try {
-      const d = await especesApi({ action: "ajouter", personneId: saisiPar, pin, ligne });
+      const d = await ajouterLigne(fs, ligne, cle);
       viderFormulaire();
       await reload();
       const quoi = mode === "client" ? `${ligne.designation || "Paiement"} de ${ligne.client}` : `Dépense ${ligne.fournisseur ? ligne.fournisseur + " " : ""}(${ligne.designation})`;
@@ -682,19 +706,19 @@ function CashCurrent({ entries, unrecovered, recoveries, etat, controle, majLe, 
     setBusy(false);
   }
 
-  async function delEntry(entry) {
-    if (!isAdmin) {
-      setStatus("Suppression réservée à l'administrateur (connexion à l'Espace admin, onglet Codes d'accès).");
-      return;
-    }
+  // Suppression : code admin + motif ; la ligne reste en base, marquée supprimée.
+  function delEntry(entry) {
     const motif = window.prompt(`Motif de la suppression de « ${entry.designation || entry.client || entry.fournisseur || "cette ligne"} » (${euros2(entry.amount)}) :`);
     if (motif === null) return;
-    try {
-      setStatus("Suppression…");
-      await especesApi({ action: "supprimer", entryId: entry.id, motif });
-      await reload();
-      setStatus("Ligne marquée supprimée (elle reste dans l'historique complet).");
-    } catch (err) { setStatus("Erreur : " + err.message); }
+    if (motif.trim().length < 5) { setStatus("Suppression annulée : motif obligatoire (au moins 5 caractères)."); return; }
+    requestCode(async () => {
+      try {
+        setStatus("Suppression…");
+        await supprimerLigne(fs, entry.id, motif);
+        await reload();
+        setStatus("Ligne marquée supprimée (elle reste dans l'historique complet).");
+      } catch (err) { setStatus("Erreur : " + err.message); }
+    });
   }
 
   function exportCurrentCSV() {
@@ -728,7 +752,6 @@ function CashCurrent({ entries, unrecovered, recoveries, etat, controle, majLe, 
   const nbClient = unrecovered.filter(e => e.type === "client").length;
   const nbDep = unrecovered.length - nbClient;
   const derniere = etat.derniere;
-  const personnesActives = personnel.filter(p => p.codeChoisi);
 
   return (
     <>
@@ -856,15 +879,10 @@ function CashCurrent({ entries, unrecovered, recoveries, etat, controle, majLe, 
           <div className="esp-signature">
             <div className="esp-row">
               <label className="esp-field">Saisi par
-                <select value={saisiPar} onChange={e => { setSaisiPar(e.target.value); setPin(""); }}>
+                <select value={saisiPar} onChange={e => choisirMoi(e.target.value)} aria-invalid={!saisiPar}>
                   <option value="">— Mon nom —</option>
-                  {personnesActives.map(p => <option key={p.id} value={p.id}>{p.nom}</option>)}
+                  {staffList.map(name => <option key={name} value={name}>{name}</option>)}
                 </select>
-              </label>
-              <label className="esp-field esp-w-s">Mon code
-                <input type="password" inputMode="numeric" autoComplete="off" value={pin} maxLength={8}
-                  onChange={e => setPin(e.target.value.replace(/\D/g, ""))}
-                  onKeyDown={e => { if (e.key === "Enter") addEntry(); }} />
               </label>
             </div>
             <button className="primary esp-submit" onClick={addEntry} disabled={!peutEnregistrer} aria-busy={busy}>
@@ -874,17 +892,29 @@ function CashCurrent({ entries, unrecovered, recoveries, etat, controle, majLe, 
             {bloqueDoublon && manque.length === 0 && <div className="esp-help warn">Confirme le second paiement ci-dessus pour enregistrer.</div>}
             {retour && <div className={`msg ${retour.ton}`} role="status">{retour.texte}</div>}
             <div className="esp-help">
-              Le code personnel engage la personne qui saisit.{" "}
-              <button type="button" onClick={() => setShowActivation(!showActivation)} className="ghost esp-mini">
-                {showActivation ? "Fermer" : "Première utilisation : choisir mon code"}
+              Ton nom n&apos;est pas dans la liste ?{" "}
+              <button type="button" onClick={toggleStaffAdmin} className="ghost esp-mini">
+                {staffAdmin ? "Fermer la gestion de la liste" : "Gérer la liste (code)"}
               </button>
             </div>
-            {personnel.length === 0 && (
-              <div className="msg warn">Aucun réceptionniste enregistré : l&apos;admin doit les créer dans Codes d&apos;accès &gt; Espace admin &gt; Espèces.</div>
-            )}
-            {showActivation && (
-              <ActivationForm personnel={personnel} setStatus={setStatus}
-                onDone={async () => { setShowActivation(false); await reloadPersonnel(); }} />
+            {staffAdmin && (
+              <div className="panel">
+                <div className="panel-title">Réceptionnistes (liste partagée avec la Check-list)</div>
+                <div className="panel-row">
+                  {staffList.map(name => (
+                    <span key={name} className="chip">
+                      {name}
+                      <button type="button" onClick={() => removeStaffName(name)} className="chip-del" title={`Retirer ${name}`} aria-label={`Retirer ${name}`}>✕</button>
+                    </span>
+                  ))}
+                  {staffList.length === 0 && <span className="note">Aucun nom pour l&apos;instant.</span>}
+                </div>
+                <div className="panel-row">
+                  <input type="text" value={newStaffName} onChange={e => setNewStaffName(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter") addStaffName(); }} placeholder="Ajouter un prénom…" />
+                  <button type="button" onClick={addStaffName} className="primary">Ajouter</button>
+                </div>
+              </div>
             )}
           </div>
         </section>
@@ -901,9 +931,10 @@ function CashCurrent({ entries, unrecovered, recoveries, etat, controle, majLe, 
           </div>
 
           {showRecoverForm && (
-            <RecoverForm unrecovered={unrecovered} totalEnCaisse={etat.total}
+            <RecoverForm fs={fs} requestCode={requestCode} entries={entries} recoveries={recoveries}
+              unrecovered={unrecovered} totalEnCaisse={etat.total}
               baseline={etat.baseline} sumClient={etat.sumClient} sumExpense={etat.sumExpense}
-              personnel={personnel} isAdmin={isAdmin}
+              staffList={staffList} saisiPar={saisiPar}
               onDone={() => { setShowRecoverForm(false); reload(); }} setStatus={setStatus} />
           )}
 
@@ -937,7 +968,7 @@ function CashCurrent({ entries, unrecovered, recoveries, etat, controle, majLe, 
                           <div className="esp-muted">{saisie && saisie !== e.date ? `saisi le ${fmtFrShort(saisie)}` : heureParis(e.createdAt)}</div>
                         </td>
                         <td className={`esp-mt ${e.type === "expense" ? "bad" : "ok"}`}>{e.type === "expense" ? "−" : "+"}{euros2(e.amount)}</td>
-                        <td className="tx-actions">{isAdmin && <button onClick={() => delEntry(e)} className="ghost danger tx-del" title="Supprimer (admin, motif obligatoire)" aria-label={`Supprimer ${e.client || e.designation || "la ligne"}`}>✕</button>}</td>
+                        <td className="tx-actions">{<button onClick={() => delEntry(e)} className="ghost danger tx-del" title="Supprimer (code et motif obligatoires)" aria-label={`Supprimer ${e.client || e.designation || "la ligne"}`}>✕</button>}</td>
                       </tr>
                     );
                   })}
@@ -948,65 +979,17 @@ function CashCurrent({ entries, unrecovered, recoveries, etat, controle, majLe, 
           <p className="esp-muted esp-formule">
             En caisse = laissé le {derniere ? fmtFrShort(derniere.date) : "—"} ({euros2(etat.baseline)}) + encaissé ({euros2(etat.sumClient)}) − dépensé ({euros2(etat.sumExpense)}).
           </p>
-          {isAdmin && (
-            <div>
-              <button onClick={() => setShowStartForm(!showStartForm)} className="ghost esp-mini">
-                {showStartForm ? "Annuler" : (recoveries.length ? "Redéfinir le solde de départ (admin)" : "Définir un solde de départ (admin)")}
-              </button>
-              {showStartForm && (
-                <StartingBalanceForm hasRecoveries={recoveries.length > 0} enCours={unrecovered.length} onConfirm={setStartingBalance} onCancel={() => setShowStartForm(false)} />
-              )}
-            </div>
-          )}
+          <div>
+            <button onClick={() => setShowStartForm(!showStartForm)} className="ghost esp-mini">
+              {showStartForm ? "Annuler" : (recoveries.length ? "Redéfinir le solde de départ (code)" : "Définir un solde de départ (code)")}
+            </button>
+            {showStartForm && (
+              <StartingBalanceForm hasRecoveries={recoveries.length > 0} enCours={unrecovered.length} onConfirm={setStartingBalance} onCancel={() => setShowStartForm(false)} />
+            )}
+          </div>
         </section>
       </div>
     </>
-  );
-}
-
-// ---- Première utilisation : la personne choisit elle-même son code personnel ----
-// L'admin lui a remis un code d'activation à 6 chiffres (valable 7 jours). L'admin ne
-// connaît donc jamais le code personnel : une saisie faite avec ce code engage la personne.
-function ActivationForm({ personnel, setStatus, onDone }) {
-  const [id, setId] = useState("");
-  const [activation, setActivation] = useState("");
-  const [pin1, setPin1] = useState("");
-  const [pin2, setPin2] = useState("");
-  const enAttente = personnel.filter(p => p.activationEnAttente);
-  async function valider() {
-    if (pin1 !== pin2) { setStatus("Les deux codes personnels ne sont pas identiques."); return; }
-    try {
-      setStatus("Activation…");
-      await especesApi({ action: "activer", personneId: id, activation, pin: pin1 });
-      setStatus("Code personnel enregistré. Il sera demandé à chaque saisie : ne le communique à personne.");
-      await onDone();
-    } catch (err) { setStatus("Erreur : " + err.message); }
-  }
-  const digits = v => v.replace(/\D/g, "");
-  return (
-    <div className="panel">
-      <div className="panel-title">Première utilisation : choisir mon code personnel</div>
-      {enAttente.length === 0 ? <span className="note">Personne n&apos;a d&apos;activation en attente. Demande un code d&apos;activation à l&apos;admin.</span> : (
-        <div className="panel-row">
-          <label>Mon nom
-            <select value={id} onChange={e => setId(e.target.value)}>
-              <option value="">—</option>
-              {enAttente.map(p => <option key={p.id} value={p.id}>{p.nom}</option>)}
-            </select>
-          </label>
-          <label>Code d&apos;activation (6 chiffres)
-            <input inputMode="numeric" autoComplete="off" maxLength={6} value={activation} onChange={e => setActivation(digits(e.target.value))} style={{ width: 100 }} />
-          </label>
-          <label>Nouveau code (4 à 8 chiffres)
-            <input type="password" inputMode="numeric" autoComplete="new-password" maxLength={8} value={pin1} onChange={e => setPin1(digits(e.target.value))} style={{ width: 100 }} />
-          </label>
-          <label>Confirmer
-            <input type="password" inputMode="numeric" autoComplete="new-password" maxLength={8} value={pin2} onChange={e => setPin2(digits(e.target.value))} style={{ width: 100 }} />
-          </label>
-          <button className="primary" onClick={valider} disabled={!id || activation.length !== 6 || pin1.length < 4}>Enregistrer mon code</button>
-        </div>
-      )}
-    </div>
   );
 }
 
@@ -1099,13 +1082,11 @@ async function downloadRecoveryXLSX({ unrecovered, baseline, sumClient, sumExpen
 }
 
 // ---- Formulaire de récupération : clôture les entrées en cours ----
-// Faite par l'admin (session Espace admin) ou par un réceptionniste avec son code
-// personnel : l'auteur est enregistré dans le journal.
-function RecoverForm({ unrecovered, totalEnCaisse, baseline, sumClient, sumExpense, onDone, setStatus, personnel, isAdmin }) {
+// Code admin demandé ; la personne qui récupère est enregistrée (faitPar).
+function RecoverForm({ fs, requestCode, entries, recoveries, unrecovered, totalEnCaisse, baseline, sumClient, sumExpense, onDone, setStatus, staffList, saisiPar }) {
   const [amountRecovered, setAmountRecovered] = useState("");
   const [note, setNote] = useState("");
-  const [qui, setQui] = useState(isAdmin ? "admin" : "");
-  const [pin, setPin] = useState("");
+  const [qui, setQui] = useState(saisiPar || "");
   const [busy, setBusy] = useState(false);
   const [erreur, setErreur] = useState("");
 
@@ -1121,12 +1102,16 @@ function RecoverForm({ unrecovered, totalEnCaisse, baseline, sumClient, sumExpen
   const left = Math.max(0, Math.round((totalEnCaisse - rec) * 100) / 100);
   const montantValide = rec >= 0 && rec <= totalEnCaisse + 0.001;
   const totalPositif = totalEnCaisse > 0;
-  const peutValider = montantValide && totalPositif && !busy && Boolean(qui) && (qui === "admin" || pin.length >= 4);
+  const peutValider = montantValide && totalPositif && !busy && Boolean(qui);
 
   async function confirmRecovery() {
     if (!totalPositif) { setStatus("La caisse est vide ou négative, rien à récupérer."); return; }
     if (!montantValide) { setStatus("Le montant récupéré ne peut pas dépasser le total en caisse."); return; }
-    if (!qui || (qui !== "admin" && !pin)) { setStatus("Indique qui récupère (nom et code personnel)."); return; }
+    if (!qui) { setStatus("Indique qui récupère."); return; }
+    requestCode(enregistrer);
+  }
+
+  async function enregistrer() {
     setBusy(true); setErreur("");
     // Sauvegarde Excel d'abord : si elle échoue, rien n'est modifié.
     try {
@@ -1139,10 +1124,8 @@ function RecoverForm({ unrecovered, totalEnCaisse, baseline, sumClient, sumExpen
     }
     try {
       setStatus("Enregistrement de la récupération…");
-      const body = { action: "recuperer", montant: rec, note: note || "", entryIds: unrecovered.map(e => e.id) };
-      if (qui !== "admin") Object.assign(body, { personneId: qui, pin });
-      const d = await especesApi(body);
-      setStatus(`Récupération enregistrée : ${euros2(d.recuperation.amountRecovered)} récupérés, ${euros2(d.recuperation.amountLeftInBox)} laissés en caisse.`);
+      const d = await recuperer(fs, { montant: rec, note, entrees: entries, recups: recoveries, faitPar: qui });
+      setStatus(`Récupération enregistrée : ${euros2(d.amountRecovered)} récupérés, ${euros2(d.amountLeftInBox)} laissés en caisse.`);
       onDone();
     } catch (err) { setErreur("Pas enregistrée : " + err.message); }
     setBusy(false);
@@ -1162,17 +1145,11 @@ function RecoverForm({ unrecovered, totalEnCaisse, baseline, sumClient, sumExpen
       </div>
       <div className="linen-form-row">
         <label>Récupéré par
-          <select value={qui} onChange={e => { setQui(e.target.value); setPin(""); }}>
+          <select value={qui} onChange={e => setQui(e.target.value)}>
             <option value="">—</option>
-            {isAdmin && <option value="admin">Admin (session Espace admin)</option>}
-            {personnel.filter(p => p.codeChoisi).map(p => <option key={p.id} value={p.id}>{p.nom}</option>)}
+            {[...new Set(["Mikhael", ...staffList])].map(n => <option key={n} value={n}>{n}</option>)}
           </select>
         </label>
-        {qui && qui !== "admin" && (
-          <label>Code personnel
-            <input type="password" inputMode="numeric" autoComplete="off" maxLength={8} value={pin} onChange={e => setPin(e.target.value.replace(/\D/g, ""))} style={{ width: 110 }} />
-          </label>
-        )}
       </div>
       {!montantValide && <div className="msg bad">Le montant récupéré ne peut pas dépasser le total en caisse ({euros2(totalEnCaisse)}).</div>}
       {erreur && <div className="msg bad" role="alert">{erreur}</div>}
@@ -1182,7 +1159,7 @@ function RecoverForm({ unrecovered, totalEnCaisse, baseline, sumClient, sumExpen
 }
 
 // ---- Historique des récupérations + historique complet (lignes supprimées incluses) ----
-function CashHistory({ recoveries, entries, isAdmin, reload, setStatus }) {
+function CashHistory({ fs, requestCode, recoveries, entries, reload, setStatus }) {
   const actives = recoveries.filter(r => !r.deleted);
   // Seule la plus récente peut être annulée (sinon des espèces déjà sorties redeviendraient « en caisse »).
   const derniereId = [...actives].sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")))[0]?.id;
@@ -1209,15 +1186,15 @@ function CashHistory({ recoveries, entries, isAdmin, reload, setStatus }) {
   // statut, leur auteur et le motif de suppression.
   function exportHistoriqueComplet() {
     const rows = [["Identifiant", "Statut", "Type", "Date", "Saisi par", "Client", "Appartement", "Date arrivée",
-      "Fournisseur", "Désignation", "Montant", "Créée le", "Journalisée", "Récupération", "Supprimée le", "Supprimée par", "Motif de suppression"]];
+      "Fournisseur", "Désignation", "Montant", "Créée le", "Récupération", "Supprimée le", "Motif de suppression"]];
     const tri = [...entries].sort((a, b) => String(a.createdAt || "").localeCompare(String(b.createdAt || "")));
     for (const e of tri) {
       rows.push([
         e.id, e.deleted ? "SUPPRIMÉE" : (e.recoveryId ? "Récupérée" : "En cours"),
         e.type === "client" ? "Paiement client" : "Dépense", fmtFrShort(e.date), e.saisiPar || "",
         e.client || "", e.appartement || "", e.arrivalDate ? fmtFrShort(e.arrivalDate) : "", e.fournisseur || "",
-        e.designation || "", e.amount, e.createdAt || "", e.journalise ? "oui" : "non (avant le journal)",
-        e.recoveryId || "", e.deletedAt || "", e.deletedBy || "", e.deleteReason || "",
+        e.designation || "", Number(e.amount) || 0, e.createdAt || "",
+        e.recoveryId || "", e.deletedAt || "", e.deleteReason || "",
       ]);
     }
     rows.push([]);
@@ -1232,15 +1209,18 @@ function CashHistory({ recoveries, entries, isAdmin, reload, setStatus }) {
 
   // Annule une récupération (admin, motif obligatoire) : elle reste en base, marquée
   // annulée, et ses lignes redeviennent « en cours ».
-  async function delRecovery(rec) {
+  function delRecovery(rec) {
     const motif = window.prompt(`Motif de l'annulation de « ${rec.note || "récupération"} » du ${fmtFrShort(rec.date)} :`);
     if (motif === null) return;
-    try {
-      setStatus("Annulation…");
-      await especesApi({ action: "annuler_recuperation", recoveryId: rec.id, motif });
-      await reload();
-      setStatus("Récupération annulée (elle reste visible dans l'historique complet).");
-    } catch (err) { setStatus("Erreur : " + err.message); }
+    if (motif.trim().length < 5) { setStatus("Annulation abandonnée : motif obligatoire (au moins 5 caractères)."); return; }
+    requestCode(async () => {
+      try {
+        setStatus("Annulation…");
+        await annulerRecuperation(fs, { id: rec.id, motif, entrees: entries, recups: recoveries });
+        await reload();
+        setStatus("Récupération annulée (elle reste visible dans l'historique complet).");
+      } catch (err) { setStatus("Erreur : " + err.message); }
+    });
   }
 
   return (
@@ -1269,7 +1249,7 @@ function CashHistory({ recoveries, entries, isAdmin, reload, setStatus }) {
               <td data-label="Note" className="card-full">{r.note || "—"}{r.faitPar ? ` · par ${r.faitPar}` : ""}</td>
               <td className="tx-actions" style={{ whiteSpace: "nowrap" }}>
                 <button onClick={() => exportRecoveryCSV(r)} className="ghost" style={{ color: "var(--ok)" }} aria-label={`Télécharger la récupération du ${fmtFrShort(r.date)}`}>Excel</button>
-                {isAdmin && r.id === derniereId && <button onClick={() => delRecovery(r)} className="ghost danger tx-del" title="Annuler (admin, motif obligatoire)" aria-label="Annuler">✕</button>}
+                {r.id === derniereId && <button onClick={() => delRecovery(r)} className="ghost danger tx-del" title="Annuler (code et motif obligatoires)" aria-label="Annuler">✕</button>}
               </td>
             </tr>
           ))}

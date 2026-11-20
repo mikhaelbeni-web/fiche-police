@@ -129,7 +129,7 @@
         "click": "text=Gestion des espèces"
       },
       {
-        "click": "text=Redéfinir le solde de départ (admin)"
+        "click": "text=Redéfinir le solde de départ (code)"
       }
     ]
   },
@@ -152,6 +152,17 @@
       },
       {
         "click": "text=Historique des récupérations →"
+      }
+    ]
+  },
+  {
+    "name": "especes-liste-personnel",
+    "steps": [
+      {
+        "click": "text=Gestion des espèces"
+      },
+      {
+        "click": "text=Gérer la liste (code)"
       }
     ]
   }
