@@ -4,12 +4,15 @@ import Head from "next/head";
 import CodeModal from "../components/CodeModal";
 import { useCodeGate } from "../hooks/useCodeGate";
 import { useInterrupteur5h } from "../hooks/useEcheance";
-import { listStaff, ensureStaff, deleteStaff } from "../lib/staff";
+import { listStaff, ensureStaff, deleteStaff, getCurrentStaff, setCurrentStaff } from "../lib/staff";
+import { controlerCaisse, etatCaisse, jourParis } from "../lib/especesControle";
+import { ajouterLigne, supprimerLigne, recuperer, annulerRecuperation, soldeDepart, nouvelleCle } from "../lib/especesEcritures";
 
 const KEY_KEY = "hostaway_api_key";
 const ACCOUNT_KEY = "hostaway_account";
 
-function isoDay(d) { return d.toISOString().slice(0, 10); }
+// Jour à Paris (et non en UTC : entre minuit et 1 h, toISOString donnait la veille).
+function isoDay(d) { return jourParis(d); }
 function fmtFr(d) {
   if (!d) return "";
   const x = new Date(d + "T12:00:00");
@@ -20,8 +23,8 @@ function euros(n) {
   return Number(n).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
 }
 
-// Code demandé avant de supprimer un solde de départ ou une ligne de taxe de
-// séjour, ou avant de confirmer une récupération d'espèces. Ce n'est pas une
+// Code demandé avant de masquer une taxe impayée et, côté espèces, avant toute
+// suppression (avec motif), récupération, annulation ou solde de départ. Ce n'est pas une
 // vraie sécurité (comparaison faite dans le navigateur) — juste un frein
 // volontaire contre une action accidentelle ou par une personne non autorisée
 // à qui l'accès à l'app a été partagé. Changeable via NEXT_PUBLIC_DELETE_PASSWORD
@@ -351,40 +354,51 @@ function TaxesImpayees() {
 // et chaque dépense hôtel. Suivi du solde en caisse. Mikhael passe régulièrement récupérer
 // une partie des espèces, laisse un reliquat en caisse — chaque récupération est tracée
 // et exportable en Excel (CSV), avec un historique complet consultable à tout moment.
+// Écritures : lib/especesEcritures.js (transactions, rien n'est plus effacé).
+// Contrôle de caisse : lib/especesControle.js, recalculé à chaque affichage.
 function CashManagement() {
   const { requestCode, codeModalProps } = useCodeGate(DELETE_PASSWORD, "Code requis");
   const [ready, setReady] = useState(false);
   const [configured, setConfigured] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [fs, setFs] = useState(null);
   const [entries, setEntries] = useState([]);
   const [recoveries, setRecoveries] = useState([]);
   const [status, setStatus] = useState("");
   const [showHistory, setShowHistory] = useState(false);
   const [showRecoverForm, setShowRecoverForm] = useState(false);
+  const [majLe, setMajLe] = useState(null);
 
   useEffect(() => {
     (async () => {
-      const { isFirebaseConfigured } = await import("../lib/firebase");
-      if (!isFirebaseConfigured()) { setConfigured(false); setReady(true); return; }
-      const { db } = await import("../lib/firebase");
-      const { collection, doc, getDocs, addDoc, updateDoc, deleteDoc, query, orderBy, writeBatch } = await import("firebase/firestore");
-      const api = { db, collection, doc, getDocs, addDoc, updateDoc, deleteDoc, query, orderBy, writeBatch };
-      setFs(api);
-      await loadAll(api);
+      try {
+        const { isFirebaseConfigured } = await import("../lib/firebase");
+        if (!isFirebaseConfigured()) { setConfigured(false); setReady(true); return; }
+        const { db } = await import("../lib/firebase");
+        const { collection, doc, getDocs, query, orderBy, setDoc, deleteDoc, runTransaction } = await import("firebase/firestore");
+        const api = { db, collection, doc, getDocs, query, orderBy, setDoc, deleteDoc, runTransaction };
+        setFs(api);
+        await loadAll(api);
+      } catch (err) {
+        setLoadError(err.message || String(err));
+      }
       setReady(true);
     })();
   }, []);
 
   async function loadAll(api) {
-    setStatus("Chargement…");
-    const eSnap = await api.getDocs(api.query(api.collection(api.db, "cash_entries"), api.orderBy("date", "desc")));
-    setEntries(eSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-    const rSnap = await api.getDocs(api.query(api.collection(api.db, "cash_recoveries"), api.orderBy("createdAt", "desc")));
-    setRecoveries(rSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-    setStatus("");
+    // Lecture sans tri Firestore : orderBy écarte les documents sans le champ trié.
+    const [eSnap, rSnap] = await Promise.all([
+      api.getDocs(api.collection(api.db, "cash_entries")),
+      api.getDocs(api.collection(api.db, "cash_recoveries")),
+    ]);
+    const parDate = (a, b) => String(b.date || "").localeCompare(String(a.date || "")) || String(b.createdAt || "").localeCompare(String(a.createdAt || ""));
+    setEntries(eSnap.docs.map(d => ({ id: d.id, ...d.data() })).sort(parDate));
+    setRecoveries(rSnap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || ""))));
+    setMajLe(new Date());
   }
 
-  if (!ready) return <div className="menage-page"><div className="recap"><div className="empty-state">Chargement…</div></div></div>;
+  if (!ready) return <div className="menage-page"><div className="recap"><div className="empty-state" aria-busy="true">Chargement de la caisse…</div></div></div>;
   if (!configured) {
     return (
       <div className="menage-page"><div className="recap">
@@ -393,33 +407,44 @@ function CashManagement() {
       </div></div>
     );
   }
+  if (loadError) {
+    return (
+      <div className="menage-page"><div className="recap">
+        <div className="msg bad" role="alert">Impossible de lire la caisse : {loadError}. Rechargez la page ; si l&apos;erreur revient, ne saisissez rien et prévenez l&apos;admin.</div>
+      </div></div>
+    );
+  }
 
-  const unrecovered = entries.filter(e => !e.recoveryId);
-  const baseline = recoveries.length ? Number(recoveries[0].amountLeftInBox) || 0 : 0;
-  const sumClient = unrecovered.filter(e => e.type === "client").reduce((s, e) => s + (Number(e.amount) || 0), 0);
-  const sumExpense = unrecovered.filter(e => e.type === "expense").reduce((s, e) => s + (Number(e.amount) || 0), 0);
-  const totalEnCaisse = baseline + sumClient - sumExpense;
+  // Rien n'est plus jamais effacé : les lignes et récupérations supprimées restent en
+  // base (deleted = true) et sont écartées ici des calculs.
+  const activeEntries = entries.filter(e => !e.deleted);
+  const activeRecoveries = recoveries.filter(r => !r.deleted);
+  const etat = etatCaisse(entries, recoveries);
+  const unrecovered = etat.enCours;
+  const controle = controlerCaisse(entries, recoveries);
+  const reload = async () => { await loadAll(fs); };
 
   return (
     <>
       <Head><title>Gestion des espèces</title></Head>
       <div className="toolbar">
         <h1>Gestion des espèces</h1>
-        <span className="status">{status}</span>
-        <button onClick={() => setShowHistory(!showHistory)}>{showHistory ? "← Retour" : "Historique →"}</button>
+        <span className="status" role="status">{status}</span>
+        <button onClick={() => setShowHistory(!showHistory)}>{showHistory ? "← Caisse en cours" : "Historique des récupérations →"}</button>
       </div>
 
       <div className="menage-page">
-        <div className="recap">
+        <div className="recap esp">
           {!showHistory ? (
             <CashCurrent
-              fs={fs} entries={entries} unrecovered={unrecovered} recoveries={recoveries}
-              baseline={baseline} sumClient={sumClient} sumExpense={sumExpense} totalEnCaisse={totalEnCaisse}
+              fs={fs} requestCode={requestCode}
+              entries={activeEntries} unrecovered={unrecovered} recoveries={activeRecoveries}
+              etat={etat} controle={controle} majLe={majLe}
               showRecoverForm={showRecoverForm} setShowRecoverForm={setShowRecoverForm}
-              reload={() => loadAll(fs)} setStatus={setStatus} requestCode={requestCode}
+              reload={reload} setStatus={setStatus}
             />
           ) : (
-            <CashHistory recoveries={recoveries} entries={entries} fs={fs} reload={() => loadAll(fs)} setStatus={setStatus} requestCode={requestCode} />
+            <CashHistory fs={fs} requestCode={requestCode} recoveries={recoveries} entries={entries} reload={reload} setStatus={setStatus} />
           )}
         </div>
       </div>
@@ -433,27 +458,87 @@ function fmtFrShort(d) {
   const x = new Date(d + "T12:00:00");
   return isNaN(x) ? d : x.toLocaleDateString("fr-FR");
 }
+function fmtJour(d) {
+  if (!d) return "Sans date";
+  const x = new Date(d + "T12:00:00");
+  if (isNaN(x)) return d;
+  const s = x.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+function heureParis(iso) {
+  return iso ? new Date(iso).toLocaleTimeString("fr-FR", { timeZone: "Europe/Paris", hour: "2-digit", minute: "2-digit" }) : "";
+}
 function euros2(n) {
   return (Number(n) || 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
 }
+// Montant tapé « 12,50 » ou « 12.50 » : arrondi au centime.
+function lireMontant(v) {
+  const n = Number(String(v ?? "").replace(/\s/g, "").replace(",", "."));
+  return Number.isFinite(n) ? Math.round(n * 100) / 100 : NaN;
+}
+const normNom = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").trim().toLowerCase();
 
 function downloadEntriesCSV(filename, rows) {
-  const csv = rows.map(r => r.map(c => `"${String(c ?? "").replace(/"/g, '""')}"`).join(";")).join("\r\n");
-  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  // Montants en virgule décimale : Excel français les lit comme des nombres.
+  const cell = c => (typeof c === "number" ? String(c).replace(".", ",") : String(c ?? ""));
+  const csv = rows.map(r => r.map(c => `"${cell(c).replace(/"/g, '""')}"`).join(";")).join("\r\n");
+  const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url; a.download = filename; a.click();
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
 
-// ---- Vue courante : saisie + solde + liste depuis la dernière récupération ----
-function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient, sumExpense, totalEnCaisse, showRecoverForm, setShowRecoverForm, reload, setStatus, requestCode }) {
-  const today = isoDay(new Date());
+const NIVEAUX = { grave: { cls: "bad", lib: "À traiter" }, attention: { cls: "warn", lib: "À vérifier" }, info: { cls: "info", lib: "Pour info" } };
+
+// ---- Contrôle de caisse : recalcul indépendant à chaque affichage (lib/especesControle.js) ----
+function ControleCaisse({ controle }) {
+  const [ouvert, setOuvert] = useState(false);
+  const an = controle.anomalies;
+  const graves = an.filter(a => a.niveau === "grave").length;
+  const attention = an.filter(a => a.niveau === "attention").length;
+  const ton = graves ? "bad" : attention ? "warn" : "ok";
+  const titre = graves ? `${graves} point(s) à traiter` : attention ? `${attention} point(s) à vérifier` : "Caisse cohérente";
+  return (
+    <section className={`esp-controle tone-${ton}`} aria-label="Contrôle de caisse">
+      <div className="esp-controle-head">
+        <span className={`esp-dot ${ton}`} aria-hidden="true" />
+        <div>
+          <strong>Contrôle de caisse : {titre}</strong>
+          <div className="esp-muted">
+            Total recalculé à partir de toutes les récupérations et de toutes les lignes, doublons, dates et lignes écrites hors application.
+            {an.length > 0 && !graves && !attention && " Rien d'anormal, seulement des informations."}
+          </div>
+        </div>
+        {an.length > 0 && (
+          <button type="button" className="ghost push-right" aria-expanded={ouvert} onClick={() => setOuvert(o => !o)}>
+            {ouvert ? "Masquer le détail" : `Voir le détail (${an.length})`}
+          </button>
+        )}
+      </div>
+      {ouvert && (
+        <ul className="esp-anomalies">
+          {an.map((a, i) => (
+            <li key={i}>
+              <span className={`pill ${NIVEAUX[a.niveau].cls}`}>{NIVEAUX[a.niveau].lib}</span>
+              <div><strong>{a.titre}</strong><div className="esp-muted">{a.detail}</div></div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+// ---- Vue courante : chiffres clés, saisie, opérations depuis la dernière récupération ----
+function CashCurrent({ fs, requestCode, entries, unrecovered, recoveries, etat, controle, majLe, showRecoverForm, setShowRecoverForm, reload, setStatus }) {
+  const today = jourParis();
   const [mode, setMode] = useState("client"); // client | expense
   const [date, setDate] = useState(today);
   const [client, setClient] = useState("");
   const [appartement, setAppartement] = useState("");
   const [arrivalDate, setArrivalDate] = useState("");
+  const [reservationId, setReservationId] = useState("");
   const [designation, setDesignation] = useState("");
   const [fournisseur, setFournisseur] = useState("");
   const [amount, setAmount] = useState("");
@@ -461,22 +546,35 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
   const [staffList, setStaffList] = useState([]);
   const [staffAdmin, setStaffAdmin] = useInterrupteur5h(); // se referme seul 5 h après le code
   const [newStaffName, setNewStaffName] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [cle, setCle] = useState("");
+  const [confirmeDoublon, setConfirmeDoublon] = useState(false);
+  const [retour, setRetour] = useState(null); // { ton, texte } affiché sous le bouton
   const [clientMode, setClientMode] = useState("taxe"); // taxe | recherche | autre
   const [taxeClients, setTaxeClients] = useState([]);
+  const [taxeEtat, setTaxeEtat] = useState("chargement"); // chargement | ok | indisponible
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [showStartForm, setShowStartForm] = useState(false);
 
-  // Liste des réceptionnistes : partagée avec la Check-list (collection
-  // Firestore "staff_members"), pour n'avoir qu'un seul endroit à tenir à
-  // jour quand l'équipe change, au lieu d'une liste figée dans le code.
+  useEffect(() => { setCle(nouvelleCle()); }, []);
+
+  // Réceptionnistes : liste partagée avec la Check-list (Firestore « staff_members »).
+  // Le dernier nom choisi sur cet appareil est proposé d'office.
   useEffect(() => {
     (async () => {
-      try { setStaffList(await listStaff(fs)); } catch { /* collection pas encore créée */ }
+      try {
+        const liste = await listStaff(fs);
+        setStaffList(liste);
+        const moi = getCurrentStaff();
+        if (moi && liste.includes(moi)) setSaisiPar(moi);
+      } catch { /* collection pas encore créée */ }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  function choisirMoi(nom) { setSaisiPar(nom); setCurrentStaff(nom); }
 
   function toggleStaffAdmin() {
     if (staffAdmin) { setStaffAdmin(false); return; }
@@ -486,69 +584,73 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
   async function addStaffName() {
     const name = newStaffName.trim();
     if (!name) return;
-    await ensureStaff(fs, name);
-    setNewStaffName("");
-    setStaffList(await listStaff(fs));
+    try {
+      await ensureStaff(fs, name);
+      setNewStaffName("");
+      setStaffList(await listStaff(fs));
+    } catch (err) { setStatus("Erreur : " + err.message); }
   }
 
   async function removeStaffName(name) {
-    if (!confirm(`Retirer "${name}" de la liste des réceptionnistes ?`)) return;
-    await deleteStaff(fs, name);
-    if (saisiPar === name) setSaisiPar("");
-    setStaffList(await listStaff(fs));
+    if (!window.confirm(`Retirer « ${name} » de la liste des réceptionnistes ?`)) return;
+    try {
+      await deleteStaff(fs, name);
+      if (saisiPar === name) setSaisiPar("");
+      setStaffList(await listStaff(fs));
+    } catch (err) { setStatus("Erreur : " + err.message); }
   }
 
-  // Charge les clients Belleville avec taxe de séjour à régler depuis Hostaway :
-  // un paiement espèces sert le plus souvent à encaisser une taxe impayée, donc
-  // on pré-remplit la liste avec ces clients (et leur montant dû). L'option
-  // "Autre client" reste dispo pour tout encaissement hors taxe / hors liste.
+  // Clients Belleville avec une taxe de séjour à régler (Hostaway) : un paiement en
+  // espèces sert le plus souvent à encaisser cette taxe.
   useEffect(() => {
     (async () => {
       try {
-        const acc = window.localStorage.getItem("hostaway_account") || "";
-        const key = window.localStorage.getItem("hostaway_api_key") || "";
-        if (!acc || !key) return;
-        // Période large : du 10 juillet (départ fixe de l'onglet Taxes) à aujourd'hui
+        const acc = window.localStorage.getItem(ACCOUNT_KEY) || "";
+        const key = window.localStorage.getItem(KEY_KEY) || "";
+        if (!acc || !key) { setTaxeEtat("indisponible"); return; }
         const res = await fetch(`/api/tourist-tax?from=2026-07-10&to=${today}`, {
           headers: { "x-hostaway-account": acc, "x-hostaway-key": key },
         });
         const d = await res.json();
-        if (!res.ok) return;
-        // On ne garde que Belleville avec une taxe due > 0 non entièrement réglée
-        const bell = (d.items || []).filter(it =>
-          it.residence === "Belleville" && Number(it.taxeSejour) > 0
-        );
-        setTaxeClients(bell);
-      } catch { /* pas bloquant : saisie manuelle possible via "Autre client" */ }
+        if (!res.ok) { setTaxeEtat("indisponible"); return; }
+        setTaxeClients((d.items || []).filter(it => it.residence === "Belleville" && Number(it.taxeSejour) > 0));
+        setTaxeEtat("ok");
+      } catch { setTaxeEtat("indisponible"); }
     })();
   }, [today]);
 
-  // Solde de départ : techniquement une "récupération" à 0 récupéré, dont le
-  // reliquat laissé en caisse sert de base à tous les calculs suivants —
-  // même mécanisme que le reliquat laissé après une vraie récupération.
-  async function setStartingBalance(startDate, startAmount) {
-    const amt = Number(startAmount);
-    if (!amt || amt < 0) { setStatus("Montant de départ invalide."); return; }
-    try {
-      setStatus("Enregistrement du solde de départ…");
-      await fs.addDoc(fs.collection(fs.db, "cash_recoveries"), {
-        date: startDate, amountRecovered: 0, amountLeftInBox: amt,
-        note: "Solde de départ", totalAvant: amt, entryIds: [],
-        createdAt: new Date().toISOString(),
-      });
-      setShowStartForm(false);
-      await reload();
-      setStatus(`Solde de départ de ${amt.toFixed(2)} € enregistré au ${startDate}.`);
-    } catch (err) { setStatus("Erreur : " + err.message); }
+  function viderFormulaire() {
+    setClient(""); setAppartement(""); setArrivalDate(""); setReservationId(""); setDesignation("");
+    setFournisseur(""); setAmount(""); setSearchQuery(""); setSearchResults([]);
+    setConfirmeDoublon(false); setDate(jourParis()); setCle(nouvelleCle());
   }
 
-  // Recherche un client parmi TOUTES les réservations (peu importe leur statut
-  // de paiement) — utile quand le paiement a déjà été marqué réglé dans
-  // Hostaway, ce qui le fait disparaître de la liste "taxe impayée" ci-dessus
-  // sans qu'il soit pour autant réglé en espèces dans notre app.
+  function choisirReservation(it) {
+    setClient(it.client || "");
+    setAppartement(it.unitNumber || it.appartement || "");
+    setArrivalDate(it.arrivee || "");
+    setReservationId(String(it.reservation || ""));
+    setConfirmeDoublon(false);
+  }
+
+  function setStartingBalance(startDate, startAmount) {
+    const amt = lireMontant(startAmount);
+    if (!(amt > 0)) { setStatus("Montant de départ invalide."); return; }
+    requestCode(async () => {
+      try {
+        setStatus("Enregistrement du solde de départ…");
+        await soldeDepart(fs, { date: startDate, montant: amt, recups: recoveries });
+        setShowStartForm(false);
+        await reload();
+        setStatus(`Solde de départ de ${euros2(amt)} enregistré au ${fmtFrShort(startDate)}.`);
+      } catch (err) { setStatus("Erreur : " + err.message); }
+    });
+  }
+
+  // Recherche parmi toutes les réservations (quel que soit le statut de paiement).
   async function runClientSearch(q) {
     setSearchQuery(q);
-    setClient(""); setAppartement(""); setArrivalDate("");
+    setClient(""); setAppartement(""); setArrivalDate(""); setReservationId("");
     if (q.trim().length < 2) { setSearchResults([]); return; }
     setSearching(true);
     try {
@@ -564,256 +666,335 @@ function CashCurrent({ fs, entries, unrecovered, recoveries, baseline, sumClient
     setSearching(false);
   }
 
+  const amt = lireMontant(amount);
+  const ecartDate = date ? Math.round((Date.parse(today + "T12:00:00Z") - Date.parse(date + "T12:00:00Z")) / 86400000) : 0;
+
+  // Même paiement déjà saisi ? Même réservation Hostaway, ou même client + appartement +
+  // montant (deux réservations d'un même client restent distinctes).
+  const doublon = mode === "client" && normNom(client) ? entries.find(e => e.type === "client" && (
+    (reservationId && e.reservationId && e.reservationId === reservationId && normNom(e.designation) === normNom(designation))
+    || (normNom(e.client) === normNom(client) && normNom(e.appartement) === normNom(appartement)
+      && Math.abs((Number(e.amount) || 0) - amt) < 0.005 && (e.arrivalDate || "") === (arrivalDate || ""))
+  )) : null;
+
+  const manque = [];
+  if (!(amt > 0)) manque.push("le montant");
+  if (!date) manque.push("la date");
+  if (mode === "client" && !client.trim()) manque.push("le client");
+  if (mode === "expense" && !designation.trim()) manque.push("la raison de la dépense");
+  if (!saisiPar) manque.push("ton nom");
+  const bloqueDoublon = Boolean(doublon) && !confirmeDoublon;
+  const peutEnregistrer = manque.length === 0 && !bloqueDoublon && !busy && ecartDate >= 0;
+
   async function addEntry() {
-    if (!saisiPar) { setStatus("Choisis d'abord qui saisit (le réceptionniste)."); return; }
-    const amt = Number(amount);
-    if (!amt || amt <= 0) { setStatus("Montant invalide."); return; }
+    if (!peutEnregistrer) return;
+    const ligne = { type: mode, date, amount: amt, designation: designation.trim(), saisiPar };
+    if (mode === "client") Object.assign(ligne, { client: client.trim(), appartement: appartement.trim(), arrivalDate: arrivalDate || "", reservationId });
+    else ligne.fournisseur = fournisseur.trim();
+    const qui = saisiPar;
+    setBusy(true); setRetour(null);
     try {
-      setStatus("Enregistrement…");
-      const payload = {
-        type: mode, date, amount: amt, designation: designation || "",
-        saisiPar,
-        recoveryId: null, createdAt: new Date().toISOString(),
-      };
-      if (mode === "client") {
-        payload.client = client || ""; payload.appartement = appartement || ""; payload.arrivalDate = arrivalDate || "";
-      }
-      if (mode === "expense") {
-        payload.fournisseur = fournisseur || "";
-      }
-      await fs.addDoc(fs.collection(fs.db, "cash_entries"), payload);
-      setClient(""); setAppartement(""); setArrivalDate(""); setDesignation(""); setFournisseur(""); setAmount("");
+      const d = await ajouterLigne(fs, ligne, cle);
+      viderFormulaire();
       await reload();
-      setStatus("Enregistré.");
-    } catch (err) { setStatus("Erreur : " + err.message); }
+      const quoi = mode === "client" ? `${ligne.designation || "Paiement"} de ${ligne.client}` : `Dépense ${ligne.fournisseur ? ligne.fournisseur + " " : ""}(${ligne.designation})`;
+      setRetour({ ton: "ok", texte: `${d.dejaEnregistree ? "Déjà enregistrée" : "Enregistré"} : ${quoi}, ${euros2(ligne.amount)}, par ${qui}.` });
+    } catch (err) {
+      // La clé d'envoi est conservée : renvoyer le formulaire ne créera pas de doublon.
+      setRetour({ ton: "bad", texte: "Pas enregistré : " + err.message });
+    }
+    setBusy(false);
   }
 
-  async function delEntry(entry) {
-    const isTaxeSejour = (entry.designation || "").toLowerCase().includes("taxe de séjour")
-      || (entry.designation || "").toLowerCase().includes("taxe de sejour");
-    if (!confirm("Êtes-vous sûr de vouloir supprimer cette entrée ?")) return;
-    if (isTaxeSejour) {
-      requestCode(async () => { await fs.deleteDoc(fs.doc(fs.db, "cash_entries", entry.id)); await reload(); });
-    } else {
-      await fs.deleteDoc(fs.doc(fs.db, "cash_entries", entry.id));
-      await reload();
-    }
+  // Suppression : code admin + motif ; la ligne reste en base, marquée supprimée.
+  function delEntry(entry) {
+    const motif = window.prompt(`Motif de la suppression de « ${entry.designation || entry.client || entry.fournisseur || "cette ligne"} » (${euros2(entry.amount)}) :`);
+    if (motif === null) return;
+    if (motif.trim().length < 5) { setStatus("Suppression annulée : motif obligatoire (au moins 5 caractères)."); return; }
+    requestCode(async () => {
+      try {
+        setStatus("Suppression…");
+        await supprimerLigne(fs, entry.id, motif);
+        await reload();
+        setStatus("Ligne marquée supprimée (elle reste dans l'historique complet).");
+      } catch (err) { setStatus("Erreur : " + err.message); }
+    });
   }
 
   function exportCurrentCSV() {
-    const rows = [["Type", "Date", "Saisi par", "Client", "Appartement", "Date arrivée", "Fournisseur", "Désignation", "Montant"]];
+    const rows = [["Type", "Date", "Saisi le", "Saisi par", "Client", "Appartement", "Date arrivée", "Fournisseur", "Désignation", "Montant"]];
     for (const e of unrecovered) {
       rows.push([
         e.type === "client" ? "Paiement client" : "Dépense",
-        fmtFrShort(e.date), e.saisiPar || "", e.client || "", e.appartement || "",
-        e.arrivalDate ? fmtFrShort(e.arrivalDate) : "", e.fournisseur || "", e.designation || "", e.amount,
+        fmtFrShort(e.date), e.createdAt ? new Date(e.createdAt).toLocaleString("fr-FR", { timeZone: "Europe/Paris" }) : "",
+        e.saisiPar || "", e.client || "", e.appartement || "",
+        e.arrivalDate ? fmtFrShort(e.arrivalDate) : "", e.fournisseur || "", e.designation || "", Number(e.amount) || 0,
       ]);
     }
+    rows.push([]);
+    rows.push(["Reliquat de la dernière récupération", "", "", "", "", "", "", "", "", etat.baseline]);
+    rows.push(["Total en caisse", "", "", "", "", "", "", "", "", etat.total]);
     downloadEntriesCSV(`especes_en_cours_${today}.csv`, rows);
   }
 
+  // Lignes signalées par le contrôle, pour les repérer dans le tableau.
+  const signalees = new Map();
+  for (const a of controle.anomalies) for (const id of a.ids || []) if (!signalees.has(id) || a.niveau === "grave") signalees.set(id, a);
+
+  // Regroupement par jour (date de l'opération), le plus récent en haut.
+  const jours = [];
+  for (const e of unrecovered) {
+    let j = jours[jours.length - 1];
+    if (!j || j.date !== e.date) { j = { date: e.date, lignes: [], net: 0 }; jours.push(j); }
+    j.lignes.push(e);
+    j.net += (e.type === "expense" ? -1 : 1) * (Number(e.amount) || 0);
+  }
+  const nbClient = unrecovered.filter(e => e.type === "client").length;
+  const nbDep = unrecovered.length - nbClient;
+  const derniere = etat.derniere;
+
   return (
     <>
-      <div className="recap-head">
-        <div>
-          <div className="recap-title">Espèces depuis la dernière récupération</div>
-          <div className="recap-sub">Saisie des paiements clients en espèces et des dépenses hôtel</div>
+      <div className="esp-kpis">
+        <div className="esp-kpi esp-kpi-main">
+          <div className="l">En caisse</div>
+          <div className={`n${etat.total < 0 ? " neg" : ""}`}>{euros2(etat.total)}</div>
+          <div className="s">{majLe ? `calculé à ${heureParis(majLe.toISOString())}` : ""} <button type="button" className="ghost esp-mini" onClick={reload}>Actualiser</button></div>
         </div>
-        <div className="recap-total">
-          <div className="n">{euros2(totalEnCaisse)}</div>
-          <div className="l">total en caisse</div>
+        <div className="esp-kpi">
+          <div className="l">Laissé à la dernière récupération</div>
+          <div className="n">{euros2(etat.baseline)}</div>
+          <div className="s">{derniere ? `${fmtFrShort(derniere.date)}${derniere.faitPar ? ` · ${derniere.faitPar}` : ""}` : "aucune récupération"}</div>
+        </div>
+        <div className="esp-kpi">
+          <div className="l">Encaissé depuis</div>
+          <div className="n ok">+{euros2(etat.sumClient)}</div>
+          <div className="s">{nbClient} paiement(s) client</div>
+        </div>
+        <div className="esp-kpi">
+          <div className="l">Dépensé depuis</div>
+          <div className="n bad">−{euros2(etat.sumExpense)}</div>
+          <div className="s">{nbDep} dépense(s)</div>
         </div>
       </div>
 
-      <div style={{ marginBottom: 14 }}>
-        <button onClick={() => setShowStartForm(!showStartForm)} className="ghost">
-          {showStartForm ? "Annuler" : (recoveries.length ? "Redéfinir le solde de départ" : "Définir un solde de départ")}
-        </button>
-      </div>
+      <ControleCaisse controle={controle} />
 
-      {showStartForm && (
-        <StartingBalanceForm hasRecoveries={recoveries.length > 0} onConfirm={setStartingBalance} onCancel={() => setShowStartForm(false)} />
-      )}
-
-      <div className="linen-form">
-        <div className={`linen-form-row recep-row${saisiPar ? "" : " a-remplir"}`}>
-          <label className="t-strong">Réceptionniste (obligatoire)
-            <select value={saisiPar} onChange={e => setSaisiPar(e.target.value)}>
-              <option value="">— Qui saisit ? —</option>
-              {staffList.map(name => <option key={name} value={name}>{name}</option>)}
-            </select>
-          </label>
-          {!saisiPar && <span className="pill warn">À renseigner avant toute saisie</span>}
-          <button type="button" onClick={toggleStaffAdmin} className="ghost push-right">
-            {staffAdmin ? "✓ Édition liste active" : "Gérer la liste"}
-          </button>
-        </div>
-        {staffAdmin && (
-          <div className="panel">
-            <div className="panel-title">Réceptionnistes (liste partagée avec la Check-list)</div>
-            <div className="panel-row">
-              {staffList.map(name => (
-                <span key={name} className="chip">
-                  {name}
-                  <button type="button" onClick={() => removeStaffName(name)} className="chip-del" title={`Retirer ${name}`} aria-label={`Retirer ${name}`}>✕</button>
-                </span>
-              ))}
-              {staffList.length === 0 && <span className="note">Aucun nom pour l&apos;instant.</span>}
-            </div>
-            <div className="panel-row">
-              <input type="text" value={newStaffName} onChange={e => setNewStaffName(e.target.value)}
-                onKeyDown={e => { if (e.key === "Enter") addStaffName(); }}
-                placeholder="Ajouter un prénom…" />
-              <button type="button" onClick={addStaffName} className="primary">Ajouter</button>
-            </div>
+      <div className="esp-grid">
+        <section className="esp-card esp-form" aria-labelledby="esp-form-titre">
+          <h2 id="esp-form-titre">Nouvelle opération</h2>
+          <div className="esp-seg" role="radiogroup" aria-label="Type d'opération">
+            <button type="button" role="radio" aria-checked={mode === "client"} className={mode === "client" ? "on ok" : ""} onClick={() => { setMode("client"); setConfirmeDoublon(false); }}>+ Encaissement client</button>
+            <button type="button" role="radio" aria-checked={mode === "expense"} className={mode === "expense" ? "on bad" : ""} onClick={() => { setMode("expense"); setConfirmeDoublon(false); }}>− Dépense hôtel</button>
           </div>
-        )}
-        <div className="linen-form-row">
-          <label>Type
-            <select value={mode} onChange={e => setMode(e.target.value)}>
-              <option value="client">Paiement client (espèces)</option>
-              <option value="expense">Dépense hôtel</option>
-            </select>
-          </label>
-          <label>Date <input type="date" value={date} onChange={e => setDate(e.target.value)} /></label>
-        </div>
-        {mode === "client" ? (
-          <>
-            <div className="linen-form-row">
-              <label>Client
+
+          {mode === "client" ? (
+            <>
+              <label className="esp-field">Client
                 <select value={clientMode} onChange={e => {
                   setClientMode(e.target.value);
-                  setClient(""); setAppartement(""); setArrivalDate(""); setSearchQuery(""); setSearchResults([]);
+                  setClient(""); setAppartement(""); setArrivalDate(""); setReservationId(""); setSearchQuery(""); setSearchResults([]);
                 }}>
-                  <option value="taxe">Client taxe de séjour (Belleville)</option>
-                  <option value="recherche">Rechercher un client (toutes réservations)</option>
+                  <option value="taxe">Taxe de séjour à régler (Belleville)</option>
+                  <option value="recherche">Rechercher dans toutes les réservations</option>
                   <option value="autre">Autre client (saisie manuelle)</option>
                 </select>
               </label>
 
-              {clientMode === "taxe" ? (
-                <label style={{ minWidth: 300 }}>Client avec taxe à régler
-                  <select
-                    value={client}
+              {clientMode === "taxe" && (
+                <label className="esp-field">Réservation
+                  <select value={reservationId ? String(taxeClients.findIndex(x => String(x.reservation || "") === reservationId)) : ""}
                     onChange={e => {
-                      const it = taxeClients.find(x => x.client === e.target.value);
-                      setClient(e.target.value);
-                      if (it) {
-                        setAppartement(it.unitNumber || it.appartement || "");
-                        setArrivalDate(it.arrivee || "");
-                        setDesignation("Taxe de séjour");
-                        if (it.taxeSejour) setAmount(String(it.taxeSejour));
-                      }
-                    }}
-                  >
-                    <option value="">— Choisir le client —</option>
+                      const it = taxeClients[Number(e.target.value)];
+                      if (!it) { setClient(""); setReservationId(""); return; }
+                      choisirReservation(it);
+                      setDesignation("Taxe de séjour");
+                      if (it.taxeSejour) setAmount(String(it.taxeSejour).replace(".", ","));
+                    }}>
+                    <option value="">{taxeEtat === "chargement" ? "Chargement des réservations…" : "— Choisir le client —"}</option>
                     {taxeClients.map((it, i) => (
-                      <option key={i} value={it.client}>
-                        {it.client} — {it.unitNumber || it.appartement} — {euros2(it.taxeSejour)}
-                      </option>
+                      <option key={i} value={i}>{it.client} · appart {it.unitNumber || it.appartement} · arrivée {fmtFr(it.arrivee)} · {euros2(it.taxeSejour)}</option>
                     ))}
                   </select>
-                  {taxeClients.length === 0 && (
-                    <span className="tx-help" style={{ fontSize: 11, color: "var(--warn)" }}>Aucun client taxe Belleville chargé (vérifie les identifiants Hostaway sur Fiches, ou utilise « Autre client »).</span>
-                  )}
+                  {taxeEtat === "indisponible" && <span className="esp-help warn">Liste Hostaway indisponible (identifiants à vérifier sur Fiches). Utilise « Autre client ».</span>}
+                  {taxeEtat === "ok" && taxeClients.length === 0 && <span className="esp-help">Aucune taxe à régler à Belleville.</span>}
                 </label>
-              ) : clientMode === "recherche" ? (
-                <label style={{ minWidth: 320, position: "relative" }}>Nom du client
-                  <input type="text" value={client || searchQuery} onChange={e => runClientSearch(e.target.value)}
-                    placeholder="Tape au moins 2 lettres du nom…" style={{ width: "100%" }} />
-                  {searching && <span className="tx-help" style={{ fontSize: 11, color: "var(--muted)" }}>Recherche…</span>}
+              )}
+
+              {clientMode === "recherche" && (
+                <label className="esp-field esp-search">Nom du client
+                  <input type="text" value={client || searchQuery} onChange={e => runClientSearch(e.target.value)} placeholder="Au moins 2 lettres du nom" />
+                  {searching && <span className="esp-help">Recherche…</span>}
                   {!client && searchResults.length > 0 && (
-                    <div className="tx-search-results" style={{ border: "1px solid #ddd", borderRadius: 6, marginTop: 4, maxHeight: 220, overflowY: "auto", background: "#fff", position: "absolute", width: "100%", zIndex: 5 }}>
+                    <ul className="esp-results" role="listbox">
                       {searchResults.map((r, i) => (
-                        <div key={i} onClick={() => {
-                          setClient(r.client); setAppartement(r.unitNumber || r.appartement || ""); setArrivalDate(r.arrivee || "");
-                          setDesignation("Taxe de séjour"); setSearchResults([]);
-                        }} className="tx-search-item" style={{ padding: "8px 10px", cursor: "pointer", borderBottom: "1px solid #f0f0f0", fontSize: 13 }}>
-                          <strong>{r.client}</strong> — {r.residence} {r.appartement} ({r.unitNumber})
-                          <div className="tx-help" style={{ fontSize: 11, color: "var(--muted)" }}>{fmtFr(r.arrivee)} → {fmtFr(r.depart)} · {r.channel}</div>
-                        </div>
+                        <li key={i} role="option" aria-selected="false" tabIndex={0}
+                          onClick={() => { choisirReservation(r); setDesignation(d => d || "Taxe de séjour"); setSearchResults([]); }}
+                          onKeyDown={ev => { if (ev.key === "Enter") { choisirReservation(r); setDesignation(d => d || "Taxe de séjour"); setSearchResults([]); } }}>
+                          <strong>{r.client}</strong> · {r.residence} {r.appartement} ({r.unitNumber})
+                          <span className="esp-muted">{fmtFr(r.arrivee)} → {fmtFr(r.depart)} · {r.channel}</span>
+                        </li>
                       ))}
-                    </div>
+                    </ul>
                   )}
                   {client && (
-                    <div className="tx-help" style={{ fontSize: 11, color: "var(--ok)", marginTop: 4 }}>
-                      {appartement} · {fmtFr(arrivalDate)}
-                      {" "}<button type="button" onClick={() => { setClient(""); setSearchQuery(""); }} className="ghost tx-change" style={{ fontSize: 11 }}>changer</button>
-                    </div>
+                    <span className="esp-help ok">Appart {appartement || "—"} · arrivée {fmtFr(arrivalDate) || "—"} <button type="button" onClick={() => { setClient(""); setSearchQuery(""); setReservationId(""); }} className="ghost esp-mini">changer</button></span>
                   )}
                 </label>
-              ) : (
-                <>
-                  <label>Nom du client <input type="text" value={client} onChange={e => setClient(e.target.value)} style={{ width: 180 }} /></label>
-                  <label>Appartement <input type="text" value={appartement} onChange={e => setAppartement(e.target.value)} style={{ width: 130 }} /></label>
-                  <label>Date arrivée <input type="date" value={arrivalDate} onChange={e => setArrivalDate(e.target.value)} /></label>
-                </>
               )}
-            </div>
-            <div className="linen-form-row">
-              <label>Désignation <input type="text" value={designation} onChange={e => setDesignation(e.target.value)} placeholder="taxe de séjour, autre vente…" style={{ width: 180 }} /></label>
-              <label>Montant € <input type="number" min="0" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} style={{ width: 100 }} /></label>
-            </div>
-          </>
-        ) : (
-          <div className="linen-form-row">
-            <label>Fournisseur (magasin) <input type="text" value={fournisseur} onChange={e => setFournisseur(e.target.value)} placeholder="ex. Leroy Merlin, Monoprix…" style={{ width: 200 }} /></label>
-            <label>Raison de la dépense <input type="text" value={designation} onChange={e => setDesignation(e.target.value)} placeholder="ex. fournitures ménage, réparation serrure…" style={{ width: 240 }} /></label>
-            <label>Montant € <input type="number" min="0" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} style={{ width: 100 }} /></label>
+
+              {clientMode === "autre" && (
+                <div className="esp-row esp-row-client">
+                  <label className="esp-field">Nom du client <input type="text" value={client} onChange={e => setClient(e.target.value)} /></label>
+                  <label className="esp-field esp-w-s">Appartement <input type="text" value={appartement} onChange={e => setAppartement(e.target.value)} /></label>
+                  <label className="esp-field esp-w-s">Arrivée <input type="date" value={arrivalDate} onChange={e => setArrivalDate(e.target.value)} /></label>
+                </div>
+              )}
+
+              <label className="esp-field">Désignation <input type="text" value={designation} onChange={e => setDesignation(e.target.value)} placeholder="Taxe de séjour, nuit supplémentaire…" /></label>
+            </>
+          ) : (
+            <>
+              <label className="esp-field">Raison de la dépense <input type="text" value={designation} onChange={e => setDesignation(e.target.value)} placeholder="ex. fournitures ménage, réparation serrure…" /></label>
+              <label className="esp-field">Fournisseur (magasin) <input type="text" value={fournisseur} onChange={e => setFournisseur(e.target.value)} placeholder="ex. Leroy Merlin, Monoprix…" /></label>
+            </>
+          )}
+
+          <div className="esp-row">
+            <label className="esp-field esp-montant">Montant
+              <span className="esp-euro"><input type="text" inputMode="decimal" autoComplete="off" value={amount} onChange={e => setAmount(e.target.value.replace(/[^\d.,]/g, ""))} placeholder="0,00" aria-invalid={amount !== "" && !(amt > 0)} /> €</span>
+            </label>
+            <label className="esp-field esp-w-s">Date de l&apos;opération <input type="date" value={date} max={today} onChange={e => setDate(e.target.value)} /></label>
           </div>
-        )}
-        <button className="primary" onClick={addEntry} disabled={!saisiPar}>Ajouter</button>
-      </div>
+          {ecartDate < 0 && <div className="msg bad">La date est dans le futur.</div>}
+          {ecartDate > 3 && <div className="msg warn">Opération datée d&apos;il y a {ecartDate} jours : elle sera signalée au contrôle. Précise la raison du retard dans la désignation.</div>}
 
-      <div className="tx-btn-row" style={{ display: "flex", gap: 8, margin: "14px 0" }}>
-        <button onClick={exportCurrentCSV} disabled={!unrecovered.length}>Télécharger Excel (en cours)</button>
-        <button className="primary" onClick={() => setShowRecoverForm(!showRecoverForm)} disabled={!unrecovered.length && !baseline}>
-          {showRecoverForm ? "Annuler" : "Récupération des espèces"}
-        </button>
-      </div>
+          {doublon && (
+            <div className="msg warn" role="alert">
+              Déjà saisi le {fmtFrShort(doublon.date)} par {doublon.saisiPar || "?"} : {doublon.client}, appart {doublon.appartement || "—"}, {euros2(doublon.amount)}{doublon.recoveryId ? " (déjà récupéré)" : ""}.
+              <label className="esp-check"><input type="checkbox" checked={confirmeDoublon} onChange={e => setConfirmeDoublon(e.target.checked)} /> C&apos;est bien un second paiement</label>
+            </div>
+          )}
 
-      {showRecoverForm && (
-        <RecoverForm fs={fs} unrecovered={unrecovered} totalEnCaisse={totalEnCaisse}
-          baseline={baseline} sumClient={sumClient} sumExpense={sumExpense}
-          onDone={() => { setShowRecoverForm(false); reload(); }} setStatus={setStatus} requestCode={requestCode} />
-      )}
+          <div className="esp-signature">
+            <div className="esp-row">
+              <label className="esp-field">Saisi par
+                <select value={saisiPar} onChange={e => choisirMoi(e.target.value)} aria-invalid={!saisiPar}>
+                  <option value="">— Mon nom —</option>
+                  {staffList.map(name => <option key={name} value={name}>{name}</option>)}
+                </select>
+              </label>
+            </div>
+            <button className="primary esp-submit" onClick={addEntry} disabled={!peutEnregistrer} aria-busy={busy}>
+              {busy ? "Enregistrement…" : mode === "client" ? `Enregistrer l'encaissement${amt > 0 ? " de " + euros2(amt) : ""}` : `Enregistrer la dépense${amt > 0 ? " de " + euros2(amt) : ""}`}
+            </button>
+            {!busy && manque.length > 0 && <div className="esp-help">Il manque : {manque.join(", ")}.</div>}
+            {bloqueDoublon && manque.length === 0 && <div className="esp-help warn">Confirme le second paiement ci-dessus pour enregistrer.</div>}
+            {retour && <div className={`msg ${retour.ton}`} role="status">{retour.texte}</div>}
+            <div className="esp-help">
+              Ton nom n&apos;est pas dans la liste ?{" "}
+              <button type="button" onClick={toggleStaffAdmin} className="ghost esp-mini">
+                {staffAdmin ? "Fermer la gestion de la liste" : "Gérer la liste (code)"}
+              </button>
+            </div>
+            {staffAdmin && (
+              <div className="panel">
+                <div className="panel-title">Réceptionnistes (liste partagée avec la Check-list)</div>
+                <div className="panel-row">
+                  {staffList.map(name => (
+                    <span key={name} className="chip">
+                      {name}
+                      <button type="button" onClick={() => removeStaffName(name)} className="chip-del" title={`Retirer ${name}`} aria-label={`Retirer ${name}`}>✕</button>
+                    </span>
+                  ))}
+                  {staffList.length === 0 && <span className="note">Aucun nom pour l&apos;instant.</span>}
+                </div>
+                <div className="panel-row">
+                  <input type="text" value={newStaffName} onChange={e => setNewStaffName(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter") addStaffName(); }} placeholder="Ajouter un prénom…" />
+                  <button type="button" onClick={addStaffName} className="primary">Ajouter</button>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
 
-      <div className="tbl-wrap"><table className="tbl tbl-cards" style={{ marginTop: 10 }}>
-        <thead>
-          <tr>
-            <th>Date</th><th>Type</th><th>Saisi par</th><th>Client</th><th>Appartement</th>
-            <th>Fournisseur</th><th>Désignation</th><th className="c">Montant</th><th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {unrecovered.map(e => (
-            <tr key={e.id}>
-              <td data-label="Date">{fmtFrShort(e.date)}</td>
-              <td data-label="Type">{e.type === "client" ? <span className="pill ok">Client</span> : <span className="pill bad">Dépense</span>}</td>
-              <td data-label="Saisi par">{e.saisiPar || "—"}</td>
-              <td data-label="Client">{e.client || "—"}</td>
-              <td data-label="Appartement">{e.appartement || "—"}</td>
-              <td data-label="Fournisseur">{e.fournisseur || "—"}</td>
-              <td className="card-title">{e.designation || "—"}</td>
-              <td className="c" data-label="Montant" style={{ color: e.type === "expense" ? "var(--bad)" : "var(--ok)", fontWeight: 600 }}>
-                {e.type === "expense" ? "−" : "+"}{euros2(e.amount)}
-              </td>
-              <td className="tx-actions"><button onClick={() => delEntry(e)} className="ghost danger tx-del" title="Supprimer" aria-label="Supprimer">✕</button></td>
-            </tr>
+        <section className="esp-card esp-liste" aria-labelledby="esp-liste-titre">
+          <div className="esp-liste-head">
+            <h2 id="esp-liste-titre">Opérations depuis {derniere ? `le ${fmtFrShort(derniere.date)}` : "le début"}</h2>
+            <div className="esp-actions">
+              <button onClick={exportCurrentCSV} disabled={!unrecovered.length}>Télécharger (Excel)</button>
+              <button className="primary" onClick={() => setShowRecoverForm(!showRecoverForm)} disabled={!(etat.total > 0)}>
+                {showRecoverForm ? "Annuler la récupération" : "Récupérer les espèces"}
+              </button>
+            </div>
+          </div>
+
+          {showRecoverForm && (
+            <RecoverForm fs={fs} requestCode={requestCode} entries={entries} recoveries={recoveries}
+              unrecovered={unrecovered} totalEnCaisse={etat.total}
+              baseline={etat.baseline} sumClient={etat.sumClient} sumExpense={etat.sumExpense}
+              staffList={staffList} saisiPar={saisiPar}
+              onDone={() => { setShowRecoverForm(false); reload(); }} setStatus={setStatus} />
+          )}
+
+          {jours.length === 0 && <div className="empty-state">Rien depuis la dernière récupération.</div>}
+          {jours.map(j => (
+            <div key={j.date || "sans"} className="esp-jour">
+              <div className="esp-jour-head">
+                <span>{fmtJour(j.date)}</span>
+                <span className={j.net < 0 ? "bad" : "ok"}>{j.net < 0 ? "−" : "+"}{euros2(Math.abs(j.net))}</span>
+              </div>
+              <table className="tbl esp-tbl">
+                <thead className="sr-only"><tr><th>Type</th><th>Opération</th><th>Saisi par</th><th>Montant</th><th>Action</th></tr></thead>
+                <tbody>
+                  {j.lignes.map(e => {
+                    const sig = signalees.get(e.id);
+                    const saisie = e.createdAt ? jourParis(e.createdAt) : "";
+                    return (
+                      <tr key={e.id} className={sig ? `esp-sig ${NIVEAUX[sig.niveau].cls}` : ""}>
+                        <td className="esp-type">{e.type === "client" ? <span className="pill ok">Encaissement</span> : <span className="pill bad">Dépense</span>}</td>
+                        <td>
+                          <strong>{e.type === "client" ? (e.client || "Client ?") : (e.designation || "Dépense")}</strong>
+                          <div className="esp-muted">
+                            {e.type === "client"
+                              ? [e.designation, e.appartement && `appart ${e.appartement}`, e.arrivalDate && `arrivée ${fmtFrShort(e.arrivalDate)}`].filter(Boolean).join(" · ")
+                              : (e.fournisseur || "")}
+                            {sig && <> · <span className={`esp-flag ${NIVEAUX[sig.niveau].cls}`}>{sig.titre}</span></>}
+                          </div>
+                        </td>
+                        <td className="esp-qui">
+                          {e.saisiPar || "—"}
+                          <div className="esp-muted">{saisie && saisie !== e.date ? `saisi le ${fmtFrShort(saisie)}` : heureParis(e.createdAt)}</div>
+                        </td>
+                        <td className={`esp-mt ${e.type === "expense" ? "bad" : "ok"}`}>{e.type === "expense" ? "−" : "+"}{euros2(e.amount)}</td>
+                        <td className="tx-actions">{<button onClick={() => delEntry(e)} className="ghost danger tx-del" title="Supprimer (code et motif obligatoires)" aria-label={`Supprimer ${e.client || e.designation || "la ligne"}`}>✕</button>}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           ))}
-          {unrecovered.length === 0 && <tr><td colSpan={9} className="empty-state">Rien depuis la dernière récupération.</td></tr>}
-        </tbody>
-      </table></div>
-      <p className="note">
-        Total en caisse = reliquat laissé à la dernière récupération ({euros2(baseline)}) + paiements clients ({euros2(sumClient)}) − dépenses ({euros2(sumExpense)}).
-      </p>
+          <p className="esp-muted esp-formule">
+            En caisse = laissé le {derniere ? fmtFrShort(derniere.date) : "—"} ({euros2(etat.baseline)}) + encaissé ({euros2(etat.sumClient)}) − dépensé ({euros2(etat.sumExpense)}).
+          </p>
+          <div>
+            <button onClick={() => setShowStartForm(!showStartForm)} className="ghost esp-mini">
+              {showStartForm ? "Annuler" : (recoveries.length ? "Redéfinir le solde de départ (code)" : "Définir un solde de départ (code)")}
+            </button>
+            {showStartForm && (
+              <StartingBalanceForm hasRecoveries={recoveries.length > 0} enCours={unrecovered.length} onConfirm={setStartingBalance} onCancel={() => setShowStartForm(false)} />
+            )}
+          </div>
+        </section>
+      </div>
     </>
   );
 }
 
-// ---- Formulaire de récupération : clôture les entrées en cours ----
 // ---- Solde de départ (une seule fois, avant la première vraie récupération) ----
-function StartingBalanceForm({ hasRecoveries, onConfirm, onCancel }) {
+function StartingBalanceForm({ hasRecoveries, enCours = 0, onConfirm, onCancel }) {
   const [startDate, setStartDate] = useState(isoDay(new Date()));
   const [startAmount, setStartAmount] = useState("");
 
@@ -824,6 +1005,12 @@ function StartingBalanceForm({ hasRecoveries, onConfirm, onCancel }) {
           Attention : des récupérations existent déjà. Ce solde de départ créera une nouvelle entrée de base
           (la plus récente prévaut dans les calculs) — vérifie que c&apos;est bien ce que tu veux plutôt que de
           corriger une récupération existante.
+        </div>
+      )}
+      {enCours > 0 && (
+        <div className="msg warn">
+          {enCours} opération(s) en cours resteront comptées en plus de ce solde. Si le montant compté dans la
+          caisse les inclut déjà, fais d&apos;abord une récupération.
         </div>
       )}
       <div className="linen-form-row">
@@ -894,53 +1081,54 @@ async function downloadRecoveryXLSX({ unrecovered, baseline, sumClient, sumExpen
   setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
 
-function RecoverForm({ fs, unrecovered, totalEnCaisse, baseline, sumClient, sumExpense, onDone, setStatus, requestCode }) {
+// ---- Formulaire de récupération : clôture les entrées en cours ----
+// Code admin demandé ; la personne qui récupère est enregistrée (faitPar).
+function RecoverForm({ fs, requestCode, entries, recoveries, unrecovered, totalEnCaisse, baseline, sumClient, sumExpense, onDone, setStatus, staffList, saisiPar }) {
   const [amountRecovered, setAmountRecovered] = useState("");
   const [note, setNote] = useState("");
+  const [qui, setQui] = useState(saisiPar || "");
+  const [busy, setBusy] = useState(false);
+  const [erreur, setErreur] = useState("");
 
   useEffect(() => {
-    setAmountRecovered(totalEnCaisse.toFixed(2));
+    setAmountRecovered(totalEnCaisse.toFixed(2).replace(".", ","));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const rec = Number(amountRecovered) || 0;
+  const rec = lireMontant(amountRecovered) || 0;
   // Laissé en caisse = automatique, jamais saisi à la main : ce qui reste une fois
   // le montant récupéré soustrait du total (le total intègre déjà les dépenses,
   // puisque totalEnCaisse = reliquat + paiements clients - dépenses).
   const left = Math.max(0, Math.round((totalEnCaisse - rec) * 100) / 100);
   const montantValide = rec >= 0 && rec <= totalEnCaisse + 0.001;
   const totalPositif = totalEnCaisse > 0;
-  const peutValider = montantValide && totalPositif;
+  const peutValider = montantValide && totalPositif && !busy && Boolean(qui);
 
   async function confirmRecovery() {
     if (!totalPositif) { setStatus("La caisse est vide ou négative, rien à récupérer."); return; }
     if (!montantValide) { setStatus("Le montant récupéré ne peut pas dépasser le total en caisse."); return; }
-    requestCode(async () => {
-      // Sauvegarde Excel d'abord : si elle échoue, rien n'est modifié.
-      try {
-        setStatus("Téléchargement de l'Excel de sauvegarde…");
-        await downloadRecoveryXLSX({ unrecovered, baseline, sumClient, sumExpense, totalEnCaisse, rec, left, note });
-      } catch (err) {
-        setStatus("Récupération annulée : l'Excel de sauvegarde n'a pas pu être généré (" + err.message + "). Rien n'a été modifié.");
-        return;
-      }
-      try {
-        setStatus("Enregistrement de la récupération…");
-        const date = isoDay(new Date());
-        const entryIds = unrecovered.map(e => e.id);
-        const recDoc = await fs.addDoc(fs.collection(fs.db, "cash_recoveries"), {
-          date, amountRecovered: rec, amountLeftInBox: left, note: note || "",
-          totalAvant: totalEnCaisse, entryIds, createdAt: new Date().toISOString(),
-        });
-        const batch = fs.writeBatch(fs.db);
-        for (const id of entryIds) {
-          batch.update(fs.doc(fs.db, "cash_entries", id), { recoveryId: recDoc.id });
-        }
-        await batch.commit();
-        setStatus(`Récupération enregistrée : ${euros2(rec)} récupérés, ${euros2(left)} laissés en caisse.`);
-        onDone();
-      } catch (err) { setStatus("Erreur : " + err.message); }
-    });
+    if (!qui) { setStatus("Indique qui récupère."); return; }
+    requestCode(enregistrer);
+  }
+
+  async function enregistrer() {
+    setBusy(true); setErreur("");
+    // Sauvegarde Excel d'abord : si elle échoue, rien n'est modifié.
+    try {
+      setStatus("Téléchargement de l'Excel de sauvegarde…");
+      await downloadRecoveryXLSX({ unrecovered, baseline, sumClient, sumExpense, totalEnCaisse, rec, left, note });
+    } catch (err) {
+      setErreur("Récupération annulée : l'Excel de sauvegarde n'a pas pu être généré (" + err.message + "). Rien n'a été modifié.");
+      setBusy(false);
+      return;
+    }
+    try {
+      setStatus("Enregistrement de la récupération…");
+      const d = await recuperer(fs, { montant: rec, note, entrees: entries, recups: recoveries, faitPar: qui });
+      setStatus(`Récupération enregistrée : ${euros2(d.amountRecovered)} récupérés, ${euros2(d.amountLeftInBox)} laissés en caisse.`);
+      onDone();
+    } catch (err) { setErreur("Pas enregistrée : " + err.message); }
+    setBusy(false);
   }
 
   return (
@@ -949,28 +1137,43 @@ function RecoverForm({ fs, unrecovered, totalEnCaisse, baseline, sumClient, sumE
         <div style={{ fontSize: 13 }}><strong>Total en caisse à répartir : {euros2(totalEnCaisse)}</strong></div>
       </div>
       <div className="linen-form-row">
-        <label>Montant récupéré € <input type="number" step="0.01" min="0" max={totalEnCaisse} value={amountRecovered} onChange={e => setAmountRecovered(e.target.value)} style={{ width: 110 }} /></label>
+        <label>Montant récupéré € <input type="text" inputMode="decimal" autoComplete="off" value={amountRecovered} onChange={e => setAmountRecovered(e.target.value.replace(/[^\d.,]/g, ""))} style={{ width: 110 }} /></label>
         <label>Laissé en caisse €
           <input type="text" value={euros2(left)} disabled style={{ width: 110 }} />
         </label>
         <label style={{ flex: 1 }}>Note <input type="text" value={note} onChange={e => setNote(e.target.value)} style={{ width: "100%" }} /></label>
       </div>
+      <div className="linen-form-row">
+        <label>Récupéré par
+          <select value={qui} onChange={e => setQui(e.target.value)}>
+            <option value="">—</option>
+            {[...new Set(["Mikhael", ...staffList])].map(n => <option key={n} value={n}>{n}</option>)}
+          </select>
+        </label>
+      </div>
       {!montantValide && <div className="msg bad">Le montant récupéré ne peut pas dépasser le total en caisse ({euros2(totalEnCaisse)}).</div>}
-      <button className="primary" onClick={confirmRecovery} disabled={!peutValider}>Confirmer la récupération</button>
+      {erreur && <div className="msg bad" role="alert">{erreur}</div>}
+      <button className="primary" onClick={confirmRecovery} disabled={!peutValider} aria-busy={busy}>{busy ? "Enregistrement…" : `Confirmer : je récupère ${euros2(rec)} et je laisse ${euros2(left)}`}</button>
     </div>
   );
 }
 
-// ---- Historique des récupérations ----
-function CashHistory({ recoveries, entries, fs, reload, setStatus, requestCode }) {
+// ---- Historique des récupérations + historique complet (lignes supprimées incluses) ----
+function CashHistory({ fs, requestCode, recoveries, entries, reload, setStatus }) {
+  const actives = recoveries.filter(r => !r.deleted);
+  // Seule la plus récente peut être annulée (sinon des espèces déjà sorties redeviendraient « en caisse »).
+  const derniereId = [...actives].sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")))[0]?.id;
+  const annulees = recoveries.filter(r => r.deleted);
+  const supprimees = entries.filter(e => e.deleted);
+
   function exportRecoveryCSV(rec) {
-    const linked = entries.filter(e => e.recoveryId === rec.id);
+    const linked = entries.filter(e => e.recoveryId === rec.id && !e.deleted);
     const rows = [["Type", "Date", "Saisi par", "Client", "Appartement", "Date arrivée", "Fournisseur", "Désignation", "Montant"]];
     for (const e of linked) {
       rows.push([
         e.type === "client" ? "Paiement client" : "Dépense",
         fmtFrShort(e.date), e.saisiPar || "", e.client || "", e.appartement || "",
-        e.arrivalDate ? fmtFrShort(e.arrivalDate) : "", e.fournisseur || "", e.designation || "", e.amount,
+        e.arrivalDate ? fmtFrShort(e.arrivalDate) : "", e.fournisseur || "", e.designation || "", Number(e.amount) || 0,
       ]);
     }
     rows.push([]);
@@ -979,30 +1182,45 @@ function CashHistory({ recoveries, entries, fs, reload, setStatus, requestCode }
     downloadEntriesCSV(`recuperation_especes_${rec.date}.csv`, rows);
   }
 
-  // Supprime une récupération (ou un solde de départ, qui est le même type de
-  // document). Libère d'abord les entrées liées si besoin, pour ne jamais les
-  // laisser orphelines avec un recoveryId pointant vers un document supprimé.
-  async function delRecovery(rec) {
-    const isSoldeDepart = (rec.note || "").toLowerCase().includes("solde de départ")
-      || (rec.note || "").toLowerCase().includes("solde de depart");
-    if (!confirm(`Êtes-vous sûr de vouloir supprimer "${rec.note || "cette récupération"}" du ${fmtFrShort(rec.date)} ?`)) return;
-    const doDelete = async () => {
+  // Toutes les lignes jamais saisies, y compris celles marquées supprimées, avec leur
+  // statut, leur auteur et le motif de suppression.
+  function exportHistoriqueComplet() {
+    const rows = [["Identifiant", "Statut", "Type", "Date", "Saisi par", "Client", "Appartement", "Date arrivée",
+      "Fournisseur", "Désignation", "Montant", "Créée le", "Récupération", "Supprimée le", "Motif de suppression"]];
+    const tri = [...entries].sort((a, b) => String(a.createdAt || "").localeCompare(String(b.createdAt || "")));
+    for (const e of tri) {
+      rows.push([
+        e.id, e.deleted ? "SUPPRIMÉE" : (e.recoveryId ? "Récupérée" : "En cours"),
+        e.type === "client" ? "Paiement client" : "Dépense", fmtFrShort(e.date), e.saisiPar || "",
+        e.client || "", e.appartement || "", e.arrivalDate ? fmtFrShort(e.arrivalDate) : "", e.fournisseur || "",
+        e.designation || "", Number(e.amount) || 0, e.createdAt || "",
+        e.recoveryId || "", e.deletedAt || "", e.deleteReason || "",
+      ]);
+    }
+    rows.push([]);
+    rows.push(["Récupérations"]);
+    rows.push(["Identifiant", "Statut", "Date", "Total avant", "Récupéré", "Laissé en caisse", "Note", "Faite par", "Créée le", "Annulée le", "Motif d'annulation"]);
+    for (const r of recoveries) {
+      rows.push([r.id, r.deleted ? "ANNULÉE" : "Valide", fmtFrShort(r.date), r.totalAvant, r.amountRecovered, r.amountLeftInBox,
+        r.note || "", r.faitPar || "", r.createdAt || "", r.deletedAt || "", r.deleteReason || ""]);
+    }
+    downloadEntriesCSV(`especes_historique_complet_${isoDay(new Date())}.csv`, rows);
+  }
+
+  // Annule une récupération (admin, motif obligatoire) : elle reste en base, marquée
+  // annulée, et ses lignes redeviennent « en cours ».
+  function delRecovery(rec) {
+    const motif = window.prompt(`Motif de l'annulation de « ${rec.note || "récupération"} » du ${fmtFrShort(rec.date)} :`);
+    if (motif === null) return;
+    if (motif.trim().length < 5) { setStatus("Annulation abandonnée : motif obligatoire (au moins 5 caractères)."); return; }
+    requestCode(async () => {
       try {
-        setStatus("Suppression…");
-        const linked = entries.filter(e => e.recoveryId === rec.id);
-        if (linked.length > 0) {
-          const batch = fs.writeBatch(fs.db);
-          for (const e of linked) {
-            batch.update(fs.doc(fs.db, "cash_entries", e.id), { recoveryId: null });
-          }
-          await batch.commit();
-        }
-        await fs.deleteDoc(fs.doc(fs.db, "cash_recoveries", rec.id));
+        setStatus("Annulation…");
+        await annulerRecuperation(fs, { id: rec.id, motif, entrees: entries, recups: recoveries });
         await reload();
-        setStatus("Récupération supprimée.");
+        setStatus("Récupération annulée (elle reste visible dans l'historique complet).");
       } catch (err) { setStatus("Erreur : " + err.message); }
-    };
-    if (isSoldeDepart) requestCode(doDelete); else await doDelete();
+    });
   }
 
   return (
@@ -1012,6 +1230,7 @@ function CashHistory({ recoveries, entries, fs, reload, setStatus, requestCode }
           <div className="recap-title">Historique des récupérations</div>
           <div className="recap-sub">Chaque récupération est exportable individuellement</div>
         </div>
+        <button onClick={exportHistoriqueComplet}>📥 Historique complet (lignes supprimées incluses)</button>
       </div>
       <div className="tbl-wrap"><table className="tbl tbl-cards">
         <thead>
@@ -1021,22 +1240,45 @@ function CashHistory({ recoveries, entries, fs, reload, setStatus, requestCode }
           </tr>
         </thead>
         <tbody>
-          {recoveries.map(r => (
+          {actives.map(r => (
             <tr key={r.id}>
               <td className="card-title">{fmtFrShort(r.date)}</td>
               <td className="c" data-label="Total avant">{euros2(r.totalAvant)}</td>
               <td className="c" data-label="Récupéré" style={{ fontWeight: 700, color: "var(--ok)" }}>{euros2(r.amountRecovered)}</td>
               <td className="c" data-label="Laissé en caisse">{euros2(r.amountLeftInBox)}</td>
-              <td data-label="Note" className="card-full">{r.note || "—"}</td>
+              <td data-label="Note" className="card-full">{r.note || "—"}{r.faitPar ? ` · par ${r.faitPar}` : ""}</td>
               <td className="tx-actions" style={{ whiteSpace: "nowrap" }}>
-                <button onClick={() => exportRecoveryCSV(r)} className="ghost" style={{ color: "var(--ok)" }}>📥 Excel</button>
-                <button onClick={() => delRecovery(r)} className="ghost danger tx-del" title="Supprimer" aria-label="Supprimer">✕</button>
+                <button onClick={() => exportRecoveryCSV(r)} className="ghost" style={{ color: "var(--ok)" }} aria-label={`Télécharger la récupération du ${fmtFrShort(r.date)}`}>Excel</button>
+                {r.id === derniereId && <button onClick={() => delRecovery(r)} className="ghost danger tx-del" title="Annuler (code et motif obligatoires)" aria-label="Annuler">✕</button>}
               </td>
             </tr>
           ))}
-          {recoveries.length === 0 && <tr><td colSpan={6} className="empty-state">Aucune récupération enregistrée.</td></tr>}
+          {actives.length === 0 && <tr><td colSpan={6} className="empty-state">Aucune récupération enregistrée.</td></tr>}
         </tbody>
       </table></div>
+
+      {(supprimees.length > 0 || annulees.length > 0) && (
+        <>
+          <div className="recap-title" style={{ marginTop: 20 }}>Lignes supprimées et récupérations annulées</div>
+          <div className="tbl-wrap"><table className="tbl tbl-cards">
+            <thead><tr><th>Supprimée le</th><th>Quoi</th><th>Saisi par</th><th className="c">Montant</th><th>Motif</th></tr></thead>
+            <tbody>
+              {[...supprimees.map(e => ({ k: e.id, at: e.deletedAt, quoi: `${e.type === "client" ? "Paiement client" : "Dépense"} du ${fmtFrShort(e.date)} : ${e.client || e.fournisseur || ""} ${e.designation || ""}`, qui: e.saisiPar, m: e.amount, motif: e.deleteReason })),
+                ...annulees.map(r => ({ k: r.id, at: r.deletedAt, quoi: `Récupération du ${fmtFrShort(r.date)}`, qui: r.faitPar, m: r.amountRecovered, motif: r.deleteReason }))]
+                .sort((a, b) => String(b.at || "").localeCompare(String(a.at || "")))
+                .map(x => (
+                  <tr key={x.k}>
+                    <td data-label="Supprimée le">{x.at ? new Date(x.at).toLocaleString("fr-FR") : "—"}</td>
+                    <td className="card-title">{x.quoi}</td>
+                    <td data-label="Saisi par">{x.qui || "—"}</td>
+                    <td className="c" data-label="Montant">{euros2(x.m)}</td>
+                    <td data-label="Motif" className="card-full">{x.motif || "—"}</td>
+                  </tr>
+                ))}
+            </tbody>
+          </table></div>
+        </>
+      )}
     </>
   );
 }
