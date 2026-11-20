@@ -227,3 +227,40 @@ test("sans session de la réception : 401", async () => {
   const r = await appel(route, { cookies: [], body: { action: "ajouter" } });
   assert.equal(r.statusCode, 401);
 });
+
+test("double envoi, date future, ordre d'annulation des récupérations", async () => {
+  store._resetStoreForTests();
+  const f = fauxFirestore();
+  await avecFetch(f, async () => {
+    const admin = await cookiesAdmin();
+    const { body } = await appel(routeAdmin, { cookies: admin, body: { action: "creer", nom: "Kurtis" } });
+    await appel(route, { body: { action: "activer", personneId: "kurtis", activation: body.codeActivation, pin: "7391" } });
+    const ligne = { type: "client", date: "2026-11-10", amount: 33.18, client: "C", designation: "Taxe de séjour", reservationId: "67438644", cle: "cle-envoi-0001" };
+
+    // Même clé d'envoi deux fois (double-clic, renvoi après coupure) : une seule ligne.
+    const a = await appel(route, { body: { action: "ajouter", personneId: "kurtis", pin: "7391", ligne } });
+    const b = await appel(route, { body: { action: "ajouter", personneId: "kurtis", pin: "7391", ligne } });
+    assert.equal(a.statusCode, 200, JSON.stringify(a.body));
+    assert.equal(b.statusCode, 200, JSON.stringify(b.body));
+    assert.equal(a.body.id, b.body.id);
+    const lignes = [...f.docs.keys()].filter(k => k.startsWith("cash_entries/"));
+    assert.equal(lignes.length, 1);
+    assert.equal(f.champs(lignes[0]).reservationId, "67438644");
+
+    // Date dans le futur refusée.
+    const fut = await appel(route, { body: { action: "ajouter", personneId: "kurtis", pin: "7391", ligne: { type: "expense", date: "2099-01-01", amount: 3 } } });
+    assert.equal(fut.statusCode, 400);
+
+    // Deux récupérations : l'ancienne ne peut pas être annulée avant la récente.
+    const r1 = await appel(route, { cookies: admin, body: { action: "recuperer", montant: 30, entryIds: [a.body.id] } });
+    assert.equal(r1.statusCode, 200, JSON.stringify(r1.body));
+    const r2 = await appel(route, { cookies: admin, body: { action: "recuperer", montant: 1, entryIds: [] } });
+    assert.equal(r2.statusCode, 200, JSON.stringify(r2.body));
+    let x = await appel(route, { cookies: admin, body: { action: "annuler_recuperation", recoveryId: r1.body.recuperation.id, motif: "test ordre" } });
+    assert.equal(x.statusCode, 409);
+    x = await appel(route, { cookies: admin, body: { action: "annuler_recuperation", recoveryId: r2.body.recuperation.id, motif: "test ordre" } });
+    assert.equal(x.statusCode, 200, JSON.stringify(x.body));
+    x = await appel(route, { cookies: admin, body: { action: "annuler_recuperation", recoveryId: r1.body.recuperation.id, motif: "test ordre" } });
+    assert.equal(x.statusCode, 200, JSON.stringify(x.body));
+  });
+});

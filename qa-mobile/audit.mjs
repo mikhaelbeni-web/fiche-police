@@ -25,6 +25,8 @@ const ALL_PAGES = [
 const PAGES = process.argv.slice(2).length ? process.argv.slice(2) : ALL_PAGES;
 
 const DEVICES = [
+  // Ordinateur d'abord (règle du projet) : la mise en page de bureau est vérifiée aussi.
+  { name: "pc-1440", browser: "chromium", viewport: { width: 1440, height: 900 }, isMobile: false, hasTouch: false, deviceScaleFactor: 1 },
   { name: "android-360", browser: "chromium", viewport: { width: 360, height: 780 }, isMobile: true, hasTouch: true, deviceScaleFactor: 1 },
   { name: "iphone-390", browser: "webkit", viewport: { width: 390, height: 664 }, isMobile: true, hasTouch: true, deviceScaleFactor: 1 },
   { name: "iphone-430", browser: "webkit", viewport: { width: 430, height: 739 }, isMobile: true, hasTouch: true, deviceScaleFactor: 1 },

@@ -33,15 +33,36 @@
     ]
   },
   {
+    "name": "especes-controle-detail",
+    "steps": [
+      {
+        "click": "text=Gestion des espèces"
+      },
+      {
+        "click": "text=Voir le détail"
+      }
+    ]
+  },
+  {
     "name": "especes-depense",
     "steps": [
       {
         "click": "text=Gestion des espèces"
       },
       {
-        "select": ".linen-form select >> nth=1",
-        "value": "expense",
-        "note": "Type select (2nd select in .linen-form; 1st is Réceptionniste)"
+        "click": "text=− Dépense hôtel"
+      }
+    ]
+  },
+  {
+    "name": "especes-client-taxe",
+    "steps": [
+      {
+        "click": "text=Gestion des espèces"
+      },
+      {
+        "select": ".esp-form select >> nth=1",
+        "value": "0"
       }
     ]
   },
@@ -52,11 +73,11 @@
         "click": "text=Gestion des espèces"
       },
       {
-        "select": ".linen-form select >> nth=2",
+        "select": ".esp-form select >> nth=0",
         "value": "recherche"
       },
       {
-        "fill": "input[placeholder='Tape au moins 2 lettres du nom…']",
+        "fill": "input[placeholder='Au moins 2 lettres du nom']",
         "value": "ma"
       }
     ]
@@ -68,8 +89,36 @@
         "click": "text=Gestion des espèces"
       },
       {
-        "select": ".linen-form select >> nth=2",
+        "select": ".esp-form select >> nth=0",
         "value": "autre"
+      }
+    ]
+  },
+  {
+    "name": "especes-doublon",
+    "steps": [
+      {
+        "click": "text=Gestion des espèces"
+      },
+      {
+        "select": ".esp-form select >> nth=0",
+        "value": "autre"
+      },
+      {
+        "fill": ".esp-form .esp-row input >> nth=0",
+        "value": "Jo Li"
+      },
+      {
+        "fill": ".esp-form .esp-row input >> nth=1",
+        "value": "21"
+      },
+      {
+        "fill": ".esp-form .esp-row input >> nth=2",
+        "value": "2026-08-02"
+      },
+      {
+        "fill": ".esp-montant input",
+        "value": "22,40"
       }
     ]
   },
@@ -80,7 +129,7 @@
         "click": "text=Gestion des espèces"
       },
       {
-        "click": "text=Redéfinir le solde de départ"
+        "click": "text=Redéfinir le solde de départ (admin)"
       }
     ]
   },
@@ -91,36 +140,9 @@
         "click": "text=Gestion des espèces"
       },
       {
-        "click": "text=Récupération des espèces"
+        "click": "text=Récupérer les espèces"
       }
     ]
-  },
-  {
-    "name": "especes-code-modal-gerer-liste",
-    "steps": [
-      {
-        "click": "text=Gestion des espèces"
-      },
-      {
-        "click": "text=Gérer la liste"
-      }
-    ],
-    "note": "opens CodeModal (screenshot the modal itself)"
-  },
-  {
-    "name": "especes-staff-admin-unlocked",
-    "steps": [
-      {
-        "click": "text=Gestion des espèces"
-      },
-      {
-        "click": "text=Gérer la liste"
-      },
-      {
-        "code": "2305"
-      }
-    ],
-    "note": "CodeModal-guarded, code 2305; only toggles staffAdmin UI (no write)"
   },
   {
     "name": "especes-historique",
@@ -129,7 +151,7 @@
         "click": "text=Gestion des espèces"
       },
       {
-        "click": "text=Historique →"
+        "click": "text=Historique des récupérations →"
       }
     ]
   }

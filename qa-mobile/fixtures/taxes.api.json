@@ -314,5 +314,27 @@
         "channel": "expedia"
       }
     ]
+  },
+  "/api/especes": {
+    "ok": true,
+    "isAdmin": true,
+    "personnel": [
+      {
+        "id": "amina",
+        "nom": "Amina",
+        "codeChoisi": true
+      },
+      {
+        "id": "bastien",
+        "nom": "Bastien",
+        "codeChoisi": true
+      },
+      {
+        "id": "nouveau",
+        "nom": "Nouveau",
+        "codeChoisi": false,
+        "activationEnAttente": true
+      }
+    ]
   }
 }
