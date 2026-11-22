@@ -138,10 +138,16 @@ test("changer le mot de passe admin invalide les sessions admin existantes", asy
   }
 });
 
-test("connexion : sans code d'accès 404, mauvais mot de passe 401 sans cookie", async () => {
+test("connexion : sans code d'accès 401 « acces », mauvais mot de passe 401 sans cookie", async () => {
   const r1 = res();
   await login(req({ method: "POST", body: { password: ADMIN_PASSWORD } }), r1);
-  assert.equal(r1.statusCode, 404);
+  assert.equal(r1.statusCode, 401);
+  assert.equal(r1.body.acces, true);
+  // Code d'accès saisi il y a plus de 5 h : même réponse, la page redemande le code.
+  const rExp = res();
+  await login(req({ method: "POST", cookies: [accessCookie(undefined, Math.floor(Date.now() / 1000) - 60)], body: { password: ADMIN_PASSWORD } }), rExp);
+  assert.equal(rExp.statusCode, 401);
+  assert.equal(rExp.body.acces, true);
   assert.equal(r1.headers["set-cookie"], undefined);
 
   const r2 = res();

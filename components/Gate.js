@@ -18,6 +18,32 @@ export default function Gate({ children }) {
     setEcheance(null); setCode(""); setErr(""); setExpiree(true); setState("locked");
   });
 
+  // L'horloge locale ne suffit pas (veille de l'ordinateur, onglet resté ouvert,
+  // cookie effacé) : au retour sur l'onglet, on redemande au serveur si la session
+  // du code d'accès est toujours valide, et on referme le verrou sinon.
+  useEffect(() => {
+    if (state !== "unlocked") return undefined;
+    let enCours = false;
+    const reverifier = () => {
+      if (enCours || document.visibilityState === "hidden") return;
+      enCours = true;
+      fetch("/api/auth", { method: "GET", cache: "no-store" })
+        .then(r => r.json())
+        .then(d => {
+          if (d.authenticated) setEcheance(echeanceDepuisServeur(d.expiresAt, d.serverNowMs));
+          else { setEcheance(null); setCode(""); setErr(""); setExpiree(true); setState("locked"); }
+        })
+        .catch(() => { /* réseau coupé : on garde l'état, le minuteur reste actif */ })
+        .finally(() => { enCours = false; });
+    };
+    document.addEventListener("visibilitychange", reverifier);
+    window.addEventListener("focus", reverifier);
+    return () => {
+      document.removeEventListener("visibilitychange", reverifier);
+      window.removeEventListener("focus", reverifier);
+    };
+  }, [state]);
+
   useEffect(() => {
     let alive = true;
     fetch("/api/auth", { method: "GET", cache: "no-store" })
