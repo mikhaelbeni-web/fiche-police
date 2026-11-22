@@ -30,6 +30,9 @@ export default function ConnexionAdmin() {
       });
       const d = await r.json().catch(() => ({}));
       if (r.ok) { router.replace("/codes/admin"); return; }
+      // Session du code d'accès terminée : recharger fait réapparaître le verrou (Gate),
+      // qui redemande le code puis ramène sur cette page.
+      if (d.acces) { window.location.reload(); return; }
       setErr(d.error || "Connexion refusée.");
       setPassword("");
     } catch {

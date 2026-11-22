@@ -1,7 +1,9 @@
 // pages/api/admin/login.js
 // Connexion à l'espace admin. Exige d'abord la session normale (code d'accès),
 // puis le mot de passe admin, comparé au hash ADMIN_PASSWORD_HASH (variable Vercel).
-// Sans session normale, ou si l'espace admin n'est pas configuré : 404.
+// Espace admin non configuré : 404. Session du code d'accès absente ou expirée (5 h) :
+// 401 avec acces: true, pour que la page redemande le code d'accès au lieu d'afficher
+// un « Introuvable » trompeur (la page de connexion est déjà visible par tout titulaire du code).
 import {
   isAdminConfigured, hasAccessSession, verifyPassword, makeAdminToken, adminCookieHeader,
   loginBlocked, recordLoginFailure, clearLoginFailures,
@@ -12,8 +14,11 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
 
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
-  if (!isAdminConfigured() || !hasAccessSession(req)) {
+  if (!isAdminConfigured()) {
     return res.status(404).json({ error: "Introuvable." });
+  }
+  if (!hasAccessSession(req)) {
+    return res.status(401).json({ acces: true, error: "Session du code d\u2019accès terminée (5 h) : retape le code d\u2019accès." });
   }
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
