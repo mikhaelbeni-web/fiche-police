@@ -122,3 +122,26 @@ L'historique (GET /devices/{id}/activity) répond 403 « Forbidden » malgré le
 - La route ne fait qu'enregistrer l'envoi (corps + quelques en-têtes, jamais cookies ni
   autorisation) dans le document chiffré `admin_prive/igloohome_webhook` (300 derniers).
   Aucun appel vers igloohome.
+
+## Serrures Nuki (Villiers, Lantiez, Deep 02) — onglet « Serrures Nuki »
+
+- Variable Vercel : `NUKI_API_TOKEN` (Sensitive, Production et Preview) = jeton API de
+  web.nuki.io (Menu → API → jeton). Jamais dans le dépôt ni dans Firestore.
+- `lib/nuki.js` : liste blanche des appels. Lecture des serrures, des codes clavier (type 13)
+  et de l'historique ; écriture limitée aux codes clavier (créer, modifier, supprimer).
+  `/smartlock/{id}/action` n'est pas dans la liste : la page ne peut ouvrir aucune porte.
+- Résidence déduite du nom de la serrure : « Villiers… » = Villiers, « A1 » à « A8 » =
+  Lantiez, « Deep » = Belleville.
+- Les valeurs des codes ne quittent pas le serveur avec la liste ; le serveur indique
+  seulement si un même nom porte la même valeur partout (lettres A, B…). Bouton « Afficher »
+  = lecture d'un seul code (`/api/admin/nuki/code`), masqué au bout de 20 s, jamais journalisé.
+- Actions en masse (`/api/admin/nuki/masse`, paquets de 25 au plus, `confirme: true` exigé) :
+  changer le code, renommer, désactiver, réactiver, supprimer. Saisie → récapitulatif serrure
+  par serrure → confirmation → compte rendu par serrure. Contrôles avant envoi : règles du
+  clavier (6 chiffres de 1 à 9, pas « 12… »), code déjà porté par un autre nom sur la même
+  serrure, deux codes de la même serrure dans la sélection.
+- Nuki applique les changements de façon asynchrone : 204 = accepté par le cloud Nuki ; une
+  serrure hors ligne (serverState 4) le reçoit à sa reconnexion. « Relire » montre ensuite
+  « synchro en cours » ou « erreur Nuki » sur les codes concernés.
+- Création (`/api/admin/nuki/creer`) : même code sur plusieurs serrures, permanent ou avec
+  début et fin. Historique : `/api/admin/nuki/historique?jours=7[&smartlockId=…]`.
