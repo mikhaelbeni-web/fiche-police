@@ -2,14 +2,15 @@
 // Vérification serveur du code d'accès. Le code n'est JAMAIS envoyé au navigateur :
 // il vit dans la variable d'environnement ACCESS_CODE (Vercel). La route pose un
 // cookie de session signé HMAC, valable 5 h après la saisie du code (voir lib/hostaway.js).
+// Changer ACCESS_CODE invalide toutes les sessions en cours.
 //   POST { code }  -> vérifie le code, pose le cookie si correct
 //   GET            -> indique si la session est valide et quand elle expire
 
 import crypto from "crypto";
-import { makeSessionToken, sessionExpiry, ACCESS_COOKIE, ACCESS_TTL_SECONDS } from "../../lib/hostaway";
+import { makeSessionToken, sessionExpiry, accessCode, ACCESS_COOKIE, ACCESS_TTL_SECONDS } from "../../lib/hostaway";
 
 export default function handler(req, res) {
-  const expectedCode = process.env.ACCESS_CODE || "188";
+  const expectedCode = accessCode();
   res.setHeader("Cache-Control", "no-store");
 
   if (req.method === "GET") {
