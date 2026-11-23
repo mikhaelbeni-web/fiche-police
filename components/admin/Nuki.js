@@ -270,7 +270,7 @@ function Codes({ data, parId, router, recharger }) {
           <button onClick={() => setAction({ type: "activer", items: selection })}>Réactiver</button>
           <span className="nk-sep" aria-hidden="true" />
           <button className="nk-danger" onClick={() => setAction({ type: "supprimer", items: selection })}>Supprimer…</button>
-          <button className="ghost" onClick={() => setSel(new Set())}>Vider</button>
+          <button className="ghost" onClick={() => setSel(new Set())}>Tout décocher</button>
         </div>
       )}
 
@@ -356,6 +356,16 @@ function Assistant({ action, serrures, router, onFermer, onReessayer }) {
     return d;
   }, [type, items]);
 
+  // Une serrure ne peut pas porter deux fois la même valeur : changer le code de plusieurs
+  // codes d'une même serrure n'a pas de sens (un seul passerait). On bloque et on explique.
+  const bloque = type === "code" && doublonsSerrure.size > 0;
+  const serruresMultiples = useMemo(() => {
+    if (!bloque) return [];
+    const n = new Map();
+    items.forEach(i => n.set(String(i.smartlockId), (n.get(String(i.smartlockId)) || 0) + 1));
+    return [...n.entries()].filter(([, k]) => k > 1).map(([id, k]) => `${parId.get(id)?.nom || id} (${k})`);
+  }, [bloque, items, parId]);
+  const nomsSel = [...new Set(items.map(i => i.nom || "(sans nom)"))];
   const eCode = code.length < 6 ? erreurCode(code + "1".repeat(6 - code.length)) : erreurCode(code); // pas d'alerte de longueur pendant la frappe
   const eCode2 = code2 && code2 !== code ? "Les deux saisies sont différentes." : "";
   const besoinCode = type === "code" || type === "creer";
@@ -424,7 +434,20 @@ function Assistant({ action, serrures, router, onFermer, onReessayer }) {
           {etape !== "execution" && <button className="ghost nk-close" aria-label="Fermer" onClick={() => onFermer(etape === "rendu")}>✕</button>}
         </div>
 
-        {etape === "saisie" && (
+        {etape === "saisie" && bloque && (
+          <div className="nk-dlg-body">
+            <div className="sv-banner warn" role="alert">
+              <span>
+                <b>Impossible : la sélection contient plusieurs codes sur la même serrure.</b> Une serrure ne peut pas avoir deux codes de même valeur, donc un seul passerait par serrure.
+              </span>
+            </div>
+            <p className="rg-help">Sélection : {pluriel(items.length, "code")} ({pluriel(nomsSel.length, "nom")} : {nomsSel.slice(0, 6).join(", ")}{nomsSel.length > 6 ? "…" : ""}). Serrures concernées : {serruresMultiples.slice(0, 10).join(", ")}{serruresMultiples.length > 10 ? "…" : ""}.</p>
+            <p className="nk-recap-phrase"><b>Pour changer le code du ménage :</b> sélectionnez un seul nom (par exemple « admin menage ») puis « Changer le code ».</p>
+            <p className="nk-recap-phrase"><b>Pour ne garder qu&apos;un seul code :</b> créez-le avec « + Nouveau code » sur toutes les serrures, puis sélectionnez les anciens codes et « Supprimer ». Gardez « Code d&apos;entrée », « sortie villiers » et vos propres accès.</p>
+          </div>
+        )}
+
+        {etape === "saisie" && !bloque && (
           <div className="nk-dlg-body">
             {type !== "creer" && <p className="rg-help">{pluriel(items.length, "code")} sélectionné(s) sur {pluriel(new Set(items.map(i => i.smartlockId)).size, "serrure")}.</p>}
             {type === "creer" && (
@@ -544,7 +567,7 @@ function Assistant({ action, serrures, router, onFermer, onReessayer }) {
         <div className="nk-dlg-foot">
           {etape === "saisie" && <>
             <button className="ghost" onClick={() => onFermer(false)}>Annuler</button>
-            <button className="primary" disabled={!saisieOk || (type !== "creer" && !items.length)} onClick={() => setEtape("recap")}>Vérifier avant d&apos;envoyer</button>
+            <button className="primary" disabled={bloque || !saisieOk || (type !== "creer" && !items.length)} onClick={() => setEtape("recap")}>Vérifier avant d&apos;envoyer</button>
           </>}
           {etape === "recap" && <>
             {type === "desactiver" || type === "activer"
