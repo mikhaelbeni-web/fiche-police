@@ -12,6 +12,7 @@ import CodesTabs from "../../../components/CodesTabs";
 import Reglages from "../../../components/admin/Reglages";
 import Croisement from "../../../components/admin/Croisement";
 import Webhook from "../../../components/admin/Webhook";
+import Nuki from "../../../components/admin/Nuki";
 import { useAdminExpiry, ADMIN_EXPIRED_URL } from "../../../components/admin/useAdminExpiry";
 import { adminPageProps } from "../../../lib/adminAuth";
 
@@ -145,7 +146,7 @@ export default function EspaceAdmin({ adminExpiresAt, serverNowMs }) {
             </div>
           </div>
           <nav className="adm-tabs" role="tablist" aria-label="Espace admin">
-            {[["surveillance", "Surveillance", "Visites dans les appartements vides"], ["reglages", "Réglages", "Horaires, types d'action, serrures, personnel"], ["technique", "Technique", "Webhook et test de connexion"]].map(([k, l, d]) => (
+            {[["surveillance", "Surveillance", "Visites dans les appartements vides"], ["nuki", "Serrures Nuki", "Codes clavier de Villiers et Lantiez"], ["reglages", "Réglages", "Horaires, types d'action, serrures, personnel"], ["technique", "Technique", "Webhook et test de connexion"]].map(([k, l, d]) => (
               <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} onClick={() => setTab(k)}>
                 <b>{l}</b><span>{d}</span>
               </button>
@@ -153,6 +154,7 @@ export default function EspaceAdmin({ adminExpiresAt, serverNowMs }) {
           </nav>
 
           {tab === "surveillance" && <Croisement onReglages={() => setTab("reglages")} />}
+          {tab === "nuki" && <Nuki />}
           {tab === "reglages" && <Reglages />}
           {tab === "technique" && <>
             <section className="rg-card">
@@ -259,7 +261,7 @@ export default function EspaceAdmin({ adminExpiresAt, serverNowMs }) {
             </div>
           )}
           </section>}
-          <p className="adm-foot">igloohome et Hostaway sont lus en <b>lecture seule</b> : aucune ouverture, aucun code créé, aucune réservation modifiée.</p>
+          <p className="adm-foot">igloohome et Hostaway sont lus en <b>lecture seule</b> : aucune ouverture, aucun code créé, aucune réservation modifiée. Nuki : seuls les codes clavier se modifient, sur votre confirmation ; aucune porte ne peut être ouverte depuis cette page.</p>
         </div>
       </div>
     </>
