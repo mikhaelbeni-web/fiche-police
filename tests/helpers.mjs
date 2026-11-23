@@ -5,10 +5,11 @@ export const SESSION_SECRET = "secret-de-test-session";
 export const ADMIN_PASSWORD = "mot-de-passe-admin-de-test";
 
 // Cookie fp_session valide, identique à celui que pose /api/auth après le code d'accès.
-// Format : "v2.<expiration en secondes>.<HMAC>", valable 5 h.
-export function accessCookie(secret = SESSION_SECRET, exp = Math.floor(Date.now() / 1000) + 5 * 3600) {
-  const payload = `v2.${exp}`;
-  const sig = crypto.createHmac("sha256", secret).update(payload).digest("hex");
+// Format : "v3.<expiration en secondes>.<HMAC>", valable 5 h ; clé dérivée de SESSION_SECRET et ACCESS_CODE.
+export function accessCookie(secret = SESSION_SECRET, exp = Math.floor(Date.now() / 1000) + 5 * 3600, code = process.env.ACCESS_CODE || "188") {
+  const payload = `v3.${exp}`;
+  const key = crypto.createHmac("sha256", secret).update(`fp_session:v3:${code}`).digest();
+  const sig = crypto.createHmac("sha256", key).update(payload).digest("hex");
   return `fp_session=${encodeURIComponent(payload + "." + sig)}`;
 }
 

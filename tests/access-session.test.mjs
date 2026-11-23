@@ -53,3 +53,21 @@ test("GET : l'usage ne prolonge pas la session (aucun nouveau cookie)", () => {
   assert.ok(r.body.expiresAt > 0);
   assert.equal(r.headers["set-cookie"], undefined);
 });
+
+test("changer ACCESS_CODE déconnecte toutes les sessions en cours", () => {
+  const avant = req({ cookies: [accessCookie()] });
+  assert.equal(h.verifySession(avant), true);
+  process.env.ACCESS_CODE = "2323";
+  try {
+    assert.equal(h.verifySession(avant), false, "ancienne session refusée");
+    assert.equal(h.verifySession(req({ cookies: [accessCookie()] })), true, "nouvelle session acceptée");
+  } finally {
+    process.env.ACCESS_CODE = "4242";
+  }
+});
+
+test("l'ancien jeton v2 (avant ce changement) est refusé", () => {
+  const exp = Math.floor(Date.now() / 1000) + 3600;
+  const sig = crypto.createHmac("sha256", SESSION_SECRET).update(`v2.${exp}`).digest("hex");
+  assert.equal(h.verifySession(req({ cookies: [`fp_session=${encodeURIComponent(`v2.${exp}.${sig}`)}`] })), false);
+});
