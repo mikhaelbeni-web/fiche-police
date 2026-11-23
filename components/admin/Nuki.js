@@ -270,7 +270,7 @@ function Codes({ data, parId, router, recharger }) {
           <button onClick={() => setAction({ type: "activer", items: selection })}>Réactiver</button>
           <span className="nk-sep" aria-hidden="true" />
           <button className="nk-danger" onClick={() => setAction({ type: "supprimer", items: selection })}>Supprimer…</button>
-          <button className="ghost" onClick={() => setSel(new Set())}>Vider</button>
+          <button className="ghost" onClick={() => setSel(new Set())}>Tout décocher</button>
         </div>
       )}
 
