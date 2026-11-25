@@ -15,14 +15,9 @@ const ACCOUNT_KEY = "hostaway_account";
 // (ex. « 14/10 13h »), codesConfirmes (booléen : le client a dit les avoir reçus).
 const NOTES_COLLECTION = "notes_arrivees";
 
-// Codes des boîtes à clés Belleville, saisis dans la page Codes d'accès
-// (collection access_codes, doc ID belleville-boite-cles-XX, XX = n° d'appartement).
-const BOITE_PREFIXE = "belleville-boite-cles-";
-
-// Code d'entrée affiché sous l'OTA : boîte à clés à Belleville (par n° d'appartement),
-// code de porte de la réservation Hostaway à Villiers et Lantiez.
-function codeEntree(g, it, boites) {
-  if (g.residence === "Belleville") return it.unitNumber ? (boites[it.unitNumber] || "") : "";
+// Code d'entrée affiché sous l'OTA : code temporaire de la réservation (Hostaway
+// doorCode) : PIN igloohome à Belleville, code Nuki à Villiers et Lantiez.
+function codeEntree(it) {
   return it.codePorte || "";
 }
 
@@ -93,7 +88,6 @@ function Arrivees() {
   const [loading, setLoading] = useState(false);
   const [creds, setCreds] = useState({ account: "", key: "" });
   const [notes, setNotes] = useState({});
-  const [boites, setBoites] = useState({});
 
   useEffect(() => {
     const a = window.localStorage.getItem(ACCOUNT_KEY) || "";
@@ -141,26 +135,6 @@ function Arrivees() {
 
   useEffect(() => { loadNotes(from, to); }, [from, to, loadNotes]);
 
-  const loadBoites = useCallback(async () => {
-    try {
-      const { isFirebaseConfigured, db } = await import("../lib/firebase");
-      if (!isFirebaseConfigured()) return;
-      const { collection, getDocs, query, where } = await import("firebase/firestore");
-      const snap = await getDocs(query(collection(db, "access_codes"), where("residence", "==", "Belleville")));
-      const byUnit = {};
-      snap.forEach(d => {
-        if (!d.id.startsWith(BOITE_PREFIXE)) return;
-        const code = String(d.data().code || "").trim();
-        if (code) byUnit[d.id.slice(BOITE_PREFIXE.length)] = code;
-      });
-      setBoites(byUnit);
-    } catch {
-      setBoites({});
-    }
-  }, []);
-
-  useEffect(() => { loadBoites(); }, [loadBoites]);
-
   function setToday() { setFrom(today); setTo(today); }
   function setTomorrow() {
     const t = isoDay(new Date(Date.now() + 864e5));
@@ -186,7 +160,7 @@ function Arrivees() {
       for (const it of g.items) {
         const l = ligne(it, notes[it.reservationId]);
         const depotMode = g.mode === "depot";
-        rows.push([g.residence, it.unitNumber, it.appartement, fmtFr(it.arrivee), it.client, l.ota, codeEntree(g, it, boites), l.heure, l.resume,
+        rows.push([g.residence, it.unitNumber, it.appartement, fmtFr(it.arrivee), it.client, l.ota, codeEntree(it), l.heure, l.resume,
           depotMode ? "Réglée par l'OTA" : [l.taxe.libelle, euros(l.taxe.montant)].filter(Boolean).join(" "),
           depotMode ? depotTexte(l) : "", depotMode ? codesTexte(l) : "", it.reservation]);
       }
@@ -237,7 +211,7 @@ function Arrivees() {
           </select>
         </div>
 
-        <button onClick={() => { load(from, to, creds.account, creds.key); loadNotes(from, to); loadBoites(); }} disabled={loading} title="Actualiser" aria-label="Actualiser" className="arr-refresh">↻</button>
+        <button onClick={() => { load(from, to, creds.account, creds.key); loadNotes(from, to); }} disabled={loading} title="Actualiser" aria-label="Actualiser" className="arr-refresh">↻</button>
         <button className="primary arr-action" onClick={downloadCSV} disabled={!shownTotal}>Télécharger CSV</button>
         <button className="arr-action" onClick={() => window.print()} disabled={!shownTotal}>Imprimer</button>
 
@@ -286,7 +260,7 @@ function Arrivees() {
                 <tbody>
                   {g.items.map((it, i) => {
                     const l = ligne(it, notes[it.reservationId]);
-                    const code = codeEntree(g, it, boites);
+                    const code = codeEntree(it);
                     return (
                       <tr key={i} className={i % 2 ? "alt" : ""}>
                         <td className="apt card-title">
@@ -300,7 +274,7 @@ function Arrivees() {
                         </td>
                         <td className="arr-ota" data-label="OTA">
                           {l.ota}
-                          {code && <div className="arr-code" title={g.residence === "Belleville" ? "Code de la boîte à clés" : "Code de la porte (Hostaway)"}>{code}</div>}
+                          {code && <div className="arr-code" title="Code d'entrée de la réservation">{code}</div>}
                         </td>
                         <td className="arr-heure" data-label="Arrivée">{l.heure}</td>
                         <td className={"arr-resume card-full" + (l.alerte ? " alerte" : "")} data-label="Résumé des échanges">

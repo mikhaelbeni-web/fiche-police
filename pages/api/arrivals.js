@@ -154,10 +154,10 @@ export default async function handler(req, res) {
           ota,
           taxe: RESIDENCES_DEPOT.includes(key) ? null : taxeOf(rv, ota),
           depot: null,
-          // Code de porte de la réservation (serrures Nuki gérées par Hostaway) :
-          // c'est le code envoyé au client à Villiers et Lantiez. À Belleville
-          // le client reçoit le code de la boîte à clés (lu côté page dans access_codes).
-          codePorte: RESIDENCES_DEPOT.includes(key) && rv.doorCode ? String(rv.doorCode) : "",
+          // Code d'entrée temporaire propre à la réservation, créé via Hostaway :
+          // PIN igloohome à Belleville (4 chiffres), code Nuki à Villiers et Lantiez.
+          // C'est celui que reçoit le client (les boîtes à clés = codes de secours).
+          codePorte: rv.doorCode ? String(rv.doorCode) : "",
           voyageurs: rv.numberOfGuests ?? rv.adults ?? "",
         });
       }
