@@ -15,6 +15,12 @@ const ACCOUNT_KEY = "hostaway_account";
 // (ex. « 14/10 13h »), codesConfirmes (booléen : le client a dit les avoir reçus).
 const NOTES_COLLECTION = "notes_arrivees";
 
+// Code d'entrée affiché sous l'OTA : code temporaire de la réservation (Hostaway
+// doorCode) : PIN igloohome à Belleville, code Nuki à Villiers et Lantiez.
+function codeEntree(it) {
+  return it.codePorte || "";
+}
+
 function isoDay(d) { return d.toISOString().slice(0, 10); }
 function fmtFr(d) {
   if (!d) return "";
@@ -149,12 +155,12 @@ function Arrivees() {
     .reduce((a, b) => (b > a ? b : a), "");
 
   function downloadCSV() {
-    const rows = [["Résidence", "N°", "Appartement", "Date d'arrivée", "Client", "OTA", "Heure", "Résumé", "Taxe de séjour", "Dépôt de garantie", "Codes", "Réservation"]];
+    const rows = [["Résidence", "N°", "Appartement", "Date d'arrivée", "Client", "OTA", "Code d'entrée", "Heure", "Résumé", "Taxe de séjour", "Dépôt de garantie", "Codes", "Réservation"]];
     for (const g of groups) {
       for (const it of g.items) {
         const l = ligne(it, notes[it.reservationId]);
         const depotMode = g.mode === "depot";
-        rows.push([g.residence, it.unitNumber, it.appartement, fmtFr(it.arrivee), it.client, l.ota, l.heure, l.resume,
+        rows.push([g.residence, it.unitNumber, it.appartement, fmtFr(it.arrivee), it.client, l.ota, codeEntree(it), l.heure, l.resume,
           depotMode ? "Réglée par l'OTA" : [l.taxe.libelle, euros(l.taxe.montant)].filter(Boolean).join(" "),
           depotMode ? depotTexte(l) : "", depotMode ? codesTexte(l) : "", it.reservation]);
       }
@@ -241,7 +247,7 @@ function Arrivees() {
                   <tr>
                     <th>N°</th>
                     <th>Client</th>
-                    <th>OTA</th>
+                    <th>OTA · code</th>
                     <th>Arrivée</th>
                     <th className="arr-resume">Résumé des échanges</th>
                     {g.mode === "depot" ? <>
@@ -254,6 +260,7 @@ function Arrivees() {
                 <tbody>
                   {g.items.map((it, i) => {
                     const l = ligne(it, notes[it.reservationId]);
+                    const code = codeEntree(it);
                     return (
                       <tr key={i} className={i % 2 ? "alt" : ""}>
                         <td className="apt card-title">
@@ -265,7 +272,10 @@ function Arrivees() {
                           {it.voyageurs !== "" && <div className="arr-sub">{it.voyageurs} pers.{from !== to ? " · " + fmtFr(it.arrivee) : ""}</div>}
                           {it.depart && <div className="arr-sub arr-depart">Départ {fmtFr(it.depart).slice(0, 5)}</div>}
                         </td>
-                        <td className="arr-ota" data-label="OTA">{l.ota}</td>
+                        <td className="arr-ota" data-label="OTA">
+                          {l.ota}
+                          {code && <div className="arr-code" title="Code d'entrée de la réservation">{code}</div>}
+                        </td>
                         <td className="arr-heure" data-label="Arrivée">{l.heure}</td>
                         <td className={"arr-resume card-full" + (l.alerte ? " alerte" : "")} data-label="Résumé des échanges">
                           {l.resume}

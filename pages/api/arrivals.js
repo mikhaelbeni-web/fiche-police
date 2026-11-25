@@ -154,6 +154,10 @@ export default async function handler(req, res) {
           ota,
           taxe: RESIDENCES_DEPOT.includes(key) ? null : taxeOf(rv, ota),
           depot: null,
+          // Code d'entrée temporaire propre à la réservation, créé via Hostaway :
+          // PIN igloohome à Belleville (4 chiffres), code Nuki à Villiers et Lantiez.
+          // C'est celui que reçoit le client (les boîtes à clés = codes de secours).
+          codePorte: rv.doorCode ? String(rv.doorCode) : "",
           voyageurs: rv.numberOfGuests ?? rv.adults ?? "",
         });
       }
