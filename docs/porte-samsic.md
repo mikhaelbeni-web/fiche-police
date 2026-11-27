@@ -29,7 +29,8 @@ l'adresse de l'opérateur (`X-Porte-Origine`) pour les journaux.
 Hotel Desk (`fiche-police`, Production + Preview) :
 
 - `NUKI_API_TOKEN` : déjà en place (Espace admin > Serrures Nuki).
-- `PORTE_SAMSIC_SERRURE` : `Bureau RLB` (ou l'identifiant Nuki).
+- `PORTE_SAMSIC_SERRURE` (facultatif) : nom exact ou identifiant Nuki de la serrure ;
+  `Bureau RLB` si absent.
 - `PORTE_SAMSIC_CLE` : clé partagée, 24 caractères au moins, générée au hasard. Jamais dans
   le dépôt, jamais dans le navigateur.
 
