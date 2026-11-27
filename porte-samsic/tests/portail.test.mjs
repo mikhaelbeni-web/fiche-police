@@ -70,11 +70,25 @@ test("routes etat/action : 401 sans session, 400 action inconnue", async () => {
   assert.equal(r3.statusCode, 400);
 });
 
+test("route etat : seuls l'état courant et l'heure de lecture sortent, jamais l'historique", async () => {
+  const ancien = globalThis.fetch;
+  globalThis.fetch = async () => new Response(JSON.stringify({ ok: true, porte: { nom: "Bureau RLB", etat: "verrouillée", enLigne: true }, evenements: [{ action: "Ouverture", qui: "Levhotel" }], lueLe: "2026-11-27T12:00:00Z" }), { status: 200 });
+  try {
+    const { jeton } = session.creerJeton();
+    const r = res(); await etat(req({ cookies: [`porte_session=${jeton}`] }), r);
+    assert.equal(r.statusCode, 200);
+    assert.deepEqual(Object.keys(r.body).sort(), ["lueLe", "ok", "porte"]);
+    assert.equal(r.body.porte.etat, "verrouillée");
+  } finally {
+    globalThis.fetch = ancien;
+  }
+});
+
 test("relais : clé partagée en Bearer, origine transmise, erreurs traduites", async () => {
   const calls = [];
   const f = async (url, opts) => {
     calls.push({ url, opts });
-    if (url.endsWith("/api/porte/etat")) return new Response(JSON.stringify({ ok: true, porte: { nom: "Bureau RLB", etat: "déverrouillée", enLigne: true }, evenements: [], lueLe: "2026-11-27T12:00:00Z" }), { status: 200 });
+    if (url.endsWith("/api/porte/etat")) return new Response(JSON.stringify({ ok: true, porte: { nom: "Bureau RLB", etat: "déverrouillée", enLigne: true }, lueLe: "2026-11-27T12:00:00Z" }), { status: 200 });
     if (url.endsWith("/api/porte/action")) return new Response(JSON.stringify({ ok: true, action: "ouvrir", libelle: "Ouverture de la porte", serrure: "Bureau RLB", a: "2026-11-27T12:00:01Z" }), { status: 200 });
     return new Response(JSON.stringify({ error: "Introuvable." }), { status: 404 });
   };

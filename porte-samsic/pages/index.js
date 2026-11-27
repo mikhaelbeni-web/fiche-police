@@ -23,11 +23,11 @@ const ACTIONS = [
 ];
 const DELAI_CONFIRMATION_MS = 12000;
 
-function quand(iso, avecDate) {
+function quand(iso) {
   if (!iso) return "—";
   const d = new Date(iso);
   if (!Number.isFinite(d.getTime())) return "—";
-  return d.toLocaleString("fr-FR", { timeZone: TZ, ...(avecDate ? { day: "2-digit", month: "2-digit" } : {}), hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  return d.toLocaleString("fr-FR", { timeZone: TZ, hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
 function Connexion({ nom, onConnecte }) {
@@ -176,23 +176,6 @@ function Portail({ nom, contact, onDeconnecte }) {
           ))}
         </div>
         {resultat && <div className={"porte-alerte " + (resultat.ok ? "ok" : "bad")} role="status">{resultat.texte}</div>}
-      </section>
-
-      <section className="porte-carte">
-        <div className="porte-section-titre">Derniers événements de cette porte (7 jours)</div>
-        {etat && etat.evenements === null && <div className="porte-muted">Historique indisponible pour le moment.</div>}
-        {etat && Array.isArray(etat.evenements) && etat.evenements.length === 0 && <div className="porte-muted">Aucun événement sur 7 jours.</div>}
-        {etat && Array.isArray(etat.evenements) && etat.evenements.length > 0 && (
-          <ul className="porte-journal">
-            {etat.evenements.map((e, i) => (
-              <li key={i} className={e.reussi ? "" : "echec"}>
-                <span className="porte-journal-date">{quand(e.date, true)}</span>
-                <span className="porte-journal-action">{e.action}</span>
-                <span className="porte-muted">{[e.qui, e.declencheur].filter(Boolean).join(" · ")}{e.reussi ? "" : ` · ${e.resultat}`}</span>
-              </li>
-            ))}
-          </ul>
-        )}
       </section>
 
       {contact && <footer className="porte-pied">En cas d'anomalie : {contact}</footer>}
