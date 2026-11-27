@@ -3,6 +3,9 @@
 // et ne connaît qu'UNE serrure (voir lib/porte.js là-bas). Ce portail n'a que la clé
 // partagée PORTE_SAMSIC_CLE, envoyée en « Authorization: Bearer ». L'adresse de
 // l'opérateur est transmise (X-Porte-Origine) pour les journaux côté Hotel Desk.
+// HOTEL_DESK_BYPASS (prévisualisation seulement) : secret « Protection Bypass for
+// Automation » du projet fiche-police, pour atteindre une prévisualisation protégée
+// par Vercel. Inutile en production (fiche-police.vercel.app est public).
 
 const TIMEOUT_MS = 25000;
 
@@ -29,6 +32,7 @@ export async function appelerRelais(chemin, { method = "GET", body, origine, fet
       headers: {
         Authorization: `Bearer ${cle}`,
         Accept: "application/json",
+        ...(process.env.HOTEL_DESK_BYPASS ? { "x-vercel-protection-bypass": process.env.HOTEL_DESK_BYPASS.trim() } : {}),
         ...(origine ? { "X-Porte-Origine": String(origine).slice(0, 80) } : {}),
         ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
       },
