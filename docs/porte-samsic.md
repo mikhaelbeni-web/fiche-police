@@ -9,7 +9,7 @@ Nuki « Bureau RLB »). Il remplace la procédure Google Home / Yale « Récepti
 
 | Morceau | Où | Rôle |
 |---|---|---|
-| **Portail** | dossier `porte-samsic/` de ce dépôt, projet Vercel `porte-samsic` (dossier racine `porte-samsic`) | Page de connexion par mot de passe, état de la porte, boutons Ouvrir / Verrouiller / Déverrouiller avec confirmation, derniers événements. Ne connaît **pas** le jeton Nuki. |
+| **Portail** | dossier `porte-samsic/` de ce dépôt, projet Vercel `porte-samsic` (dossier racine `porte-samsic`) | Page de connexion par mot de passe, état de la porte, boutons Ouvrir / Verrouiller / Déverrouiller avec confirmation. Aucun historique affiché. Ne connaît **pas** le jeton Nuki. |
 | **Relais** | ce projet (Hotel Desk), `lib/porte.js` et `pages/api/porte/*` | Parle à Nuki avec `NUKI_API_TOKEN`, pour UNE serrure seulement. Répond 404 sans la clé partagée. |
 
 Le portail appelle le relais avec `Authorization: Bearer <PORTE_SAMSIC_CLE>` et transmet
@@ -21,6 +21,8 @@ l'adresse de l'opérateur (`X-Porte-Origine`) pour les journaux.
   si l'appelant passe explicitement `actionSur` = l'identifiant de la serrure configurée,
   et `lib/porte.js` ne passe jamais autre chose que cette serrure.
 - Lire ou modifier des codes clavier, des réservations, l'espace admin : routes séparées.
+- Transmettre l'historique de la serrure : le relais ne renvoie que l'état courant (état,
+  en ligne ou non, pile). Le journal Nuki reste visible dans Nuki Web et dans l'espace admin.
 - Choisir « la première serrure qui ressemble » : `PORTE_SAMSIC_SERRURE` doit correspondre
   à exactement une serrure (identifiant Nuki ou nom exact), sinon refus.
 
@@ -52,7 +54,7 @@ Portail (`porte-samsic`) :
   40 par heure au total côté relais. Boutons grisés si la serrure est hors ligne.
 - Journaux : chaque action est écrite dans les journaux Vercel des deux projets (origine,
   action, résultat, jamais la clé ni le mot de passe) et apparaît dans l'historique Nuki
-  de la serrure (Nuki Web), affiché sur le portail (7 jours).
+  de la serrure (Nuki Web). Le portail n'affiche rien de cet historique.
 - Pages `noindex`, `Referrer-Policy: no-referrer`, `Cache-Control: no-store`.
 
 ## Changer le mot de passe de Samsic

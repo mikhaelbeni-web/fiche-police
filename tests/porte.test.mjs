@@ -3,7 +3,8 @@
 //   - l'ouverture n'est possible QUE sur la serrure configurée, jamais sur une autre ;
 //   - sans la clé partagée, les routes répondent 404 ;
 //   - la serrure est trouvée par identifiant ou nom exact, jamais « la première qui ressemble » ;
-//   - freins sur les actions ; rien du jeton Nuki ne sort.
+//   - freins sur les actions ; rien du jeton Nuki ne sort ;
+//   - aucun historique de la serrure n'est transmis au portail.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { req, res } from "./helpers.mjs";
@@ -33,7 +34,6 @@ function fakeNuki({ horsLigne = false } = {}) {
       const s = LOCKS.find(l => String(l.smartlockId) === one[1]);
       return new Response(JSON.stringify(horsLigne ? { ...s, serverState: 4 } : s), { status: 200 });
     }
-    if (/^\/smartlock\/\d+\/log$/.test(u.pathname)) return new Response(JSON.stringify([{ id: "l1", smartlockId: 222, date: "2026-11-27T12:00:00Z", name: "Levhotel", action: 3, trigger: 4, state: 0 }]), { status: 200 });
     return new Response(null, { status: 204 });
   };
   fn.calls = calls;
@@ -84,8 +84,8 @@ test("état : l'action POST part sur la serrure configurée, avec le bon code Nu
   assert.equal(e.porte.etat, "déverrouillée");
   assert.equal(e.porte.enLigne, true);
   assert.ok(!("id" in e.porte) && !("residence" in e.porte), "rien d'interne dans le résumé public");
-  assert.equal(e.evenements.length, 1);
-  assert.equal(e.evenements[0].action, "Ouverture (loquet)");
+  assert.ok(!("evenements" in e), "aucun historique transmis au portail");
+  assert.equal(f.calls.filter(c => /\/log$/.test(c.path)).length, 0, "le relais ne lit pas le journal Nuki");
   const r = await porte.executerAction("ouvrir", { fetchImpl: f });
   assert.equal(r.action, "ouvrir");
   const post = f.calls.filter(c => c.method === "POST");
