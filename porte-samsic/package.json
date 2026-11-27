@@ -1,0 +1,17 @@
+{
+  "name": "porte-samsic",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Portail d'ouverture à distance de la porte du bureau (Résidence Le Belleville) pour la télésurveillance Samsic",
+  "scripts": {
+    "dev": "next dev -p 3100",
+    "build": "next build",
+    "start": "next start -p 3100",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "dependencies": {
+    "next": "14.2.5",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  }
+}
