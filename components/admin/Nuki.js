@@ -1,4 +1,4 @@
-// components/admin/Nuki.js — onglet « Serrures Nuki » de l'Espace admin (Villiers, Lantiez, Deep 02).
+// components/admin/Nuki.js — onglet « Serrures Nuki » de l'Espace admin (Villiers, Lantiez, Belleville : bureau LRLB, ex-Deep 02).
 // Ordinateur d'abord ; sur téléphone, les lignes passent en cartes.
 //
 // Principes (audit ui-ux-pro-max) :
@@ -14,6 +14,12 @@ import { adminCall, Erreur } from "./api";
 
 const TZ = "Europe/Paris";
 const RESIDENCES = ["Villiers", "Lantiez", "Belleville"];
+// Résidences à proposer : les 3 connues, plus « Autre » si une serrure porte un nom non reconnu
+// (serrure renommée dans l'application Nuki), pour qu'elle reste visible et modifiable.
+function residencesDe(serrures) {
+  const extra = [...new Set((serrures || []).map(s => s.residence).filter(r => !RESIDENCES.includes(r)))];
+  return [...RESIDENCES, ...extra];
+}
 const PAQUET = 10;
 
 function quand(iso) {
@@ -119,9 +125,18 @@ function Codes({ data, parId, router, recharger }) {
   const codes = useMemo(() => data.codes.map(c => ({ ...c, serrure: parId.get(String(c.smartlockId)) }))
     .filter(c => c.serrure), [data, parId]);
 
+  const choixResidences = useMemo(() => residencesDe(data.serrures), [data]);
+  const nomsParResidence = useMemo(() => {
+    const m = new Map();
+    data.serrures.forEach(s => m.set(s.residence, [...(m.get(s.residence) || []), s.nom]));
+    return m;
+  }, [data]);
+
+  // Une recherche porte sur TOUTES les résidences : taper un nom de serrure ou de code
+  // doit le trouver même si sa résidence n'est pas cochée.
   const visibles = useMemo(() => {
     const q = cle(recherche);
-    return codes.filter(c => residences.includes(c.serrure.residence))
+    return codes.filter(c => q || residences.includes(c.serrure.residence))
       .filter(c => portee === "tous" || (portee === "permanents" ? !c.fin : Boolean(c.fin)))
       .filter(c => !q || cle(c.nom).includes(q) || cle(c.serrure.nom).includes(q));
   }, [codes, residences, portee, recherche]);
@@ -167,7 +182,7 @@ function Codes({ data, parId, router, recharger }) {
   return (
     <>
       <div className="sv-kpis nk-kpis">
-        <div className="sv-kpi static"><b>{data.serrures.filter(s => residences.includes(s.residence)).length}</b><span>serrures ({residences.join(", ") || "aucune résidence"})</span></div>
+        <div className="sv-kpi static"><b>{recherche.trim() ? new Set(visibles.map(c => c.smartlockId)).size : data.serrures.filter(s => residences.includes(s.residence)).length}</b><span>serrures ({recherche.trim() ? "recherche dans toutes les résidences" : residences.join(", ") || "aucune résidence"})</span></div>
         <div className="sv-kpi static"><b>{groupes.length}</b><span>noms de code affichés</span></div>
         <div className="sv-kpi static"><b>{totalVisibles}</b><span>codes clavier affichés</span></div>
         <div className={"sv-kpi static" + (selection.length ? " sel" : "")}><b>{selection.length}</b><span>sélectionné(s){selection.length ? ` · ${pluriel(nbSerruresSel, "serrure")}` : ""}</span></div>
@@ -175,11 +190,15 @@ function Codes({ data, parId, router, recharger }) {
 
       <div className="sv-filters nk-filters">
         <div className="nk-chips" role="group" aria-label="Résidences">
-          {RESIDENCES.map(r => (
-            <button key={r} className={"nk-chip" + (residences.includes(r) ? " on" : "")} aria-pressed={residences.includes(r)} onClick={() => toggleResidence(r)}>
-              {r}{r === "Belleville" ? " (Deep 02)" : ""}
-            </button>
-          ))}
+          {choixResidences.map(r => {
+            const noms = nomsParResidence.get(r) || [];
+            const detail = r === "Belleville" || !RESIDENCES.includes(r) ? noms.join(", ") : "";
+            return (
+              <button key={r} className={"nk-chip" + (residences.includes(r) ? " on" : "")} aria-pressed={residences.includes(r)} onClick={() => toggleResidence(r)} title={noms.join(", ")}>
+                {r}{detail ? ` (${detail})` : ""}
+              </button>
+            );
+          })}
         </div>
         <div className="sv-seg small" role="group" aria-label="Durée des codes">
           {[["permanents", "Permanents"], ["temporaires", "Avec date de fin"], ["tous", "Tous"]].map(([k, l]) => (
@@ -194,7 +213,9 @@ function Codes({ data, parId, router, recharger }) {
       </div>
 
       {groupes.length === 0 ? (
-        <div className="sv-empty"><b>Aucun code avec ces filtres.</b><span>Changez de résidence ou de durée, ou videz la recherche.</span></div>
+        <div className="sv-empty"><b>Aucun code avec ces filtres.</b><span>{recherche.trim()
+          ? `Aucun nom de code ni de serrure ne contient « ${recherche.trim()} »${portee !== "tous" ? " avec cette durée : essayez « Tous »" : ""}. Une serrure renommée dans l'application Nuki se cherche par son nouveau nom.`
+          : "Changez de résidence ou de durée, ou videz la recherche."}</span></div>
       ) : (
         <div className="nk-list" role="table" aria-label="Codes clavier Nuki">
           <div className="nk-row nk-head" role="row">
@@ -592,7 +613,7 @@ function ChoixSerrures({ serrures, cibles, setCibles }) {
   return (
     <fieldset className="nk-choix">
       <legend>Serrures</legend>
-      {RESIDENCES.map(r => {
+      {residencesDe(serrures).map(r => {
         const list = serrures.filter(s => s.residence === r);
         if (!list.length) return null;
         const ids = list.map(s => String(s.id));
